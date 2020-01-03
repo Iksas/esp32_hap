@@ -1,3 +1,5 @@
+#pragma once
+
 typedef enum {
     HK_CAT_OTHER = 1,
     HK_CAT_BRIDGE = 2,

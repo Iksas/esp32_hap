@@ -4,6 +4,28 @@
 #include "hk_mem.h"
 #include "hk_res.h"
 
+enum hk_tlv_params
+{
+    HK_TLV_VALUE = 0x01,
+    HK_TLV_PARAM_ADDITIONAL_AUTHORIZATION_DATA = 0x02,
+    HK_TLV_PARAM_ORIGIN = 0x03,
+    HK_TLV_CHRARACTERISTIC_TYPE = 0x04,
+    HK_TLV_CHARACTERISTIC_ID = 0x05,
+    HK_TLV_SERVICE_TYPE = 0x06,
+    HK_TLV_SERVICE_ID = 0x07,
+    HK_TLV_PARAM_TTL = 0x08,
+    HK_TLV_PARAM_RETURN_RESPONSE = 0x09,
+    HK_TLV_CHARACTERISTIC_PROPERTIES = 0x0a,
+    HK_TLV_USER_DESCRIPTION = 0X0b,
+    HK_TLV_PRESENTATION_FORMAT= 0X0c,
+    HK_TLV_VALID_RANGE = 0X0d,
+    HK_TLV_STEP_VALUE = 0X0e,
+    HK_TLV_HAP_SERVICE_PROPERTIES = 0X0f,
+    HK_TLV_HAP_LINKED_SERVICES = 0X10,
+    HK_TLV_HAP_VALID_VALUES_DESCRIPTOR = 0X11,
+    HK_TLV_HAP_VALID_VALUES_RANGE_DESCRIPTOR = 0X12,
+};
+
 enum hk_tlv_types
 {
     HK_TLV_Method = 0,        // (integer) Method to use for pairing. See PairMethod
@@ -52,10 +74,16 @@ typedef struct
 
 hk_tlv_t *hk_tlv_add_state(hk_tlv_t *tlv_list, enum hk_tlv_types type);
 hk_tlv_t *hk_tlv_add_error(hk_tlv_t *tlv_list, enum hk_tlv_errors error);
+hk_tlv_t *hk_tlv_add_str(hk_tlv_t *tlv_list, char type, char *data);
+hk_tlv_t *hk_tlv_add_buffer(hk_tlv_t *tlv_list, char type, char *data, size_t length);
+hk_tlv_t *hk_tlv_add_uint8(hk_tlv_t *tlv_list, char type, uint8_t data);
+hk_tlv_t *hk_tlv_add_uint16(hk_tlv_t *tlv_list, char type, uint16_t data);
 hk_tlv_t *hk_tlv_add(hk_tlv_t *tlv_list, char type, hk_mem *data);
 esp_err_t hk_tlv_get_mem_by_type(hk_tlv_t *tlv, char type, hk_mem *result);
 hk_tlv_t *hk_tlv_get_tlv_by_type(hk_tlv_t *tlv_list, char type);
+size_t hk_tlv_get_size(hk_tlv_t *tlv_list);
 void hk_tlv_free(hk_tlv_t *tlv_list);
 
 void hk_tlv_serialize(hk_tlv_t *tlv_list, hk_mem *result);
 hk_tlv_t *hk_tlv_deserialize(hk_mem *data);
+hk_tlv_t *hk_tlv_deserialize_buffer(char *data, size_t size);

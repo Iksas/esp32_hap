@@ -8,7 +8,7 @@
 #include "crypto/hk_hkdf.h"
 #include "crypto/hk_ed25519.h"
 #include "crypto/hk_chacha20poly1305.h"
-#include "hk_mdns.h"
+#include "hk_advertising.h"
 #include "hk_html.h"
 #include "hk_pairings_store.h"
 
@@ -271,7 +271,7 @@ void hk_pairing_setup_exchange_response(hk_session_t *session,hk_tlv_t *tlv)
     if (!ret)
     {
         hk_store_is_paired_set(true);
-        hk_mdns_update_paired(false);
+        hk_advertising_update_paired(false);
         HK_LOGI("Accessory paired.");
     }
 

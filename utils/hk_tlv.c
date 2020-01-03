@@ -26,9 +26,8 @@ hk_tlv_t *hk_tlv_add_error(hk_tlv_t *tlv_list, enum hk_tlv_errors error)
     return tlv_list;
 }
 
-hk_tlv_t *hk_tlv_add(hk_tlv_t *tlv_list, char type, hk_mem *data)
+hk_tlv_t *hk_tlv_add_buffer(hk_tlv_t *tlv_list, char type, char *data, size_t size)
 {
-    size_t size = data->size;
     size_t size_added = 0;
     do
     {
@@ -39,12 +38,29 @@ hk_tlv_t *hk_tlv_add(hk_tlv_t *tlv_list, char type, hk_mem *data)
         tlv_list->type = type;
         tlv_list->length = size_to_add;
         tlv_list->value = malloc(size_to_add);
-        memcpy(tlv_list->value, data->ptr + size_added, size_to_add);
-
+        memcpy(tlv_list->value, data + size_added, size_to_add);
         size_added += size_to_add;
     } while (size > 0);
 
     return tlv_list;
+}
+
+hk_tlv_t *hk_tlv_add_str(hk_tlv_t *tlv_list, char type, char *data)
+{
+    return hk_tlv_add_buffer(tlv_list, type, data, strlen(data));
+}
+
+hk_tlv_t *hk_tlv_add(hk_tlv_t *tlv_list, char type, hk_mem *data)
+{
+    return hk_tlv_add_buffer(tlv_list, type, data->ptr, data->size);
+}
+
+hk_tlv_t *hk_tlv_add_uint8(hk_tlv_t *tlv_list, char type, uint8_t data){
+    return hk_tlv_add_buffer(tlv_list, type, (char*)&data, 1);
+}
+
+hk_tlv_t *hk_tlv_add_uint16(hk_tlv_t *tlv_list, char type, uint16_t data){
+    return hk_tlv_add_buffer(tlv_list, type, (char*)&data, 2);
 }
 
 esp_err_t hk_tlv_get_mem_by_type(hk_tlv_t *tlv, char type, hk_mem *result)
@@ -96,18 +112,23 @@ void hk_tlv_serialize(hk_tlv_t *tlv_list, hk_mem *result)
 
 hk_tlv_t *hk_tlv_deserialize(hk_mem *data)
 {
-    hk_tlv_t *tlv_list = NULL;
+    return hk_tlv_deserialize_buffer(data->ptr, data->size);
+}
 
-    for (size_t i = 0; i < data->size;)
+hk_tlv_t *hk_tlv_deserialize_buffer(char *data, size_t size)
+{
+    hk_tlv_t *tlv_list = NULL;
+    
+    for (size_t i = 0; i < size;)
     {
-        char type = data->ptr[i++];
-        char length = data->ptr[i++];
+        char type = data[i++];
+        char length = data[i++];
 
         tlv_list = hk_ll_new(tlv_list);
         tlv_list->type = type;
         tlv_list->length = length;
         tlv_list->value = malloc(tlv_list->length);
-        memcpy(tlv_list->value, data->ptr + i, length);
+        memcpy(tlv_list->value, data + i, length);
 
         i += length;
     }
@@ -115,6 +136,19 @@ hk_tlv_t *hk_tlv_deserialize(hk_mem *data)
     tlv_list = hk_ll_reverse(tlv_list);
 
     return tlv_list;
+}
+
+size_t hk_tlv_get_size(hk_tlv_t *tlv_list)
+{
+    size_t size = 0;
+    
+    hk_ll_foreach(tlv_list, tlv)
+    {
+        size += 2;
+        size += tlv->length;
+    }
+
+    return size;
 }
 
 void hk_tlv_free(hk_tlv_t *tlv_list)

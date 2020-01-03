@@ -2,25 +2,25 @@
 #include "include/homekit.h"
 #include "utils/hk_store.h"
 #include "hk_server.h"
-#include "hk_mdns.h"
+#include "hk_advertising.h"
 #include "hk_accessories_serializer.h"
 #include "hk_accessories_store.h"
 #include "hk_characteristics.h"
 #include "hk_pairings_store.h"
 
-void hk_init()
+void hk_init(const char *name, const hk_categories_t category, const char *code)
 {
+    hk_store_code_set(code);
+    hk_advertising_init(name, category, 2);
     hk_server_start();
 
     ESP_LOGD("homekit", "Inititialized.");
 }
 
-void hk_setup_start(const char *name, hk_categories_t category, const char *code)
+void hk_setup_start()
 {
     hk_store_init();
-    hk_store_code_set(code);
     hk_pairings_log_devices();
-    hk_mdns_init(name, category, 2);
 }
 
 void hk_setup_add_accessory(const char *name, const char *manufacturer, const char *model, const char *serial_number, const char *revision, void (*identify)())
@@ -61,7 +61,7 @@ void hk_reset()
     HK_LOGW("Resetting homekit for this device.");
     hk_pairings_store_remove_all();
     hk_store_is_paired_set(false);
-    hk_mdns_update_paired(false);
+    hk_advertising_update_paired(false);
 }
 
 void hk_notify(void *characteristic)

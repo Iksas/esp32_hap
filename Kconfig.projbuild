@@ -1,0 +1,17 @@
+menu "ESP32_HAP"
+
+    choice ESP32_HAP_STACK
+        prompt "The stack to use for Homekit"
+        default ESP32_HAP_STACK_BLE
+        help
+            You may choose wich stack to use:
+
+            - Bluetooth LE
+            - IP/WIFI
+        config ESP32_HAP_STACK_BLE
+            bool "Bluetooth LE"
+        config ESP32_HAP_STACK_IP
+            bool "IP"
+    endchoice
+
+endmenu

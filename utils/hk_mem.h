@@ -1,7 +1,8 @@
 #pragma once
 
-#include "../include/homekit.h"
+//#include "../include/homekit.h"
 #include <stdlib.h>
+#include <stdbool.h>
 
 typedef struct
 {
