@@ -1,8 +1,8 @@
 #include "unity.h"
 
-#include "../utils/hk_mem.h"
-#include "../utils/hk_store.h"
-#include "../utils/hk_logging.h"
+#include "../../utils/hk_mem.h"
+#include "../../utils/hk_store.h"
+#include "../../utils/hk_logging.h"
 
 
 #include "../hk_pairings_store.h"

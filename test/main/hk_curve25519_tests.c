@@ -1,7 +1,7 @@
 #include "unity.h"
 
 #include "../crypto/hk_curve25519.h"
-#include "../utils/hk_mem.h"
+#include "../../utils/hk_mem.h"
 
 
 TEST_CASE("generate key", "[crypto, curve25519]")

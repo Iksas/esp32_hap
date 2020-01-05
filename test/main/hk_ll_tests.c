@@ -1,7 +1,7 @@
 #include "unity.h"
 
-#include "../utils/hk_ll.h"
-#include "../utils/hk_logging.h"
+#include "../../utils/hk_ll.h"
+#include "../../utils/hk_logging.h"
 
 typedef struct
 {

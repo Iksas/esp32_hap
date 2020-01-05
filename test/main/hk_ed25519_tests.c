@@ -1,7 +1,7 @@
 #include "unity.h"
 
 #include "../crypto/hk_ed25519.h"
-#include "../utils/hk_mem.h"
+#include "../../utils/hk_mem.h"
 
 
 TEST_CASE("Ed25519: generate key", "[crypto, ed25519]")
