@@ -1,9 +1,8 @@
 set(COMPONENT_SRCDIRS src src/common src/crypto src/stacks src/utils )
-set(COMPONENT_REQUIRES nvs_flash json esp32_hap_wolfssl)
+set(COMPONENT_PRIV_REQUIRES nvs_flash json esp32_hap_wolfssl nghttp esp_http_server mdns)
 
 if(CONFIG_ESP32_HAP_STACK_IP)
     list(APPEND COMPONENT_SRCDIRS src/stacks/ip)
-    list(APPEND COMPONENT_REQUIRES nghttp esp_http_server mdns)
 endif()
 
 if(CONFIG_ESP32_HAP_STACK_BLE)
