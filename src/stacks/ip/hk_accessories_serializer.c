@@ -130,7 +130,7 @@ void hk_accessories_serializer_service(hk_service_t *service, cJSON *j_services)
     char type[37] = {
         0,
     };
-    sprintf(type, HAP_UUID, service->type); //todo: check if full type is needed
+    sprintf(type, HAP_UUID, service->type); // todo: check if full type is needed
     cJSON_AddStringToObject(j_service, "type", type);
     cJSON_AddNumberToObject(j_service, "iid", service->iid);
     cJSON_AddBoolToObject(j_service, "primary", service->primary);

@@ -35,6 +35,15 @@ void hk_mem_append_string_terminator(hk_mem *mem)
     mem->ptr[mem->size - 1] = 0;
 }
 
+void hk_mem_prepend_buffer(hk_mem *mem, char *data, size_t size)
+{
+    size_t new_size = mem->size + size;
+    mem->ptr = realloc(mem->ptr, new_size);
+    memcpy(mem->ptr + size, mem->ptr, mem->size);
+    memcpy(mem->ptr, data, size);
+    mem->size = new_size;
+}
+
 void hk_mem_set(hk_mem *mem, size_t size)
 {
     if (mem->size != size)

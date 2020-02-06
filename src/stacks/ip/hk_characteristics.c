@@ -96,7 +96,7 @@ void hk_characteristics_notify(void *characteristic_ptr)
     cJSON *j_characteristic = cJSON_CreateObject();
     cJSON_AddNumberToObject(j_characteristic, "aid", aid);
     cJSON_AddNumberToObject(j_characteristic, "iid", iid);
-    cJSON_AddNumberToObject(j_characteristic, "status", 0); //todo: is this needed?
+    cJSON_AddNumberToObject(j_characteristic, "status", 0); // todo: is this needed?
     hk_accessories_serializer_value(characteristic, j_characteristic);
 
     cJSON *j_characteristics = cJSON_CreateArray();

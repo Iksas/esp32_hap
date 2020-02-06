@@ -1,6 +1,6 @@
 #include "hk_accessories_store.h"
-#include "../utils/hk_logging.h"
-#include "../utils/hk_ll.h"
+#include "../../utils/hk_logging.h"
+#include "../../utils/hk_ll.h"
 
 hk_accessory_t *hk_accessories;
 

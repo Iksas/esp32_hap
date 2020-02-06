@@ -1,11 +1,11 @@
-#include "utils/hk_logging.h"
-#include "include/homekit.h"
-#include "utils/hk_store.h"
-#include "stacks/hk_server.h"
-#include "stacks/hk_advertising.h"
-#include "stacks/hk_characteristics.h"
-#include "common/hk_accessories_store.h"
-#include "common/hk_pairings_store.h"
+#include "../../utils/hk_logging.h"
+#include "../../include/homekit.h"
+#include "../../utils/hk_store.h"
+#include "../../common/hk_accessories_store.h"
+#include "../../common/hk_pairings_store.h"
+#include "hk_server.h"
+#include "hk_advertising.h"
+#include "hk_characteristics.h"
 
 void hk_init(const char *name, const hk_categories_t category, const char *code)
 {

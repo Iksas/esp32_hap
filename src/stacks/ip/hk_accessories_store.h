@@ -1,8 +1,8 @@
 #pragma once
 
-#include "../include/homekit_characteristics.h"
-#include "../include/homekit_services.h"
-#include "../include/homekit_characteristics.h"
+#include "../../include/homekit_characteristics.h"
+#include "../../include/homekit_services.h"
+#include "../../include/homekit_characteristics.h"
 
 #include <stdlib.h>
 #include <stdbool.h>
