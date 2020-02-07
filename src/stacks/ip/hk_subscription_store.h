@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../common/hk_accessories_store.h"
+#include "hk_accessories_store.h"
 #include "hk_session.h"
 
 void hk_subscription_store_add_session(hk_characteristic_t *characteristic, hk_session_t *session);

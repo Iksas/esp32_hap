@@ -2,7 +2,6 @@
 
 #include "../../include/homekit_services.h"
 #include "../../include/homekit_characteristics.h"
-#include "../../common/hk_accessories_store.h"
 #include "../../common/hk_characteristics_properties.h"
 #include "../../utils/hk_logging.h"
 #include "../../utils/hk_ll.h"
