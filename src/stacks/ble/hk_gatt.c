@@ -9,8 +9,10 @@
 
 #include "../../utils/hk_logging.h"
 #include "../../utils/hk_tlv.h"
+#include "../../common/hk_characteristics_properties.h"
 
 #include "hk_uuid_manager.h"
+#include "hk_formats_ble.h"
 
 typedef struct ble_gatt_svc_def hk_ble_service_t;
 typedef struct ble_gatt_chr_def hk_ble_characteristic_t;
@@ -29,6 +31,7 @@ typedef struct
     size_t service_index;
     const ble_uuid128_t* service_uuid;
     size_t characteristic_index;
+    hk_characteristic_types_t characteristic_type;
 } hk_gatt_callback_info_t;
 
 hk_gatt_setup_info_t *hk_gatt_setup_info;
@@ -85,14 +88,13 @@ static int hk_gatt_read_descriptor(struct ble_gatt_access_ctxt *ctxt, void *arg)
 
 static void hk_gatt_signature_request(const ble_uuid128_t *characteristic_uuid, hk_gatt_callback_info_t *callback_info, hk_mem* response)
 {
-    char format[7] = {0x19, 0x00, 0x00, 0x27, 0x01, 0x00, 0x00}; // todo: get dynamically
     hk_tlv_t *tlv_data = NULL;
     tlv_data = hk_tlv_add_buffer(tlv_data, HK_TLV_CHRARACTERISTIC_TYPE, (char*)characteristic_uuid, 16);
     tlv_data = hk_tlv_add_uint16(tlv_data, HK_TLV_SERVICE_ID, callback_info->service_index);
     tlv_data = hk_tlv_add_buffer(tlv_data, HK_TLV_SERVICE_TYPE, (char*)callback_info->service_uuid, 16);
     tlv_data = hk_tlv_add_uint16(tlv_data, HK_TLV_CHARACTERISTIC_PROPERTIES, 0x1);
     tlv_data = hk_tlv_add_str(tlv_data, HK_TLV_USER_DESCRIPTION, "User description, where can I see it?");
-    tlv_data = hk_tlv_add_buffer(tlv_data, HK_TLV_PRESENTATION_FORMAT, format, 7);
+    tlv_data = hk_tlv_add_buffer(tlv_data, HK_TLV_PRESENTATION_FORMAT, hk_formats_ble_get(callback_info->characteristic_type), 7);
     // Characteristic Presentation Format: 0x19: string; 0x00: no exponent; 0x2700: unit = unitless; 0x01: Bluetooth SIG namespace; 0x0000: No description
     //tlv_data = hk_tlv_add_str(tlv_data, HK_TLV_VALID_RANGE, HK_CHR_VERSION);
     //tlv_data = hk_tlv_add_str(tlv_data, HK_TLV_STEP_VALUE, HK_CHR_VERSION);
@@ -277,6 +279,8 @@ void *hk_gatt_add_characteristic(
     hk_gatt_callback_info_t *callback_info = (hk_gatt_callback_info_t*)malloc(sizeof(hk_gatt_callback_info_t));
     callback_info->static_data = NULL;
     callback_info->characteristic_index = hk_gatt_setup_info->instance_id++;
+    callback_info->characteristic_type = characteristic_type;
+
     hk_gatt_characteristic_init(characteristic, current_service->uuid, characteristic_uuid, callback_info);
     return NULL;
 }
@@ -291,6 +295,7 @@ void hk_gatt_add_characteristic_static_read(hk_characteristic_types_t characteri
     callback_info->service_uuid = (ble_uuid128_t*)current_service->uuid;
     callback_info->service_index = hk_gatt_setup_info->service_index;
     callback_info->characteristic_index = hk_gatt_setup_info->instance_id++;
+    callback_info->characteristic_type = characteristic_type;
 
     hk_gatt_characteristic_init(characteristic, current_service->uuid, characteristic_uuid, callback_info);
 }

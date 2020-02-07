@@ -3,6 +3,7 @@
 #include "../../include/homekit_services.h"
 #include "../../include/homekit_characteristics.h"
 #include "../../common/hk_accessories_store.h"
+#include "../../common/hk_characteristics_properties.h"
 #include "../../utils/hk_logging.h"
 #include "../../utils/hk_ll.h"
 
@@ -37,7 +38,7 @@ cJSON *hk_accessories_serializer_format_value(hk_format_t format, void *value)
 
 void hk_accessories_serializer_value(hk_characteristic_t *characteristic, cJSON *j_characteristic)
 {
-    hk_format_t format = hk_accessories_store_get_format(characteristic->type);
+    hk_format_t format = hk_characteristics_properties_get_type(characteristic->type);
     if (characteristic->read != NULL)
     {
         void *value = characteristic->read();
@@ -58,7 +59,7 @@ void hk_accessories_serializer_value(hk_characteristic_t *characteristic, cJSON 
 
 void hk_accessories_serializer_format(hk_characteristic_t *characteristic, cJSON *j_characteristic)
 {
-    hk_format_t format = hk_accessories_store_get_format(characteristic->type);
+    hk_format_t format = hk_characteristics_properties_get_type(characteristic->type);
     switch (format)
     {
     case HK_FORMAT_BOOL:

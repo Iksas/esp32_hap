@@ -1,5 +1,5 @@
-#include "include/homekit.h"
-#include "include/homekit_fascade.h"
+#include "../include/homekit.h"
+#include "../include/homekit_fascade.h"
 
 #include <stdbool.h>
 void hk_setup_dummy_identify(){

@@ -1,6 +1,6 @@
 #include "hk_characteristics.h"
 
-#include "../../common/hk_accessories_store.h"
+#include "../../common/hk_characteristics_properties.h"
 #include "../../include/homekit_services.h"
 #include "../../include/homekit_characteristics.h"
 #include "../../utils/hk_logging.h"
@@ -147,7 +147,7 @@ void hk_characteristics_write(hk_session_t *session, cJSON *j_characteristic)
     if (!ret)
     {
         cJSON *j_value = cJSON_GetObjectItem(j_characteristic, "value");
-        hk_format_t format = hk_accessories_store_get_format(characteristic->type);
+        hk_format_t format = hk_characteristics_properties_get_type(characteristic->type);
         void *value = NULL;
         bool bool_value = false;
 
