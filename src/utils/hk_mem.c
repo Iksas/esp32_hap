@@ -39,8 +39,14 @@ void hk_mem_prepend_buffer(hk_mem *mem, char *data, size_t size)
 {
     size_t new_size = mem->size + size;
     mem->ptr = realloc(mem->ptr, new_size);
-    memcpy(mem->ptr + size, mem->ptr, mem->size);
+
+    // move data in memory area
+    char buffer[mem->size];
+    memcpy(buffer, mem->ptr, mem->size);
+    memcpy(mem->ptr + size, buffer, mem->size);
+    // prepend new data
     memcpy(mem->ptr, data, size);
+    // set new size
     mem->size = new_size;
 }
 

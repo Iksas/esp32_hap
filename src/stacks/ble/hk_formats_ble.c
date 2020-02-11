@@ -15,6 +15,7 @@ const char hk_formats_ble_data[7] = {0x1B, 0x00, 0x00, 0x27, 0x01, 0x00, 0x00};
 char* hk_formats_ble_get(hk_characteristic_types_t characteristic_type)
 {
     hk_format_t characteristic_format = hk_characteristics_properties_get_type(characteristic_type);
+    
     switch(characteristic_format)
     {
         case HK_FORMAT_BOOL:
