@@ -8,11 +8,10 @@
 //#include <esp_heap_caps.h> heap_caps_check_integrity_addr(0x3ffbd868, true);
 
 #include "../../utils/hk_logging.h"
-#include "../../utils/hk_tlv.h"
-#include "../../common/hk_characteristics_properties.h"
 
+#include "hk_session.h"
 #include "hk_uuid_manager.h"
-#include "hk_formats_ble.h"
+#include "operations/hk_signature.h"
 
 typedef struct ble_gatt_svc_def hk_ble_service_t;
 typedef struct ble_gatt_chr_def hk_ble_characteristic_t;
@@ -25,18 +24,6 @@ typedef struct
     int characteristic_index;
     uint16_t instance_id;
 } hk_gatt_setup_info_t;
-
-typedef struct
-{
-    char transaction_id;
-    char last_opcode;
-    const void* static_data;
-    char service_index;
-    char service_id;
-    const ble_uuid128_t* service_uuid;
-    char characteristic_index;
-    hk_characteristic_types_t characteristic_type;
-} hk_gatt_callback_info_t;
 
 hk_gatt_setup_info_t *hk_gatt_setup_info;
 hk_ble_service_t *hk_gatt_services = NULL;
@@ -52,33 +39,16 @@ static bool hk_gatt_cmp(const ble_uuid128_t *uuid1, const ble_uuid128_t *uuid2) 
     return ble_uuid_cmp(&uuid1->u, &uuid2->u) == 0;
 }
 
-static void hk_gatt_signature_request(const ble_uuid128_t *characteristic_uuid, hk_gatt_callback_info_t *callback_info, hk_mem* response)
-{
-    hk_tlv_t *tlv_data = NULL;
-    tlv_data = hk_tlv_add_buffer(tlv_data, HK_TLV_CHRARACTERISTIC_TYPE, (char*)characteristic_uuid->value, 16);
-    tlv_data = hk_tlv_add_uint16(tlv_data, HK_TLV_SERVICE_ID, callback_info->service_id);
-    tlv_data = hk_tlv_add_buffer(tlv_data, HK_TLV_SERVICE_TYPE, (char*)callback_info->service_uuid->value, 16);
-    tlv_data = hk_tlv_add_uint16(tlv_data, HK_TLV_CHARACTERISTIC_PROPERTIES, 0x1);
-    tlv_data = hk_tlv_add_str(tlv_data, HK_TLV_USER_DESCRIPTION, "Version");
-    tlv_data = hk_tlv_add_buffer(tlv_data, HK_TLV_PRESENTATION_FORMAT, hk_formats_ble_get(callback_info->characteristic_type), 7);
-    // Characteristic Presentation Format: 0x19: string; 0x00: no exponent; 0x2700: unit = unitless; 0x01: Bluetooth SIG namespace; 0x0000: No description
-    //tlv_data = hk_tlv_add_str(tlv_data, HK_TLV_VALID_RANGE, HK_CHR_VERSION);
-    //tlv_data = hk_tlv_add_str(tlv_data, HK_TLV_STEP_VALUE, HK_CHR_VERSION);
-    //size_t tlv_size = hk_tlv_get_size(tlv_data);
-
-    hk_tlv_serialize(tlv_data, response);
-}
-
 static int hk_gatt_read_characteristic(struct ble_gatt_access_ctxt *ctxt, void *arg)
 {
     int rc = 0;
     const ble_uuid128_t *characteristic_uuid = BLE_UUID128(ctxt->chr->uuid);
     hk_logu("Access to characteristic", characteristic_uuid);
-    hk_gatt_callback_info_t* callback_info = (hk_gatt_callback_info_t*)arg;
+    hk_session_t* session = (hk_session_t*)arg;
 
     if(hk_gatt_cmp(characteristic_uuid, (ble_uuid128_t *)&hk_uuid_manager_service_id)){
-        HK_LOGD("Returning instance id for service: %d", callback_info->service_id);
-        uint16_t id = callback_info->service_id;
+        HK_LOGD("Returning instance id for service: %d", session->service_id);
+        uint16_t id = session->service_id;
         rc = os_mbuf_append(ctxt->om, &id, sizeof(uint16_t));
     } else {
         // todo: next 5 lines probably not needed
@@ -89,9 +59,9 @@ static int hk_gatt_read_characteristic(struct ble_gatt_access_ctxt *ctxt, void *
         // hk_log_print_bytewise("Request", buffer, out_len); 
         
         hk_mem *response = hk_mem_create();
-        switch(callback_info->last_opcode){
+        switch(session->last_opcode){
             case 1:
-                hk_gatt_signature_request(characteristic_uuid, callback_info, response);
+                hk_signature_response(characteristic_uuid, session, response);
                 break;
             default:
                 HK_LOGE("Unknown opcode.");
@@ -99,7 +69,7 @@ static int hk_gatt_read_characteristic(struct ble_gatt_access_ctxt *ctxt, void *
 
         char out_buffer[5];
         out_buffer[0] = 0b00000010; // control field, always 1
-        out_buffer[1] = callback_info->transaction_id;
+        out_buffer[1] = session->transaction_id;
         out_buffer[2] = 0; // status: zero for successful
         out_buffer[3] = response->size; // body len
         out_buffer[4] = 0; // body len
@@ -122,11 +92,11 @@ static int hk_gatt_read_descriptor(struct ble_gatt_access_ctxt *ctxt, void *arg)
     hk_logu("Access to characteristic", characteristic_uuid);
     const ble_uuid128_t *descriptor_uuid = BLE_UUID128(ctxt->dsc->uuid);
     hk_logu("Access to descriptor", descriptor_uuid);
-    hk_gatt_callback_info_t* callback_info = (hk_gatt_callback_info_t*)arg;
+    hk_session_t* session = (hk_session_t*)arg;
 
     if(hk_gatt_cmp(descriptor_uuid, (ble_uuid128_t *)&hk_uuid_manager_desciptor_instance_id)){
-        HK_LOGD("Returning instance id for characteristic: %d", callback_info->characteristic_index);
-        uint16_t id = callback_info->characteristic_index;
+        HK_LOGD("Returning instance id for characteristic: %d", session->characteristic_index);
+        uint16_t id = session->characteristic_index;
         rc = os_mbuf_append(ctxt->om, &id, sizeof(uint16_t));
     } else {
         HK_LOGE("Operation not implemented.");
@@ -139,7 +109,7 @@ static int hk_gatt_write_characteristic(struct ble_gatt_access_ctxt *ctxt, void 
 {
     int rc = 0;
     const ble_uuid128_t *characteristic_uuid = BLE_UUID128(ctxt->chr->uuid);
-    hk_gatt_callback_info_t *callback_info = (hk_gatt_callback_info_t*)arg;
+    hk_session_t *session = (hk_session_t*)arg;
     hk_logu("Access to characteristic", characteristic_uuid);
 
     int buffer_len = OS_MBUF_PKTLEN(ctxt->om);
@@ -147,8 +117,8 @@ static int hk_gatt_write_characteristic(struct ble_gatt_access_ctxt *ctxt, void 
     uint16_t out_len = 0;
     rc = ble_hs_mbuf_to_flat(ctxt->om, buffer, buffer_len, &out_len);
     hk_log_print_bytewise("Request", buffer, out_len); 
-    callback_info->last_opcode = buffer[1];
-    callback_info->transaction_id = buffer[2];
+    session->last_opcode = buffer[1];
+    session->transaction_id = buffer[2];
     rc = rc == 0 ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES;
 
     return rc;
@@ -221,12 +191,12 @@ void hk_gatt_characteristic_init(
     hk_ble_characteristic_t *characteristic,
     const ble_uuid_t *service_uuid,
     ble_uuid128_t *characteristic_uuid,
-    hk_gatt_callback_info_t *callback_info)
+    hk_session_t *session)
 {
     characteristic->uuid = &characteristic_uuid->u;
     characteristic->access_cb = hk_gatt_access_callback;
     characteristic->flags = BLE_GATT_CHR_F_READ | BLE_GATT_CHR_F_WRITE | BLE_GATT_CHR_PROP_READ;
-    characteristic->arg = (void*)callback_info;
+    characteristic->arg = (void*)session;
 
     size_t memory_size = 3 * sizeof(hk_ble_descriptor_t);
     characteristic->descriptors = (hk_ble_descriptor_t *)malloc(memory_size);
@@ -234,12 +204,12 @@ void hk_gatt_characteristic_init(
 
     characteristic->descriptors[0].uuid = &hk_uuid_manager_desciptor_instance_id.u;
     characteristic->descriptors[0].att_flags = BLE_ATT_F_READ;
-    characteristic->descriptors[0].arg = (void *)callback_info;
+    characteristic->descriptors[0].arg = (void *)session;
     characteristic->descriptors[0].access_cb = hk_gatt_access_callback;
 
     characteristic->descriptors[1].uuid = &hk_uuid_manager_descriptor_format.u;
     characteristic->descriptors[1].att_flags = BLE_ATT_F_READ;
-    characteristic->descriptors[1].arg = (void *)callback_info;
+    characteristic->descriptors[1].arg = (void *)session;
     characteristic->descriptors[1].access_cb = hk_gatt_access_callback;
 }
 
@@ -271,13 +241,13 @@ void hk_gatt_add_service(hk_service_types_t service_type, bool primary, bool hid
 
     // add service id characteristic
     hk_ble_characteristic_t *characteristic = hk_gatt_alloc_new_characteristic(service); // todo: combine in one function
-    hk_gatt_callback_info_t *callback_info = (hk_gatt_callback_info_t*)malloc(sizeof(hk_gatt_callback_info_t));
-    callback_info->static_data = NULL;
-    callback_info->service_id 
+    hk_session_t *session = (hk_session_t*)malloc(sizeof(hk_session_t));
+    session->static_data = NULL;
+    session->service_id 
         = hk_gatt_setup_info->service_id 
-        = callback_info->characteristic_index
+        = session->characteristic_index
         = hk_gatt_setup_info->instance_id++;
-    hk_gatt_characteristic_init(characteristic, service->uuid, (ble_uuid128_t *)&hk_uuid_manager_service_id, callback_info);
+    hk_gatt_characteristic_init(characteristic, service->uuid, (ble_uuid128_t *)&hk_uuid_manager_service_id, session);
 }
 
 void *hk_gatt_add_characteristic(
@@ -289,17 +259,17 @@ void *hk_gatt_add_characteristic(
     hk_ble_service_t *current_service = &hk_gatt_services[hk_gatt_setup_info->service_index];
     ble_uuid128_t *characteristic_uuid = hk_uuid_manager_get((uint8_t)characteristic_type);
     hk_ble_characteristic_t *characteristic = hk_gatt_alloc_new_characteristic(current_service);
-    hk_gatt_callback_info_t *callback_info = (hk_gatt_callback_info_t*)malloc(sizeof(hk_gatt_callback_info_t));
-    callback_info->static_data = NULL;
-    callback_info->service_uuid = (ble_uuid128_t*)current_service->uuid;
-    callback_info->service_index = hk_gatt_setup_info->service_index;
-    callback_info->service_id = hk_gatt_setup_info->service_id ;
-    callback_info->characteristic_index = hk_gatt_setup_info->instance_id++;
-    callback_info->characteristic_type = characteristic_type;
-    callback_info->transaction_id = -1;
-    callback_info->last_opcode = -1;
+    hk_session_t *session = (hk_session_t*)malloc(sizeof(hk_session_t));
+    session->static_data = NULL;
+    session->service_uuid = (ble_uuid128_t*)current_service->uuid;
+    session->service_index = hk_gatt_setup_info->service_index;
+    session->service_id = hk_gatt_setup_info->service_id ;
+    session->characteristic_index = hk_gatt_setup_info->instance_id++;
+    session->characteristic_type = characteristic_type;
+    session->transaction_id = -1;
+    session->last_opcode = -1;
 
-    hk_gatt_characteristic_init(characteristic, current_service->uuid, characteristic_uuid, callback_info);
+    hk_gatt_characteristic_init(characteristic, current_service->uuid, characteristic_uuid, session);
     return NULL;
 }
 
@@ -308,17 +278,17 @@ void hk_gatt_add_characteristic_static_read(hk_characteristic_types_t characteri
     hk_ble_service_t *current_service = &hk_gatt_services[hk_gatt_setup_info->service_index];
     ble_uuid128_t *characteristic_uuid = hk_uuid_manager_get((uint8_t)characteristic_type);
     hk_ble_characteristic_t *characteristic = hk_gatt_alloc_new_characteristic(current_service);
-    hk_gatt_callback_info_t *callback_info = (hk_gatt_callback_info_t*)malloc(sizeof(hk_gatt_callback_info_t));
-    callback_info->static_data = value;
-    callback_info->service_uuid = (ble_uuid128_t*)current_service->uuid;
-    callback_info->service_index = hk_gatt_setup_info->service_index;
-    callback_info->service_id = hk_gatt_setup_info->service_id ;
-    callback_info->characteristic_index = hk_gatt_setup_info->instance_id++;
-    callback_info->characteristic_type = characteristic_type;
-    callback_info->transaction_id = -1;
-    callback_info->last_opcode = -1;
+    hk_session_t *session = (hk_session_t*)malloc(sizeof(hk_session_t));
+    session->static_data = value;
+    session->service_uuid = (ble_uuid128_t*)current_service->uuid;
+    session->service_index = hk_gatt_setup_info->service_index;
+    session->service_id = hk_gatt_setup_info->service_id ;
+    session->characteristic_index = hk_gatt_setup_info->instance_id++;
+    session->characteristic_type = characteristic_type;
+    session->transaction_id = -1;
+    session->last_opcode = -1;
 
-    hk_gatt_characteristic_init(characteristic, current_service->uuid, characteristic_uuid, callback_info);
+    hk_gatt_characteristic_init(characteristic, current_service->uuid, characteristic_uuid, session);
 }
 
 void hk_gatt_end_config()

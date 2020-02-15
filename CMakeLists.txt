@@ -6,7 +6,7 @@ if(CONFIG_ESP32_HAP_STACK_IP)
 endif()
 
 if(CONFIG_ESP32_HAP_STACK_BLE)
-    list(APPEND COMPONENT_SRCDIRS src/stacks/ble)
+    list(APPEND COMPONENT_SRCDIRS src/stacks/ble src/stacks/ble/operations)
 endif()
 
 set(COMPONENT_ADD_INCLUDEDIRS src/include)
