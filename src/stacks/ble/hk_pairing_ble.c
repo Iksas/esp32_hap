@@ -20,7 +20,7 @@ void *hk_pairing_ble_read_pair_setup(size_t* response_length)
 
 void *hk_pairing_ble_write_pair_setup(void *request, size_t request_length, size_t* response_length)
 {    
-    hk_pairing_ble_request = hk_mem_create(); // todo: never freed, but should be. Thinkabout a homekit data structure as public interface
+    hk_pairing_ble_request = hk_mem_create(); // todo: never freed, but should be. Thinkabout a hk data structure as public interface
     hk_pairing_ble_response = hk_mem_create();
     hk_pairing_ble_device_id = hk_mem_create();
     hk_mem_append_buffer(hk_pairing_ble_request, request, request_length);

@@ -2,7 +2,7 @@
 
 #include <freertos/FreeRTOS.h>
 
-#include "../include/homekit_chrs.h"
+#include "../include/hk_chrs.h"
 
 typedef enum
 {

@@ -5,7 +5,7 @@
 #include "../../utils/hk_logging.h"
 #include "../../utils/hk_store.h"
 #include "../../utils/hk_util.h"
-#include "../../include/homekit_categories.h"
+#include "../../include/hk_categories.h"
 
 void hk_advertising_add_txt(const char *key, const char *format, ...)
 {

@@ -1,8 +1,8 @@
 #pragma once
 
-#include "homekit_srvs.h"
-#include "homekit_chrs.h"
-#include "homekit_categories.h"
+#include "hk_srvs.h"
+#include "hk_chrs.h"
+#include "hk_categories.h"
 #include <stdlib.h>
 #include <stdbool.h>
 

@@ -1,5 +1,5 @@
-#include "../include/homekit.h"
-#include "../include/homekit_fascade.h"
+#include "../include/hk.h"
+#include "../include/hk_fascade.h"
 
 #include <stdbool.h>
 void hk_setup_dummy_identify(){
@@ -13,8 +13,8 @@ void *hk_setup_add_switch(
     const char *revision, 
     bool primary, 
     void (*identify)(), 
-    void *(*read)(), 
-    void (*write)(void *, size_t, size_t*))
+    void *(*read)(size_t*), 
+    void *(*write)(void *, size_t, size_t*))
 {
     hk_setup_add_accessory(name, manufacturer, model, serial_number, revision, identify);
     hk_setup_add_srv(HK_SRV_SWITCH, primary, false);
@@ -28,7 +28,7 @@ void *hk_setup_add_motion_sensor(
     const char *serial_number, 
     const char *revision, 
     bool primary,
-    void *(*read)())
+    void *(*read)(size_t*))
 {
     hk_setup_add_accessory(name, manufacturer, model, serial_number, revision, hk_setup_dummy_identify);
     //hk_setup_add_srv(HK_SRV_MOTION_SENSOR, primary, false);

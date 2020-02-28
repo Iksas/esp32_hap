@@ -1,5 +1,5 @@
 #include "../../utils/hk_logging.h"
-#include "../../include/homekit.h"
+#include "../../include/hk.h"
 #include "../../utils/hk_store.h"
 #include "../../common/hk_pairings_store.h"
 #include "hk_nimble.h"

@@ -1,7 +1,7 @@
 #include "hk_accessories_serializer.h"
 
-#include "../../include/homekit_srvs.h"
-#include "../../include/homekit_chrs.h"
+#include "../../include/hk_srvs.h"
+#include "../../include/hk_chrs.h"
 #include "../../common/hk_chrs_properties.h"
 #include "../../utils/hk_logging.h"
 #include "../../utils/hk_ll.h"

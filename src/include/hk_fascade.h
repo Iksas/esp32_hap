@@ -8,7 +8,7 @@ void *hk_setup_add_switch(
     const char *revision,
     bool primary,
     void (*identify)(),
-    void *(*read)(),
+    void *(*read)(size_t*),
     void (*write)(void *, size_t, size_t*));
 
 void *hk_setup_add_motion_sensor(
@@ -18,4 +18,4 @@ void *hk_setup_add_motion_sensor(
     const char *serial_number,
     const char *revision,
     bool primary,
-    void *(*read)());
+    void *(*read)(size_t*));
