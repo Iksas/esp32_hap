@@ -11,10 +11,10 @@ typedef struct
 
 hk_mem *hk_mem_create();
 void hk_mem_append(hk_mem *mem, hk_mem *mem_to_append);
-void hk_mem_append_buffer(hk_mem *mem, char *data, size_t size);
+void hk_mem_append_buffer(hk_mem *mem, void *data, size_t size);
 void hk_mem_append_string(hk_mem *mem, const char *string);
 void hk_mem_append_string_terminator(hk_mem *mem);
-void hk_mem_prepend_buffer(hk_mem *mem, char *data, size_t size);
+void hk_mem_prepend_buffer(hk_mem *mem, void *data, size_t size);
 void hk_mem_set(hk_mem *mem, size_t size);
 void hk_mem_free(hk_mem *mem);
 

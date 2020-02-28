@@ -16,7 +16,7 @@ void hk_mem_append(hk_mem *mem, hk_mem *mem_to_append)
     hk_mem_append_buffer(mem, mem_to_append->ptr, mem_to_append->size);
 }
 
-void hk_mem_append_buffer(hk_mem *mem, char *data, size_t size)
+void hk_mem_append_buffer(hk_mem *mem, void *data, size_t size)
 {
     size_t new_size = mem->size + size;
     mem->ptr = realloc(mem->ptr, new_size);
@@ -26,7 +26,7 @@ void hk_mem_append_buffer(hk_mem *mem, char *data, size_t size)
 
 void hk_mem_append_string(hk_mem *mem, const char *string)
 {
-    hk_mem_append_buffer(mem, (char *)string, strlen(string));
+    hk_mem_append_buffer(mem, (void *)string, strlen(string));
 }
 
 void hk_mem_append_string_terminator(hk_mem *mem)
@@ -35,7 +35,7 @@ void hk_mem_append_string_terminator(hk_mem *mem)
     mem->ptr[mem->size - 1] = 0;
 }
 
-void hk_mem_prepend_buffer(hk_mem *mem, char *data, size_t size)
+void hk_mem_prepend_buffer(hk_mem *mem, void *data, size_t size)
 {
     size_t new_size = mem->size + size;
     mem->ptr = realloc(mem->ptr, new_size);
