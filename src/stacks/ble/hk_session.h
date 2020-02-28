@@ -2,7 +2,7 @@
 
 #include <host/ble_hs.h>
 
-#include "../../utils/hk_mem.h"
+#include "../../include/hk_mem.h"
 #include "../../common/hk_chrs_properties.h"
 
 typedef struct

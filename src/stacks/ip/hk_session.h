@@ -5,7 +5,7 @@
 #include <freertos/FreeRTOS.h>
 #include <freertos/queue.h>
 
-#include "../../utils/hk_mem.h"
+#include "../../include/hk_mem.h"
 #include "../../common/hk_pair_verify_keys.h"
 
 #define HK_SESSION_RESPONSE_MESSAGE 0

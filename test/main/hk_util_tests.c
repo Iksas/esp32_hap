@@ -1,7 +1,7 @@
 #include "unity.h"
 
 #include "../../utils/hk_util.h"
-#include "../../utils/hk_mem.h"
+#include "../../include/hk_mem.h"
 
 
 TEST_CASE("Util: get accessory id", "[util]")

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../utils/hk_mem.h"
+#include "../include/hk_mem.h"
 #include "../utils/hk_tlv.h"
 
 #include <esp_err.h>

@@ -1,6 +1,6 @@
 #include "unity.h"
 
-#include "../../utils/hk_mem.h"
+#include "../../include/hk_mem.h"
 #include "../../utils/hk_store.h"
 #include "../../utils/hk_logging.h"
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../utils/hk_mem.h"
+#include "../include/hk_mem.h"
 
 enum hk_hkdf_types {
     HK_HKDF_PAIR_SETUP_ENCRYPT,

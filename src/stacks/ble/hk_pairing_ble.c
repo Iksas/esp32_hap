@@ -1,7 +1,7 @@
 #include "hk_pairing_ble.h"
 
 #include "../../utils/hk_tlv.h"
-#include "../../utils/hk_mem.h"
+#include "../../include/hk_mem.h"
 #include "../../common/hk_pair_setup.h"
 
 const uint8_t hk_paring_ble_features = 0; //zero because non mfi certified

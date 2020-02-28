@@ -2,7 +2,7 @@
 
 #include <esp_err.h>
 
-#include "../../utils/hk_mem.h"
+#include "../../include/hk_mem.h"
 #include "hk_session.h"
 
 esp_err_t hk_html_parser_parse(hk_mem* message, hk_session_t *data);

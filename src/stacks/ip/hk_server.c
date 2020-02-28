@@ -6,7 +6,7 @@
 #include <esp_http_server.h>
 
 #include "../../utils/hk_logging.h"
-#include "../../utils/hk_mem.h"
+#include "../../include/hk_mem.h"
 #include "../../utils/hk_store.h"
 #include "../../utils/hk_util.h"
 #include "../../common/hk_pair_setup.h"

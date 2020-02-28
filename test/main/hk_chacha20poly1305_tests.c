@@ -2,7 +2,7 @@
 
 #include "../crypto/hk_curve25519.h"
 #include "../crypto/hk_chacha20poly1305.h"
-#include "../../utils/hk_mem.h"
+#include "../../include/hk_mem.h"
 
 
 TEST_CASE("export key", "[crypto, curve25519]")

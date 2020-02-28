@@ -2,7 +2,7 @@
 
 #include <cJSON.h>
 
-#include "../../utils/hk_mem.h"
+#include "../../include/hk_mem.h"
 #include "hk_accessories_store.h"
 
 void hk_accessories_serializer_value(hk_chr_t *chr, cJSON *j_chr);

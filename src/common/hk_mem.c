@@ -1,5 +1,5 @@
 #include "hk_mem.h"
-#include "hk_logging.h"
+#include "../utils/hk_logging.h"
 
 #include <string.h>
 

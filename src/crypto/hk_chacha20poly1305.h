@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../utils/hk_mem.h"
+#include "../include/hk_mem.h"
 
 #define HK_CHACHA_SETUP_MSG5 "\x0\x0\x0\x0PS-Msg05"
 #define HK_CHACHA_SETUP_MSG6 "\x0\x0\x0\x0PS-Msg06"

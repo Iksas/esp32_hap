@@ -6,7 +6,7 @@
 #include "../utils/hk_tlv.h"
 #include "../utils/hk_store.h"
 #include "../utils/hk_util.h"
-#include "../utils/hk_mem.h"
+#include "../include/hk_mem.h"
 #include "../crypto/hk_srp.h"
 #include "../crypto/hk_hkdf.h"
 #include "../crypto/hk_ed25519.h"
