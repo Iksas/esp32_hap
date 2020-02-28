@@ -38,7 +38,7 @@ void hk_chrs_get(hk_session_t *session)
     if (res == ESP_OK)
     {
         cJSON *j_chrs = cJSON_CreateArray();
-        cJSON_AddItemToObject(j_root, "chrs", j_chrs);
+        cJSON_AddItemToObject(j_root, "characteristics", j_chrs);
         char *id_ptr = ids->ptr;
         session->response->result = HK_RES_OK;
         while (id_ptr != NULL)
@@ -103,7 +103,7 @@ void hk_chrs_notify(void *chr_ptr)
     cJSON_AddItemToArray(j_chrs, j_chr);
 
     cJSON *j_root = cJSON_CreateObject();
-    cJSON_AddItemToObject(j_root, "chrs", j_chrs);
+    cJSON_AddItemToObject(j_root, "characteristics", j_chrs);
 
     char *serialized = cJSON_PrintUnformatted(j_root);
     cJSON_Delete(j_root);
@@ -148,8 +148,9 @@ void hk_chrs_write(hk_session_t *session, cJSON *j_chr)
     {
         cJSON *j_value = cJSON_GetObjectItem(j_chr, "value");
         hk_format_t format = hk_chrs_properties_get_type(chr->type);
-        void *value = NULL;
         bool bool_value = false;
+        hk_mem* write_request = hk_mem_create();
+        hk_mem* write_response = hk_mem_create();
 
         switch (format)
         {
@@ -171,7 +172,7 @@ void hk_chrs_write(hk_session_t *session, cJSON *j_chr)
                 HK_LOGE("Failed to update %d.%d: value is not a boolean or 0/1", aid, iid);
                 ret = ESP_FAIL;
             }
-            value = &bool_value;
+            hk_mem_append_buffer(write_request, (char*)&bool_value, sizeof(bool));
             break;
         case HK_FORMAT_UINT8:
         case HK_FORMAT_UINT16:
@@ -186,7 +187,7 @@ void hk_chrs_write(hk_session_t *session, cJSON *j_chr)
                 ret = ESP_FAIL;
             }
 
-            value = &j_value->valueint;
+            hk_mem_append_buffer(write_request, (char*)&j_value->valueint, sizeof(int));
 
             break;
         case HK_FORMAT_FLOAT:
@@ -196,7 +197,7 @@ void hk_chrs_write(hk_session_t *session, cJSON *j_chr)
                 ret = ESP_FAIL;
             }
 
-            value = &j_value->valuedouble;
+            hk_mem_append_buffer(write_request, (char*)&j_value->valuedouble, sizeof(double));
 
             break;
         case HK_FORMAT_STRING:
@@ -206,7 +207,7 @@ void hk_chrs_write(hk_session_t *session, cJSON *j_chr)
                 ret = ESP_FAIL;
             }
 
-            value = j_value->valuestring;
+            hk_mem_append_string(write_request, j_value->valuestring);
             break;
         case HK_FORMAT_TLV8:
             HK_LOGW("Writing tlv not implemented.");
@@ -222,10 +223,18 @@ void hk_chrs_write(hk_session_t *session, cJSON *j_chr)
         if (!ret)
         {
             HK_LOGD("%d - Writing chr %d.%d.", session->socket, aid, iid);
-            chr->write(value);
-            hk_html_response_send_empty(session, HK_HTML_204);
+
+            chr->write(write_request, write_response);
+            if(write_response->size > 0){
+                HK_LOGW("Writing data with response is not implemented.");
+            }else{
+                hk_html_response_send_empty(session, HK_HTML_204);
+            }
             hk_chrs_notify(chr);
         }
+
+        hk_mem_free(write_request);
+        hk_mem_free(write_response);
     }
 
     if (ret)
@@ -292,7 +301,7 @@ void hk_chrs_put(hk_session_t *session)
 
     if (session->response->result == HK_RES_OK)
     {
-        cJSON *j_chrs = cJSON_GetObjectItem(j_root, "chrs");
+        cJSON *j_chrs = cJSON_GetObjectItem(j_root, "characteristics");
         for (int i = 0; i < cJSON_GetArraySize(j_chrs) && session->response->result == HK_RES_OK; i++)
         {
             cJSON *j_chr = cJSON_GetArrayItem(j_chrs, i);
@@ -337,7 +346,7 @@ void hk_chrs_identify(hk_session_t *session)
     if (session->response->result == HK_RES_OK)
     {
         HK_LOGE("%d - Calling write on identify chr!", session->socket);
-        chr->write(NULL);
+        chr->write(NULL, NULL);
     }
 
     hk_session_send(session);

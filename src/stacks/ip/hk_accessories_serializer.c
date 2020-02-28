@@ -2,6 +2,7 @@
 
 #include "../../include/hk_srvs.h"
 #include "../../include/hk_chrs.h"
+#include "../../include/hk_mem.h"
 #include "../../common/hk_chrs_properties.h"
 #include "../../utils/hk_logging.h"
 #include "../../utils/hk_ll.h"
@@ -40,8 +41,10 @@ void hk_accessories_serializer_value(hk_chr_t *chr, cJSON *j_chr)
     hk_format_t format = hk_chrs_properties_get_type(chr->type);
     if (chr->read != NULL)
     {
-        void *value = chr->read();
-        cJSON_AddItemToObject(j_chr, "value", hk_accessories_serializer_format_value(format, value));
+        hk_mem* response = hk_mem_create();
+        chr->read(response);
+        cJSON_AddItemToObject(j_chr, "value", hk_accessories_serializer_format_value(format, response->ptr));
+        hk_mem_free(response);
     }
     else if (chr->static_value != NULL)
     {
@@ -137,7 +140,7 @@ void hk_accessories_serializer_srv(hk_srv_t *srv, cJSON *j_srvs)
     //cJSON_AddBoolToObject(j_srv, "hidden", srv->hidden);
 
     cJSON *j_chrs = cJSON_CreateArray();
-    cJSON_AddItemToObject(j_srv, "chrs", j_chrs);
+    cJSON_AddItemToObject(j_srv, "characteristics", j_chrs);
 
     hk_ll_foreach(srv->chrs, chr)
     {
@@ -152,7 +155,7 @@ void hk_accessories_serializer_accessory(hk_accessory_t *accessory, cJSON *j_acc
     cJSON_AddItemToArray(j_accessories, j_accessory);
 
     cJSON *j_srvs = cJSON_CreateArray();
-    cJSON_AddItemToObject(j_accessory, "srvs", j_srvs);
+    cJSON_AddItemToObject(j_accessory, "services", j_srvs);
 
     hk_ll_foreach(accessory->srvs, srv)
     {

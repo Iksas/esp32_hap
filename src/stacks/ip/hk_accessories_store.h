@@ -3,6 +3,7 @@
 #include "../../include/hk_chrs.h"
 #include "../../include/hk_srvs.h"
 #include "../../include/hk_chrs.h"
+#include "../../include/hk_mem.h"
 #include "../../common/hk_chrs_properties.h"
 
 #include <stdlib.h>

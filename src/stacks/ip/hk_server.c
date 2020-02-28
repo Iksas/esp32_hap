@@ -58,15 +58,16 @@ void hk_server_handle(hk_session_t *session)
     else if (hk_mem_cmp_str(session->request->url, "/accessories") && HK_SESSION_HTML_METHOD_GET == session->request->method)
     {
         hk_accessories_serializer_accessories(session->response->content);
+        hk_log_print_as_string("accs", session->response->content->ptr, session->response->content->size);
         session->response->content_type = HK_SESSION_CONTENT_JSON;
         HK_LOGD("%d - Returning accessories.", session->socket);
         hk_session_send(session);
     }
-    else if (hk_mem_cmp_str(session->request->url, "/chrs") && HK_SESSION_HTML_METHOD_GET == session->request->method)
+    else if (hk_mem_cmp_str(session->request->url, "/characteristics") && HK_SESSION_HTML_METHOD_GET == session->request->method)
     {
         hk_chrs_get(session);
     }
-    else if (hk_mem_cmp_str(session->request->url, "/chrs") && HK_SESSION_HTML_METHOD_PUT == session->request->method)
+    else if (hk_mem_cmp_str(session->request->url, "/characteristics") && HK_SESSION_HTML_METHOD_PUT == session->request->method)
     {
         hk_chrs_put(session);
     }
