@@ -1,7 +1,7 @@
 #pragma once
 
 #include <stdlib.h>
-#include "hk_mem.h"
+#include "../include/hk_mem.h"
 #include "hk_res.h"
 
 enum hk_tlv_params
@@ -76,6 +76,7 @@ hk_tlv_t *hk_tlv_add_state(hk_tlv_t *tlv_list, enum hk_tlv_types type);
 hk_tlv_t *hk_tlv_add_error(hk_tlv_t *tlv_list, enum hk_tlv_errors error);
 hk_tlv_t *hk_tlv_add_str(hk_tlv_t *tlv_list, char type, char *data);
 hk_tlv_t *hk_tlv_add_buffer(hk_tlv_t *tlv_list, char type, char *data, size_t length);
+hk_tlv_t *hk_tlv_add_mem(hk_tlv_t *tlv_list, char type, hk_mem* mem);
 hk_tlv_t *hk_tlv_add_uint8(hk_tlv_t *tlv_list, char type, uint8_t data);
 hk_tlv_t *hk_tlv_add_uint16(hk_tlv_t *tlv_list, char type, uint16_t data);
 hk_tlv_t *hk_tlv_add(hk_tlv_t *tlv_list, char type, hk_mem *data);

@@ -13,8 +13,8 @@ void *hk_setup_add_switch(
     const char *revision, 
     bool primary, 
     void (*identify)(), 
-    void *(*read)(size_t*), 
-    void *(*write)(void *, size_t, size_t*))
+    void (*read)(hk_mem* response), 
+    void (*write)(hk_mem* request, hk_mem* response))
 {
     hk_setup_add_accessory(name, manufacturer, model, serial_number, revision, identify);
     hk_setup_add_srv(HK_SRV_SWITCH, primary, false);
@@ -28,7 +28,7 @@ void *hk_setup_add_motion_sensor(
     const char *serial_number, 
     const char *revision, 
     bool primary,
-    void *(*read)(size_t*))
+    void (*read)(hk_mem* response))
 {
     hk_setup_add_accessory(name, manufacturer, model, serial_number, revision, hk_setup_dummy_identify);
     //hk_setup_add_srv(HK_SRV_MOTION_SENSOR, primary, false);

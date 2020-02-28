@@ -44,6 +44,9 @@ hk_tlv_t *hk_tlv_add_buffer(hk_tlv_t *tlv_list, char type, char *data, size_t si
 
     return tlv_list;
 }
+hk_tlv_t *hk_tlv_add_mem(hk_tlv_t *tlv_list, char type, hk_mem* mem){
+    return hk_tlv_add_buffer(tlv_list, type, mem->ptr, mem->size);
+}
 
 hk_tlv_t *hk_tlv_add_str(hk_tlv_t *tlv_list, char type, char *data)
 {

@@ -40,7 +40,7 @@ void hk_setup_add_srv(hk_srv_types_t srv_type, bool primary, bool hidden)
     hk_accessories_store_add_srv(srv_type, primary, hidden);
 }
 
-void *hk_setup_add_chr(hk_chr_types_t type, void *(*read)(), void (*write)(void *, size_t), bool can_notify)
+void *hk_setup_add_chr(hk_chr_types_t type, void (*read)(hk_mem* response), void (*write)(hk_mem* request, hk_mem* response), bool can_notify)
 {
     return hk_accessories_store_add_chr(type, read, write, can_notify);
 }

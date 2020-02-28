@@ -14,8 +14,8 @@ typedef struct
     size_t aid;
     hk_chr_types_t type;
     void *static_value;
-    void *(*read)();
-    void (*write)(void *);
+    void (*read)(hk_mem* response);
+    void (*write)(hk_mem* request, hk_mem* response);
     bool can_notify;
 } hk_chr_t;
 
@@ -36,7 +36,7 @@ typedef struct
 
 void hk_accessories_store_add_accessory();
 void hk_accessories_store_add_srv(hk_srv_types_t srv_type, bool primary, bool hidden);
-void* hk_accessories_store_add_chr(hk_chr_types_t chr_type, void *(*read)(), void (*write)(void *), bool can_notify);
+void* hk_accessories_store_add_chr(hk_chr_types_t chr_type, void (*read)(hk_mem* response), void (*write)(hk_mem* request, hk_mem* response), bool can_notify);
 void hk_accessories_store_add_chr_static_read(hk_chr_types_t type, void *value);
 void hk_accessories_store_end_config();
 

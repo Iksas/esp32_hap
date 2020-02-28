@@ -10,8 +10,8 @@ typedef struct
     uint8_t transaction_id;
     uint8_t last_opcode;
     const char* static_data;
-    void *(*read_callback)(size_t*);
-    void *(*write_callback)(void *, size_t, size_t*);
+    void (*read_callback)(hk_mem* response);
+    void (*write_callback)(hk_mem* request, hk_mem* response);
     char srv_index;
     char srv_id;
     const ble_uuid128_t* srv_uuid;
