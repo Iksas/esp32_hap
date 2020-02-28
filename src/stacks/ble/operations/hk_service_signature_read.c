@@ -5,7 +5,7 @@
 
 #include "../hk_formats_ble.h"
 
-enum hk_service_signature_read_characteristic_properties
+enum hk_service_signature_read_chr_properties
 {
     CHARACTERISTIC_SUPPORTS_READ = 0x0001,
     CHARACTERISTIC_SUPPORTS_WRITE = 0x0002,
@@ -19,7 +19,7 @@ enum hk_service_signature_read_characteristic_properties
     CHARACTERISTIC_SUPPORTS_BROADCAST_NOTIFICATION = 0x0200
 };
 
-void hk_service_signature_read_response(const ble_uuid128_t *characteristic_uuid, hk_session_t *session, hk_mem* response)
+void hk_service_signature_read_response(const ble_uuid128_t *chr_uuid, hk_session_t *session, hk_mem* response)
 {
     uint16_t properties = CHARACTERISTIC_SUPPORTS_ADDITONAL_AUTHORIZATION_DATA;
     hk_tlv_t *tlv_data = NULL;

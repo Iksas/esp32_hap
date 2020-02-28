@@ -1,8 +1,8 @@
 #include "hk_accessories_serializer.h"
 
 #include "../../include/homekit_services.h"
-#include "../../include/homekit_characteristics.h"
-#include "../../common/hk_characteristics_properties.h"
+#include "../../include/homekit_chrs.h"
+#include "../../common/hk_chrs_properties.h"
 #include "../../utils/hk_logging.h"
 #include "../../utils/hk_ll.h"
 
@@ -35,91 +35,91 @@ cJSON *hk_accessories_serializer_format_value(hk_format_t format, void *value)
     }
 }
 
-void hk_accessories_serializer_value(hk_characteristic_t *characteristic, cJSON *j_characteristic)
+void hk_accessories_serializer_value(hk_chr_t *chr, cJSON *j_chr)
 {
-    hk_format_t format = hk_characteristics_properties_get_type(characteristic->type);
-    if (characteristic->read != NULL)
+    hk_format_t format = hk_chrs_properties_get_type(chr->type);
+    if (chr->read != NULL)
     {
-        void *value = characteristic->read();
-        cJSON_AddItemToObject(j_characteristic, "value", hk_accessories_serializer_format_value(format, value));
+        void *value = chr->read();
+        cJSON_AddItemToObject(j_chr, "value", hk_accessories_serializer_format_value(format, value));
     }
-    else if (characteristic->static_value != NULL)
+    else if (chr->static_value != NULL)
     {
-        cJSON_AddItemToObject(j_characteristic, "value", hk_accessories_serializer_format_value(format, characteristic->static_value));
+        cJSON_AddItemToObject(j_chr, "value", hk_accessories_serializer_format_value(format, chr->static_value));
     }
     else
     {
-        if (characteristic->type != HK_CHR_IDENTIFY)
+        if (chr->type != HK_CHR_IDENTIFY)
         {
-            cJSON_AddNullToObject(j_characteristic, "value");
+            cJSON_AddNullToObject(j_chr, "value");
         }
     }
 }
 
-void hk_accessories_serializer_format(hk_characteristic_t *characteristic, cJSON *j_characteristic)
+void hk_accessories_serializer_format(hk_chr_t *chr, cJSON *j_chr)
 {
-    hk_format_t format = hk_characteristics_properties_get_type(characteristic->type);
+    hk_format_t format = hk_chrs_properties_get_type(chr->type);
     switch (format)
     {
     case HK_FORMAT_BOOL:
-        cJSON_AddStringToObject(j_characteristic, "format", "bool");
+        cJSON_AddStringToObject(j_chr, "format", "bool");
         break;
     case HK_FORMAT_UINT8:
-        cJSON_AddStringToObject(j_characteristic, "format", "uint8");
+        cJSON_AddStringToObject(j_chr, "format", "uint8");
         break;
     case HK_FORMAT_UINT32:
-        cJSON_AddStringToObject(j_characteristic, "format", "uint32");
+        cJSON_AddStringToObject(j_chr, "format", "uint32");
         break;
     case HK_FORMAT_UINT64:
-        cJSON_AddStringToObject(j_characteristic, "format", "uint64");
+        cJSON_AddStringToObject(j_chr, "format", "uint64");
         break;
     case HK_FORMAT_INT:
-        cJSON_AddStringToObject(j_characteristic, "format", "int");
+        cJSON_AddStringToObject(j_chr, "format", "int");
         break;
     case HK_FORMAT_FLOAT:
-        cJSON_AddStringToObject(j_characteristic, "format", "float");
+        cJSON_AddStringToObject(j_chr, "format", "float");
         break;
     case HK_FORMAT_STRING:
-        cJSON_AddStringToObject(j_characteristic, "format", "string");
+        cJSON_AddStringToObject(j_chr, "format", "string");
         break;
     case HK_FORMAT_TLV8:
-        cJSON_AddStringToObject(j_characteristic, "format", "tlv8");
+        cJSON_AddStringToObject(j_chr, "format", "tlv8");
         break;
     case HK_FORMAT_DATA:
-        cJSON_AddStringToObject(j_characteristic, "format", "data");
+        cJSON_AddStringToObject(j_chr, "format", "data");
         break;
     default:
         HK_LOGE("Unknown format found: %d", format);
     }
 }
 
-void hk_accessories_serializer_perms(hk_characteristic_t *characteristic, cJSON *j_characteristic)
+void hk_accessories_serializer_perms(hk_chr_t *chr, cJSON *j_chr)
 {
     cJSON *j_perms = cJSON_CreateArray();
-    cJSON_AddItemToObject(j_characteristic, "perms", j_perms);
-    if (characteristic->read != NULL || characteristic->static_value != NULL)
+    cJSON_AddItemToObject(j_chr, "perms", j_perms);
+    if (chr->read != NULL || chr->static_value != NULL)
         cJSON_AddItemToArray(j_perms, cJSON_CreateString("pr"));
-    if (characteristic->write != NULL)
+    if (chr->write != NULL)
         cJSON_AddItemToArray(j_perms, cJSON_CreateString("pw"));
-    if (characteristic->can_notify)
+    if (chr->can_notify)
         cJSON_AddItemToArray(j_perms, cJSON_CreateString("ev"));
 }
 
-void hk_accessories_serializer_characteristic(hk_characteristic_t *characteristic, cJSON *j_characteristics)
+void hk_accessories_serializer_chr(hk_chr_t *chr, cJSON *j_chrs)
 {
-    cJSON *j_characteristic = cJSON_CreateObject();
-    cJSON_AddItemToArray(j_characteristics, j_characteristic);
+    cJSON *j_chr = cJSON_CreateObject();
+    cJSON_AddItemToArray(j_chrs, j_chr);
 
     char type[37] = {
         0,
     };
-    sprintf(type, HAP_UUID, characteristic->type);
-    cJSON_AddStringToObject(j_characteristic, "type", type);
-    cJSON_AddNumberToObject(j_characteristic, "iid", characteristic->iid);
+    sprintf(type, HAP_UUID, chr->type);
+    cJSON_AddStringToObject(j_chr, "type", type);
+    cJSON_AddNumberToObject(j_chr, "iid", chr->iid);
 
-    hk_accessories_serializer_perms(characteristic, j_characteristic);
-    hk_accessories_serializer_format(characteristic, j_characteristic);
-    hk_accessories_serializer_value(characteristic, j_characteristic);
+    hk_accessories_serializer_perms(chr, j_chr);
+    hk_accessories_serializer_format(chr, j_chr);
+    hk_accessories_serializer_value(chr, j_chr);
 }
 
 void hk_accessories_serializer_service(hk_service_t *service, cJSON *j_services)
@@ -136,12 +136,12 @@ void hk_accessories_serializer_service(hk_service_t *service, cJSON *j_services)
     cJSON_AddBoolToObject(j_service, "primary", service->primary);
     //cJSON_AddBoolToObject(j_service, "hidden", service->hidden);
 
-    cJSON *j_characteristics = cJSON_CreateArray();
-    cJSON_AddItemToObject(j_service, "characteristics", j_characteristics);
+    cJSON *j_chrs = cJSON_CreateArray();
+    cJSON_AddItemToObject(j_service, "chrs", j_chrs);
 
-    hk_ll_foreach(service->characteristics, characteristic)
+    hk_ll_foreach(service->chrs, chr)
     {
-        hk_accessories_serializer_characteristic(characteristic, j_characteristics);
+        hk_accessories_serializer_chr(chr, j_chrs);
     }
 }
 

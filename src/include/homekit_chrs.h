@@ -112,4 +112,4 @@ typedef enum {
     HK_CHR_SERVICE_LABEL_NAMESPACE = 0xCD,
     HK_CHR_COLOR_TEMPERATURE = 0xCE,
     HK_CHR_SERVICE_SIGNATURE = 0xA5,
-} hk_characteristic_types_t;
+} hk_chr_types_t;

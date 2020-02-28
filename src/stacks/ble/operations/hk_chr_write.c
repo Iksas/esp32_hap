@@ -1,11 +1,11 @@
-#include "hk_characteristic_write.h"
+#include "hk_chr_write.h"
 
 #include "../../../utils/hk_logging.h"
 #include "../../../utils/hk_tlv.h"
 
 #include "../hk_formats_ble.h"
 
-void hk_characteristic_write_response(const ble_uuid128_t *characteristic_uuid, hk_session_t *session, hk_mem* response)
+void hk_chr_write_response(const ble_uuid128_t *chr_uuid, hk_session_t *session, hk_mem* response)
 {
     hk_tlv_t *tlv_data = hk_tlv_deserialize(session->request);
     hk_tlv_t *value_tlv = hk_tlv_get_tlv_by_type(tlv_data, HK_TLV_VALUE);

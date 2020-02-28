@@ -3,7 +3,7 @@
 #include <host/ble_hs.h>
 
 #include "../../utils/hk_mem.h"
-#include "../../common/hk_characteristics_properties.h"
+#include "../../common/hk_chrs_properties.h"
 
 typedef struct
 {
@@ -15,8 +15,8 @@ typedef struct
     char service_index;
     char service_id;
     const ble_uuid128_t* service_uuid;
-    char characteristic_index;
-    hk_characteristic_types_t characteristic_type;
+    char chr_index;
+    hk_chr_types_t chr_type;
     int16_t max_length;
     int16_t min_length;
     hk_mem *request;

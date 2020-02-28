@@ -7,19 +7,19 @@
 
 typedef struct
 {
-    hk_characteristic_t *characteristic;
+    hk_chr_t *chr;
     hk_session_t **sessions;
 } hk_subscription_t;
 
 hk_subscription_t *subscriptions = NULL;
 
-hk_subscription_t *hk_subscription_store_get_subscription(hk_characteristic_t *characteristic)
+hk_subscription_t *hk_subscription_store_get_subscription(hk_chr_t *chr)
 {
     hk_subscription_t *subscription = NULL;
 
     hk_ll_foreach(subscriptions, current_subscription)
     {
-        if (current_subscription->characteristic == characteristic)
+        if (current_subscription->chr == chr)
         {
             subscription = current_subscription;
         }
@@ -28,9 +28,9 @@ hk_subscription_t *hk_subscription_store_get_subscription(hk_characteristic_t *c
     return subscription;
 }
 
-hk_session_t **hk_subscription_store_get_sessions(hk_characteristic_t *characteristic)
+hk_session_t **hk_subscription_store_get_sessions(hk_chr_t *chr)
 {
-    hk_subscription_t *subscription = hk_subscription_store_get_subscription(characteristic);
+    hk_subscription_t *subscription = hk_subscription_store_get_subscription(chr);
     if (subscription == NULL)
     {
         return NULL;
@@ -39,14 +39,14 @@ hk_session_t **hk_subscription_store_get_sessions(hk_characteristic_t *character
     return subscription->sessions;
 }
 
-void hk_subscription_store_add_session(hk_characteristic_t *characteristic, hk_session_t *session)
+void hk_subscription_store_add_session(hk_chr_t *chr, hk_session_t *session)
 {
-    hk_subscription_t *subscription = hk_subscription_store_get_subscription(characteristic);
+    hk_subscription_t *subscription = hk_subscription_store_get_subscription(chr);
 
     if (subscription == NULL)
     {
         subscription = subscriptions = hk_ll_new(subscriptions);
-        subscription->characteristic = characteristic;
+        subscription->chr = chr;
         subscription->sessions = NULL;
     }
     else
@@ -62,14 +62,14 @@ void hk_subscription_store_add_session(hk_characteristic_t *characteristic, hk_s
     }
 
     HK_LOGD("Adding session %d (%x) to subscription list of %x.", 
-        session->socket, (uint)session, (uint)characteristic);
+        session->socket, (uint)session, (uint)chr);
     subscription->sessions = hk_ll_new(subscription->sessions);
     *subscription->sessions = session;
 }
 
-void hk_subscription_store_remove_session_from_subscription(hk_characteristic_t *characteristic, hk_session_t *session)
+void hk_subscription_store_remove_session_from_subscription(hk_chr_t *chr, hk_session_t *session)
 {
-    hk_subscription_t *subscription = hk_subscription_store_get_subscription(characteristic);
+    hk_subscription_t *subscription = hk_subscription_store_get_subscription(chr);
 
     if (subscription != NULL)
     {
@@ -78,7 +78,7 @@ void hk_subscription_store_remove_session_from_subscription(hk_characteristic_t 
             if (*current_session == session)
             {
                 HK_LOGD("Removing session %d from subscription list of %x.", 
-                    session->socket, (uint)characteristic);
+                    session->socket, (uint)chr);
                 subscription->sessions = hk_ll_remove(subscription->sessions, current_session);
                 return;
             }
@@ -86,7 +86,7 @@ void hk_subscription_store_remove_session_from_subscription(hk_characteristic_t 
     }
 
     HK_LOGD("Could not remove subscription of session %d in subscription list of %x. It was not found.", 
-        session->socket, (uint)characteristic);
+        session->socket, (uint)chr);
 }
 
 void hk_subscription_store_remove_session(hk_session_t *session)

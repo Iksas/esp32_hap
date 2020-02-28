@@ -11,24 +11,24 @@
 
 #include "hk_session.h"
 #include "hk_uuid_manager.h"
-#include "operations/hk_characteristic_signature_read.h"
-#include "operations/hk_characteristic_write.h"
-#include "operations/hk_characteristic_read.h"
-#include "operations/hk_characteristic_timed_write.h"
-#include "operations/hk_characteristic_execute_write.h"
+#include "operations/hk_chr_signature_read.h"
+#include "operations/hk_chr_write.h"
+#include "operations/hk_chr_read.h"
+#include "operations/hk_chr_timed_write.h"
+#include "operations/hk_chr_execute_write.h"
 #include "operations/hk_service_signature_read.h"
-#include "operations/hk_characteristic_configuration.h"
+#include "operations/hk_chr_configuration.h"
 #include "operations/hk_protocol_configuration.h"
 
 typedef struct ble_gatt_svc_def hk_ble_service_t;
-typedef struct ble_gatt_chr_def hk_ble_characteristic_t;
+typedef struct ble_gatt_chr_def hk_ble_chr_t;
 typedef struct ble_gatt_dsc_def hk_ble_descriptor_t;
 
 typedef struct
 {
     int service_index;
     char service_id;
-    int characteristic_index;
+    int chr_index;
     uint16_t instance_id;
 } hk_gatt_setup_info_t;
 
@@ -47,14 +47,14 @@ static bool hk_gatt_cmp(const ble_uuid128_t *uuid1, const ble_uuid128_t *uuid2)
     return ble_uuid_cmp(&uuid1->u, &uuid2->u) == 0;
 }
 
-static int hk_gatt_read_characteristic(struct ble_gatt_access_ctxt *ctxt, void *arg)
+static int hk_gatt_read_ble_chr(struct ble_gatt_access_ctxt *ctxt, void *arg)
 {
     int rc = 0;
-    const ble_uuid128_t *characteristic_uuid = BLE_UUID128(ctxt->chr->uuid);
-    hk_logu("Request to read characteristic", characteristic_uuid);
+    const ble_uuid128_t *chr_uuid = BLE_UUID128(ctxt->chr->uuid);
+    hk_logu("Request to read ble characteristic", chr_uuid);
     hk_session_t *session = (hk_session_t *)arg;
 
-    if (hk_gatt_cmp(characteristic_uuid, (ble_uuid128_t *)&hk_uuid_manager_service_id))
+    if (hk_gatt_cmp(chr_uuid, (ble_uuid128_t *)&hk_uuid_manager_service_id))
     {
         HK_LOGD("Returning instance id for service: %d", session->service_id);
         uint16_t id = session->service_id;
@@ -73,28 +73,28 @@ static int hk_gatt_read_characteristic(struct ble_gatt_access_ctxt *ctxt, void *
         switch (session->last_opcode)
         {
         case 1:
-            hk_characteristic_signature_read_response(characteristic_uuid, session, response);
+            hk_chr_signature_read_response(chr_uuid, session, response);
             break;
         case 2:
-            hk_characteristic_write_response(characteristic_uuid, session, response);
+            hk_chr_write_response(chr_uuid, session, response);
             break;
         case 3:
-            hk_characteristic_read_response(characteristic_uuid, session, response);
+            hk_chr_read_response(chr_uuid, session, response);
             break;
         case 4:
-            hk_characteristic_timed_write_response(characteristic_uuid, session, response);
+            hk_chr_timed_write_response(chr_uuid, session, response);
             break;
         case 5:
-            hk_characteristic_execute_write_response(characteristic_uuid, session, response);
+            hk_chr_execute_write_response(chr_uuid, session, response);
             break;
         case 6:
-            hk_service_signature_read_response(characteristic_uuid, session, response);
+            hk_service_signature_read_response(chr_uuid, session, response);
             break;
         case 7:
-            hk_characteristic_configuration_response(characteristic_uuid, session, response);
+            hk_chr_configuration_response(chr_uuid, session, response);
             break;
         case 8:
-            hk_protocol_configuration_response(characteristic_uuid, session, response);
+            hk_protocol_configuration_response(chr_uuid, session, response);
             break;
         default:
             HK_LOGE("Unknown opcode.");
@@ -124,19 +124,19 @@ static int hk_gatt_read_characteristic(struct ble_gatt_access_ctxt *ctxt, void *
     return rc == 0 ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES;
 }
 
-static int hk_gatt_read_descriptor(struct ble_gatt_access_ctxt *ctxt, void *arg)
+static int hk_gatt_read_ble_descriptor(struct ble_gatt_access_ctxt *ctxt, void *arg)
 {
     int rc = 0;
-    const ble_uuid128_t *characteristic_uuid = BLE_UUID128(ctxt->chr->uuid);
-    hk_logu("Read descriptor of  characteristic", characteristic_uuid);
+    const ble_uuid128_t *chr_uuid = BLE_UUID128(ctxt->chr->uuid);
+    hk_logu("Read descriptor of  chr", chr_uuid);
     const ble_uuid128_t *descriptor_uuid = BLE_UUID128(ctxt->dsc->uuid);
     hk_logu("with id", descriptor_uuid);
     hk_session_t *session = (hk_session_t *)arg;
 
     if (hk_gatt_cmp(descriptor_uuid, (ble_uuid128_t *)&hk_uuid_manager_desciptor_instance_id))
     {
-        HK_LOGD("Returning instance id for characteristic: %d", session->characteristic_index);
-        uint16_t id = session->characteristic_index;
+        HK_LOGD("Returning instance id for chr: %d", session->chr_index);
+        uint16_t id = session->chr_index;
         rc = os_mbuf_append(ctxt->om, &id, sizeof(uint16_t));
     }
     else
@@ -147,12 +147,12 @@ static int hk_gatt_read_descriptor(struct ble_gatt_access_ctxt *ctxt, void *arg)
     return rc == 0 ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES;
 }
 
-static int hk_gatt_write_characteristic(struct ble_gatt_access_ctxt *ctxt, void *arg)
+static int hk_gatt_write_ble_chr(struct ble_gatt_access_ctxt *ctxt, void *arg)
 {
     int rc = 0;
-    const ble_uuid128_t *characteristic_uuid = BLE_UUID128(ctxt->chr->uuid);
+    const ble_uuid128_t *chr_uuid = BLE_UUID128(ctxt->chr->uuid);
     hk_session_t *session = (hk_session_t *)arg;
-    hk_logu("Request to write characteristic", characteristic_uuid);
+    hk_logu("Request to write ble chr", chr_uuid);
 
     uint8_t buffer_len = OS_MBUF_PKTLEN(ctxt->om);
     char buffer[buffer_len];
@@ -177,17 +177,17 @@ static int hk_gatt_access_callback(uint16_t conn_handle, uint16_t attr_handle, s
     if (ctxt->op == BLE_GATT_ACCESS_OP_READ_CHR)
     {
         HK_LOGD("BLE_GATT_ACCESS_OP_READ_CHR");
-        rc = hk_gatt_read_characteristic(ctxt, arg);
+        rc = hk_gatt_read_ble_chr(ctxt, arg);
     }
     else if (ctxt->op == BLE_GATT_ACCESS_OP_READ_DSC)
     {
         HK_LOGD("BLE_GATT_ACCESS_OP_READ_DSC");
-        rc = hk_gatt_read_descriptor(ctxt, arg);
+        rc = hk_gatt_read_ble_descriptor(ctxt, arg);
     }
     else if (ctxt->op == BLE_GATT_ACCESS_OP_WRITE_CHR)
     {
         HK_LOGD("BLE_GATT_ACCESS_OP_WRITE_CHR");
-        rc = hk_gatt_write_characteristic(ctxt, arg);
+        rc = hk_gatt_write_ble_chr(ctxt, arg);
     }
     else if (ctxt->op == BLE_GATT_ACCESS_OP_WRITE_DSC)
     {
@@ -229,46 +229,46 @@ hk_ble_service_t *hk_gatt_alloc_new_service()
     return service;
 }
 
-hk_ble_characteristic_t *hk_gatt_alloc_new_characteristic(hk_ble_service_t *current_service)
+hk_ble_chr_t *hk_gatt_alloc_new_chr(hk_ble_service_t *current_service)
 {
-    hk_gatt_setup_info->characteristic_index++;
-    current_service->characteristics = (hk_ble_characteristic_t *)hk_gatt_alloc(
+    hk_gatt_setup_info->chr_index++;
+    current_service->characteristics = (hk_ble_chr_t *)hk_gatt_alloc(
         (void *)current_service->characteristics,
-        (hk_gatt_setup_info->characteristic_index + 1) * sizeof(hk_ble_characteristic_t));
-    hk_ble_characteristic_t *characteristic =
-        (hk_ble_characteristic_t *)&current_service->characteristics[hk_gatt_setup_info->characteristic_index];
+        (hk_gatt_setup_info->chr_index + 1) * sizeof(hk_ble_chr_t));
+    hk_ble_chr_t *chr =
+        (hk_ble_chr_t *)&current_service->characteristics[hk_gatt_setup_info->chr_index];
 
-    memset(characteristic, 0, sizeof(hk_ble_characteristic_t));
+    memset(chr, 0, sizeof(hk_ble_chr_t));
 
-    return characteristic;
+    return chr;
 }
 
-void hk_gatt_characteristic_init(
-    hk_ble_characteristic_t *characteristic,
+void hk_gatt_chr_init(
+    hk_ble_chr_t *chr,
     const ble_uuid_t *service_uuid,
-    ble_uuid128_t *characteristic_uuid,
+    ble_uuid128_t *chr_uuid,
     ble_gatt_chr_flags flags,
     hk_session_t *session,
     bool add_descriptors)
 {
-    characteristic->uuid = &characteristic_uuid->u;
-    characteristic->access_cb = hk_gatt_access_callback;
-    characteristic->flags = flags;
-    characteristic->arg = (void *)session;
+    chr->uuid = &chr_uuid->u;
+    chr->access_cb = hk_gatt_access_callback;
+    chr->flags = flags;
+    chr->arg = (void *)session;
 
     size_t memory_size = 3 * sizeof(hk_ble_descriptor_t);
-    characteristic->descriptors = (hk_ble_descriptor_t *)malloc(memory_size);
-    memset((void *)characteristic->descriptors, 0, memory_size);
+    chr->descriptors = (hk_ble_descriptor_t *)malloc(memory_size);
+    memset((void *)chr->descriptors, 0, memory_size);
 
-    characteristic->descriptors[0].uuid = &hk_uuid_manager_desciptor_instance_id.u;
-    characteristic->descriptors[0].att_flags = BLE_ATT_F_READ;
-    characteristic->descriptors[0].arg = (void *)session;
-    characteristic->descriptors[0].access_cb = hk_gatt_access_callback;
+    chr->descriptors[0].uuid = &hk_uuid_manager_desciptor_instance_id.u;
+    chr->descriptors[0].att_flags = BLE_ATT_F_READ;
+    chr->descriptors[0].arg = (void *)session;
+    chr->descriptors[0].access_cb = hk_gatt_access_callback;
 
-    // characteristic->descriptors[1].uuid = &hk_uuid_manager_descriptor_format.u;
-    // characteristic->descriptors[1].att_flags = BLE_ATT_F_READ;
-    // characteristic->descriptors[1].arg = (void *)session;
-    // characteristic->descriptors[1].access_cb = hk_gatt_access_callback;
+    // chr->descriptors[1].uuid = &hk_uuid_manager_descriptor_format.u;
+    // chr->descriptors[1].att_flags = BLE_ATT_F_READ;
+    // chr->descriptors[1].arg = (void *)session;
+    // chr->descriptors[1].access_cb = hk_gatt_access_callback;
 }
 
 void hk_gatt_init()
@@ -277,7 +277,7 @@ void hk_gatt_init()
 
     hk_gatt_setup_info = malloc(sizeof(hk_gatt_setup_info_t));
     hk_gatt_setup_info->service_index = -1;
-    hk_gatt_setup_info->characteristic_index = -1;
+    hk_gatt_setup_info->chr_index = -1;
     hk_gatt_setup_info->instance_id = 0;
 }
 
@@ -285,10 +285,10 @@ void hk_gatt_add_service(hk_service_types_t service_type, bool primary, bool hid
 {
     if (hk_gatt_setup_info->service_index >= 0)
     {
-        // add end marker to characteristic array of last service
+        // add end marker to chr array of last service
         hk_ble_service_t *last_service = &hk_gatt_services[hk_gatt_setup_info->service_index];
-        hk_gatt_alloc_new_characteristic(last_service);
-        hk_gatt_setup_info->characteristic_index = -1;
+        hk_gatt_alloc_new_chr(last_service);
+        hk_gatt_setup_info->chr_index = -1;
     }
 
     hk_ble_service_t *service = hk_gatt_alloc_new_service();
@@ -297,16 +297,16 @@ void hk_gatt_add_service(hk_service_types_t service_type, bool primary, bool hid
     service->type = 1;
     service->uuid = &service_uuid->u;
 
-    // add service id characteristic
-    hk_ble_characteristic_t *characteristic = hk_gatt_alloc_new_characteristic(service); // todo: combine in one function
+    // add service id chr
+    hk_ble_chr_t *chr = hk_gatt_alloc_new_chr(service); // todo: combine in one function
     hk_session_t *session = (hk_session_t *)malloc(sizeof(hk_session_t));
     session->static_data = NULL;
-    session->service_id = hk_gatt_setup_info->service_id = session->characteristic_index = hk_gatt_setup_info->instance_id++;
-    hk_gatt_characteristic_init(characteristic, service->uuid, (ble_uuid128_t *)&hk_uuid_manager_service_id, BLE_GATT_CHR_F_READ, session, false);
+    session->service_id = hk_gatt_setup_info->service_id = session->chr_index = hk_gatt_setup_info->instance_id++;
+    hk_gatt_chr_init(chr, service->uuid, (ble_uuid128_t *)&hk_uuid_manager_service_id, BLE_GATT_CHR_F_READ, session, false);
 }
 
-void *hk_gatt_add_characteristic(
-    hk_characteristic_types_t characteristic_type,
+void *hk_gatt_add_chr(
+    hk_chr_types_t chr_type,
     void *(*read)(size_t*),
     void *(*write)(void *, size_t, size_t*),
     bool can_notify,
@@ -314,15 +314,15 @@ void *hk_gatt_add_characteristic(
     int16_t max_length)
 {
     hk_ble_service_t *current_service = &hk_gatt_services[hk_gatt_setup_info->service_index];
-    ble_uuid128_t *characteristic_uuid = hk_uuid_manager_get((uint8_t)characteristic_type);
-    hk_ble_characteristic_t *characteristic = hk_gatt_alloc_new_characteristic(current_service);
+    ble_uuid128_t *chr_uuid = hk_uuid_manager_get((uint8_t)chr_type);
+    hk_ble_chr_t *chr = hk_gatt_alloc_new_chr(current_service);
     hk_session_t *session = (hk_session_t *)malloc(sizeof(hk_session_t));
     session->static_data = NULL;
     session->service_uuid = (ble_uuid128_t *)current_service->uuid;
     session->service_index = hk_gatt_setup_info->service_index;
     session->service_id = hk_gatt_setup_info->service_id;
-    session->characteristic_index = hk_gatt_setup_info->instance_id++;
-    session->characteristic_type = characteristic_type;
+    session->chr_index = hk_gatt_setup_info->instance_id++;
+    session->chr_type = chr_type;
     session->transaction_id = -1;
     session->last_opcode = -1;
     session->read_callback = read;
@@ -338,37 +338,37 @@ void *hk_gatt_add_characteristic(
         flags |= BLE_GATT_CHR_F_INDICATE;
     }
 
-    hk_gatt_characteristic_init(
-        characteristic,
+    hk_gatt_chr_init(
+        chr,
         current_service->uuid,
-        characteristic_uuid,
+        chr_uuid,
         flags,
         session, true);
     return NULL;
 }
 
-void hk_gatt_add_characteristic_static_read(hk_characteristic_types_t characteristic_type, const char *value)
+void hk_gatt_add_chr_static_read(hk_chr_types_t chr_type, const char *value)
 {
     hk_ble_service_t *current_service = &hk_gatt_services[hk_gatt_setup_info->service_index];
-    ble_uuid128_t *characteristic_uuid = hk_uuid_manager_get((uint8_t)characteristic_type);
-    hk_ble_characteristic_t *characteristic = hk_gatt_alloc_new_characteristic(current_service);
+    ble_uuid128_t *chr_uuid = hk_uuid_manager_get((uint8_t)chr_type);
+    hk_ble_chr_t *chr = hk_gatt_alloc_new_chr(current_service);
     hk_session_t *session = (hk_session_t *)malloc(sizeof(hk_session_t));
     session->static_data = value;
     session->service_uuid = (ble_uuid128_t *)current_service->uuid;
     session->service_index = hk_gatt_setup_info->service_index;
     session->service_id = hk_gatt_setup_info->service_id;
-    session->characteristic_index = hk_gatt_setup_info->instance_id++;
-    session->characteristic_type = characteristic_type;
+    session->chr_index = hk_gatt_setup_info->instance_id++;
+    session->chr_type = chr_type;
     session->transaction_id = -1;
     session->last_opcode = -1;
     session->max_length = -1;
     session->min_length = -1;
     session->request = hk_mem_create();
 
-    hk_gatt_characteristic_init(
-        characteristic,
+    hk_gatt_chr_init(
+        chr,
         current_service->uuid,
-        characteristic_uuid,
+        chr_uuid,
         BLE_GATT_CHR_F_READ | BLE_GATT_CHR_F_WRITE | BLE_GATT_CHR_PROP_READ,
         session, true);
 }
@@ -377,9 +377,9 @@ void hk_gatt_end_config()
 {
     if (hk_gatt_setup_info->service_index >= 0)
     {
-        // add end marker to characteristic array of last service
+        // add end marker to chr array of last service
         hk_ble_service_t *last_service = &hk_gatt_services[hk_gatt_setup_info->service_index];
-        hk_gatt_alloc_new_characteristic(last_service);
+        hk_gatt_alloc_new_chr(last_service);
     }
 
     // add end marker to services array

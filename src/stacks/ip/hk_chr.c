@@ -1,8 +1,8 @@
-#include "hk_characteristics.h"
+#include "hk_chrs.h"
 
-#include "../../common/hk_characteristics_properties.h"
+#include "../../common/hk_chrs_properties.h"
 #include "../../include/homekit_services.h"
-#include "../../include/homekit_characteristics.h"
+#include "../../include/homekit_chrs.h"
 #include "../../utils/hk_logging.h"
 #include "../../utils/hk_res.h"
 #include "../../utils/hk_ll.h"
@@ -14,7 +14,7 @@
 #include <cJSON.h>
 #include <stdbool.h>
 
-char *hk_characteristics_get_next_id_pair(char *ids, int *result)
+char *hk_chrs_get_next_id_pair(char *ids, int *result)
 {
     sscanf(ids, "%d.%d", &result[0], &result[1]);
     char *next_ids = strchr(ids, ',');
@@ -27,7 +27,7 @@ char *hk_characteristics_get_next_id_pair(char *ids, int *result)
     return next_ids + 1;
 }
 
-void hk_characteristics_get(hk_session_t *session)
+void hk_chrs_get(hk_session_t *session)
 {
     hk_mem *ids = hk_mem_create();
     session->response->content_type = HK_SESSION_CONTENT_JSON;
@@ -37,26 +37,26 @@ void hk_characteristics_get(hk_session_t *session)
     cJSON *j_root = cJSON_CreateObject();
     if (res == ESP_OK)
     {
-        cJSON *j_characteristics = cJSON_CreateArray();
-        cJSON_AddItemToObject(j_root, "characteristics", j_characteristics);
+        cJSON *j_chrs = cJSON_CreateArray();
+        cJSON_AddItemToObject(j_root, "chrs", j_chrs);
         char *id_ptr = ids->ptr;
         session->response->result = HK_RES_OK;
         while (id_ptr != NULL)
         {
-            id_ptr = hk_characteristics_get_next_id_pair(id_ptr, results);
-            hk_characteristic_t *characteristic = hk_accessories_store_get_characteristic(results[0], results[1]);
-            if (characteristic == NULL)
+            id_ptr = hk_chrs_get_next_id_pair(id_ptr, results);
+            hk_chr_t *chr = hk_accessories_store_get_chr(results[0], results[1]);
+            if (chr == NULL)
             {
-                HK_LOGE("Could not find characteristic %d.%d.", results[0], results[1]);
+                HK_LOGE("Could not find chr %d.%d.", results[0], results[1]);
                 session->response->result = HK_RES_UNKNOWN;
                 break;
             }
 
-            cJSON *j_characteristic = cJSON_CreateObject();
-            cJSON_AddNumberToObject(j_characteristic, "aid", results[0]);
-            cJSON_AddNumberToObject(j_characteristic, "iid", results[1]);
-            hk_accessories_serializer_value(characteristic, j_characteristic);
-            cJSON_AddItemToArray(j_characteristics, j_characteristic);
+            cJSON *j_chr = cJSON_CreateObject();
+            cJSON_AddNumberToObject(j_chr, "aid", results[0]);
+            cJSON_AddNumberToObject(j_chr, "iid", results[1]);
+            hk_accessories_serializer_value(chr, j_chr);
+            cJSON_AddItemToArray(j_chrs, j_chr);
         }
     }
 
@@ -67,43 +67,43 @@ void hk_characteristics_get(hk_session_t *session)
         free(serialized);
     }
 
-    HK_LOGD("%d - Returning value for characteristic %d.%d.", session->socket, results[0], results[1]);
+    HK_LOGD("%d - Returning value for chr %d.%d.", session->socket, results[0], results[1]);
     hk_session_send(session);
     hk_mem_free(ids);
     cJSON_Delete(j_root);
 }
 
-void hk_characteristics_notify(void *characteristic_ptr)
+void hk_chrs_notify(void *chr_ptr)
 {
-    if (!characteristic_ptr)
+    if (!chr_ptr)
     {
-        HK_LOGE("No characteristic was given, to notify.");
+        HK_LOGE("No chr was given, to notify.");
         return;
     }
 
-    hk_characteristic_t *characteristic = (hk_characteristic_t *)characteristic_ptr;
-    hk_session_t **session_list = hk_subscription_store_get_sessions(characteristic);
+    hk_chr_t *chr = (hk_chr_t *)chr_ptr;
+    hk_session_t **session_list = hk_subscription_store_get_sessions(chr);
 
     if (session_list == NULL)
     {
-        HK_LOGD("Cant notify, because nothing is subscribed for characteristic %d.%d.", characteristic->aid, characteristic->iid);
+        HK_LOGD("Cant notify, because nothing is subscribed for chr %d.%d.", chr->aid, chr->iid);
         return;
     }
 
-    const double aid = characteristic->aid;
-    const double iid = characteristic->iid;
+    const double aid = chr->aid;
+    const double iid = chr->iid;
 
-    cJSON *j_characteristic = cJSON_CreateObject();
-    cJSON_AddNumberToObject(j_characteristic, "aid", aid);
-    cJSON_AddNumberToObject(j_characteristic, "iid", iid);
-    cJSON_AddNumberToObject(j_characteristic, "status", 0); // todo: is this needed?
-    hk_accessories_serializer_value(characteristic, j_characteristic);
+    cJSON *j_chr = cJSON_CreateObject();
+    cJSON_AddNumberToObject(j_chr, "aid", aid);
+    cJSON_AddNumberToObject(j_chr, "iid", iid);
+    cJSON_AddNumberToObject(j_chr, "status", 0); // todo: is this needed?
+    hk_accessories_serializer_value(chr, j_chr);
 
-    cJSON *j_characteristics = cJSON_CreateArray();
-    cJSON_AddItemToArray(j_characteristics, j_characteristic);
+    cJSON *j_chrs = cJSON_CreateArray();
+    cJSON_AddItemToArray(j_chrs, j_chr);
 
     cJSON *j_root = cJSON_CreateObject();
-    cJSON_AddItemToObject(j_root, "characteristics", j_characteristics);
+    cJSON_AddItemToObject(j_root, "chrs", j_chrs);
 
     char *serialized = cJSON_PrintUnformatted(j_root);
     cJSON_Delete(j_root);
@@ -121,33 +121,33 @@ void hk_characteristics_notify(void *characteristic_ptr)
     free(serialized);
 }
 
-void hk_characteristics_write(hk_session_t *session, cJSON *j_characteristic)
+void hk_chrs_write(hk_session_t *session, cJSON *j_chr)
 {
     esp_err_t ret = ESP_OK;
 
-    cJSON *j_aid = cJSON_GetObjectItem(j_characteristic, "aid");
+    cJSON *j_aid = cJSON_GetObjectItem(j_chr, "aid");
     int aid = j_aid->valueint;
 
-    cJSON *j_iid = cJSON_GetObjectItem(j_characteristic, "iid");
+    cJSON *j_iid = cJSON_GetObjectItem(j_chr, "iid");
     int iid = j_iid->valueint;
 
-    hk_characteristic_t *characteristic = hk_accessories_store_get_characteristic(aid, iid);
-    if (characteristic == NULL)
+    hk_chr_t *chr = hk_accessories_store_get_chr(aid, iid);
+    if (chr == NULL)
     {
-        HK_LOGE("Could not find characteristic %d.%d.", aid, iid);
+        HK_LOGE("Could not find chr %d.%d.", aid, iid);
         ret = ESP_FAIL;
     }
 
-    if (!characteristic->write)
+    if (!chr->write)
     {
-        HK_LOGE("Could not write characteristic %d.%d. It has no write function.", aid, iid);
+        HK_LOGE("Could not write chr %d.%d. It has no write function.", aid, iid);
         ret = ESP_FAIL;
     }
 
     if (!ret)
     {
-        cJSON *j_value = cJSON_GetObjectItem(j_characteristic, "value");
-        hk_format_t format = hk_characteristics_properties_get_type(characteristic->type);
+        cJSON *j_value = cJSON_GetObjectItem(j_chr, "value");
+        hk_format_t format = hk_chrs_properties_get_type(chr->type);
         void *value = NULL;
         bool bool_value = false;
 
@@ -221,10 +221,10 @@ void hk_characteristics_write(hk_session_t *session, cJSON *j_characteristic)
 
         if (!ret)
         {
-            HK_LOGD("%d - Writing characteristic %d.%d.", session->socket, aid, iid);
-            characteristic->write(value);
+            HK_LOGD("%d - Writing chr %d.%d.", session->socket, aid, iid);
+            chr->write(value);
             hk_html_response_send_empty(session, HK_HTML_204);
-            hk_characteristics_notify(characteristic);
+            hk_chrs_notify(chr);
         }
     }
 
@@ -234,90 +234,90 @@ void hk_characteristics_write(hk_session_t *session, cJSON *j_characteristic)
     }
 }
 
-void hk_characteristic_subscribe(hk_session_t *session, cJSON *j_characteristic, cJSON *j_root)
+void hk_chr_subscribe(hk_session_t *session, cJSON *j_chr, cJSON *j_root)
 {
-    cJSON *j_aid = cJSON_GetObjectItem(j_characteristic, "aid");
+    cJSON *j_aid = cJSON_GetObjectItem(j_chr, "aid");
     int aid = j_aid->valueint;
 
-    cJSON *j_iid = cJSON_GetObjectItem(j_characteristic, "iid");
+    cJSON *j_iid = cJSON_GetObjectItem(j_chr, "iid");
     int iid = j_iid->valueint;
 
-    HK_LOGD("%d - Subscription request for characteristic %d.%d.", session->socket, aid, iid);
-    hk_characteristic_t *characteristic = hk_accessories_store_get_characteristic(aid, iid);
-    if (characteristic == NULL)
+    HK_LOGD("%d - Subscription request for chr %d.%d.", session->socket, aid, iid);
+    hk_chr_t *chr = hk_accessories_store_get_chr(aid, iid);
+    if (chr == NULL)
     {
-        HK_LOGE("Could not find characteristic %d.%d.", aid, iid);
+        HK_LOGE("Could not find chr %d.%d.", aid, iid);
         return;
     }
 
-    hk_subscription_store_add_session(characteristic, session);
+    hk_subscription_store_add_session(chr, session);
 
     hk_html_response_send_empty(session, HK_HTML_204);
 
-    hk_characteristics_notify(characteristic);
+    hk_chrs_notify(chr);
 }
 
-void hk_characteristic_unsubscribe(hk_session_t *session, cJSON *j_characteristic)
+void hk_chr_unsubscribe(hk_session_t *session, cJSON *j_chr)
 {
-    cJSON *j_aid = cJSON_GetObjectItem(j_characteristic, "aid");
+    cJSON *j_aid = cJSON_GetObjectItem(j_chr, "aid");
     int aid = j_aid->valueint;
 
-    cJSON *j_iid = cJSON_GetObjectItem(j_characteristic, "iid");
+    cJSON *j_iid = cJSON_GetObjectItem(j_chr, "iid");
     int iid = j_iid->valueint;
 
-    hk_characteristic_t *characteristic = hk_accessories_store_get_characteristic(aid, iid);
-    HK_LOGD("%d - Request for removing subscription for characteristic %d.%d (%x).", 
-        session->socket, aid, iid, (unsigned int)characteristic);
-    if (characteristic == NULL)
+    hk_chr_t *chr = hk_accessories_store_get_chr(aid, iid);
+    HK_LOGD("%d - Request for removing subscription for chr %d.%d (%x).", 
+        session->socket, aid, iid, (unsigned int)chr);
+    if (chr == NULL)
     {
-        HK_LOGE("Could not find characteristic %d.%d.", aid, iid);
+        HK_LOGE("Could not find chr %d.%d.", aid, iid);
         return;
     }
 
-    hk_subscription_store_remove_session_from_subscription(characteristic, session);
+    hk_subscription_store_remove_session_from_subscription(chr, session);
 
     hk_html_response_send_empty(session, HK_HTML_204);
 }
 
-void hk_characteristics_put(hk_session_t *session)
+void hk_chrs_put(hk_session_t *session)
 {
     session->response->content_type = HK_SESSION_CONTENT_JSON;
     
     cJSON *j_root = cJSON_Parse((const char *)session->request->content->ptr);
     if (j_root == NULL)
     {
-        HK_LOGE("Failed to parse request for characteristics put: %s", session->request->content->ptr);
+        HK_LOGE("Failed to parse request for chrs put: %s", session->request->content->ptr);
         session->response->result = HK_RES_UNKNOWN;
     }
 
     if (session->response->result == HK_RES_OK)
     {
-        cJSON *j_characteristics = cJSON_GetObjectItem(j_root, "characteristics");
-        for (int i = 0; i < cJSON_GetArraySize(j_characteristics) && session->response->result == HK_RES_OK; i++)
+        cJSON *j_chrs = cJSON_GetObjectItem(j_root, "chrs");
+        for (int i = 0; i < cJSON_GetArraySize(j_chrs) && session->response->result == HK_RES_OK; i++)
         {
-            cJSON *j_characteristic = cJSON_GetArrayItem(j_characteristics, i);
-            if (j_characteristic == NULL)
+            cJSON *j_chr = cJSON_GetArrayItem(j_chrs, i);
+            if (j_chr == NULL)
             {
-                HK_LOGE("Could not find first element in characteristics put.");
+                HK_LOGE("Could not find first element in chrs put.");
                 session->response->result = HK_RES_UNKNOWN;
                 break;
             }
 
-            if (cJSON_HasObjectItem(j_characteristic, "ev"))
+            if (cJSON_HasObjectItem(j_chr, "ev"))
             {
-                cJSON *j_ev = cJSON_GetObjectItem(j_characteristic, "ev");
+                cJSON *j_ev = cJSON_GetObjectItem(j_chr, "ev");
                 if (cJSON_IsTrue(j_ev))
                 {
-                    hk_characteristic_subscribe(session, j_characteristic, j_root);
+                    hk_chr_subscribe(session, j_chr, j_root);
                 }
                 else
                 {
-                    hk_characteristic_unsubscribe(session, j_characteristic);
+                    hk_chr_unsubscribe(session, j_chr);
                 }
             }
             else
             {
-                hk_characteristics_write(session, j_characteristic);
+                hk_chrs_write(session, j_chr);
             }
         }
     }
@@ -325,19 +325,19 @@ void hk_characteristics_put(hk_session_t *session)
     cJSON_Delete(j_root);
 }
 
-void hk_characteristics_identify(hk_session_t *session)
+void hk_chrs_identify(hk_session_t *session)
 {
-    hk_characteristic_t *characteristic = hk_accessories_store_get_identify_characteristic();
-    if (characteristic == NULL)
+    hk_chr_t *chr = hk_accessories_store_get_identify_chr();
+    if (chr == NULL)
     {
-        HK_LOGE("Could not find identify characteristic.");
+        HK_LOGE("Could not find identify chr.");
         session->response->result = HK_RES_UNKNOWN;
     }
 
     if (session->response->result == HK_RES_OK)
     {
-        HK_LOGE("%d - Calling write on identify characteristic!", session->socket);
-        characteristic->write(NULL);
+        HK_LOGE("%d - Calling write on identify chr!", session->socket);
+        chr->write(NULL);
     }
 
     hk_session_send(session);

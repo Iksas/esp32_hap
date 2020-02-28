@@ -22,37 +22,37 @@ void hk_accessories_store_add_service(hk_service_types_t type, bool primary, boo
     service->type = type;
     service->primary = primary;
     service->hidden = hidden;
-    service->characteristics = NULL;
+    service->chrs = NULL;
 
     hk_accessories->services = service;
 }
 
-void *hk_accessories_store_add_characteristic(hk_characteristic_types_t type, void *(*read)(), void (*write)(void *), bool can_notify)
+void *hk_accessories_store_add_chr(hk_chr_types_t type, void *(*read)(), void (*write)(void *), bool can_notify)
 {
-    hk_characteristic_t *characteristic = hk_ll_new(hk_accessories->services->characteristics);
+    hk_chr_t *chr = hk_ll_new(hk_accessories->services->chrs);
 
-    characteristic->type = type;
-    characteristic->static_value = NULL;
-    characteristic->read = read;
-    characteristic->write = write;
-    characteristic->can_notify = can_notify;
+    chr->type = type;
+    chr->static_value = NULL;
+    chr->read = read;
+    chr->write = write;
+    chr->can_notify = can_notify;
 
-    hk_accessories->services->characteristics = characteristic;
+    hk_accessories->services->chrs = chr;
 
-    return characteristic;
+    return chr;
 }
 
-void hk_accessories_store_add_characteristic_static_read(hk_characteristic_types_t type, void *value)
+void hk_accessories_store_add_chr_static_read(hk_chr_types_t type, void *value)
 {
-    hk_characteristic_t *characteristic = hk_ll_new(hk_accessories->services->characteristics);
+    hk_chr_t *chr = hk_ll_new(hk_accessories->services->chrs);
 
-    characteristic->type = type;
-    characteristic->static_value = value;
-    characteristic->read = NULL;
-    characteristic->write = NULL;
-    characteristic->can_notify = false;
+    chr->type = type;
+    chr->static_value = value;
+    chr->read = NULL;
+    chr->write = NULL;
+    chr->can_notify = false;
 
-    hk_accessories->services->characteristics = characteristic;
+    hk_accessories->services->chrs = chr;
 }
 
 void hk_accessories_store_end_config()
@@ -72,13 +72,13 @@ void hk_accessories_store_end_config()
                 hk_ll_foreach(accessory->services, service)
                 {
                     service->iid = ++iid;
-                    if (service->characteristics)
+                    if (service->chrs)
                     {
-                        service->characteristics = hk_ll_reverse(service->characteristics);
-                        hk_ll_foreach(service->characteristics, characteristic)
+                        service->chrs = hk_ll_reverse(service->chrs);
+                        hk_ll_foreach(service->chrs, chr)
                         {
-                            characteristic->iid = ++iid;
-                            characteristic->aid = accessory->aid;
+                            chr->iid = ++iid;
+                            chr->aid = accessory->aid;
                         }
                     }
                 }
@@ -87,7 +87,7 @@ void hk_accessories_store_end_config()
     }
 }
 
-hk_characteristic_t *hk_accessories_store_get_characteristic(size_t aid, size_t iid)
+hk_chr_t *hk_accessories_store_get_chr(size_t aid, size_t iid)
 {
     if (hk_accessories)
     {
@@ -97,13 +97,13 @@ hk_characteristic_t *hk_accessories_store_get_characteristic(size_t aid, size_t 
             {
                 hk_ll_foreach(accessory->services, service)
                 {
-                    if (service->characteristics)
+                    if (service->chrs)
                     {
-                        hk_ll_foreach(service->characteristics, characteristic)
+                        hk_ll_foreach(service->chrs, chr)
                         {
-                            if (iid == characteristic->iid)
+                            if (iid == chr->iid)
                             {
-                                return characteristic;
+                                return chr;
                             }
                         }
                     }
@@ -115,7 +115,7 @@ hk_characteristic_t *hk_accessories_store_get_characteristic(size_t aid, size_t 
     return NULL;
 }
 
-hk_characteristic_t *hk_accessories_store_get_identify_characteristic()
+hk_chr_t *hk_accessories_store_get_identify_chr()
 {
     if (hk_accessories)
     {
@@ -125,13 +125,13 @@ hk_characteristic_t *hk_accessories_store_get_identify_characteristic()
             {
                 hk_ll_foreach(accessory->services, service)
                 {
-                    if (service->characteristics)
+                    if (service->chrs)
                     {
-                        hk_ll_foreach(service->characteristics, characteristic)
+                        hk_ll_foreach(service->chrs, chr)
                         {
-                            if (HK_CHR_IDENTIFY == characteristic->type)
+                            if (HK_CHR_IDENTIFY == chr->type)
                             {
-                                return characteristic;
+                                return chr;
                             }
                         }
                     }

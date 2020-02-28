@@ -1,10 +1,10 @@
-#include "hk_characteristics_properties.h"
+#include "hk_chrs_properties.h"
 
 #include "../utils/hk_logging.h"
 
-hk_format_t hk_characteristics_properties_get_type(hk_characteristic_types_t characteristic_type)
+hk_format_t hk_chrs_properties_get_type(hk_chr_types_t chr_type)
 {
-    switch (characteristic_type)
+    switch (chr_type)
     {
     case HK_CHR_ADMINISTRATOR_ONLY_ACCESS:
     case HK_CHR_AUDIO_FEEDBACK:
@@ -129,14 +129,14 @@ hk_format_t hk_characteristics_properties_get_type(hk_characteristic_types_t cha
     // case HK_CHR:
     //     return HK_FORMAT_DATA
     default:
-        HK_LOGE("Could not find format for type %X", characteristic_type);
+        HK_LOGE("Could not find format for type %X", chr_type);
         return HK_FORMAT_UNKNOWN;
     }
 }
 
-uint16_t hk_characteristics_properties_get_prop(hk_characteristic_types_t characteristic_type)
+uint16_t hk_chrs_properties_get_prop(hk_chr_types_t chr_type)
 {
-    switch (characteristic_type)
+    switch (chr_type)
     {
     case HK_CHR_VERSION:
         return HK_CHR_PROP_NOTIFIES_EVENTS_CONNECTED_STATE | HK_CHR_PROP_SUPPORTS_SECURE_READS;
@@ -255,7 +255,7 @@ uint16_t hk_characteristics_properties_get_prop(hk_characteristic_types_t charac
     case HK_CHR_SETUP_ENDPOINTS:
     case HK_CHR_SELECTED_RTP_STREAM_CONFIGURATION:
     default:
-        HK_LOGE("Could return characteristic properties for type %X", characteristic_type);
+        HK_LOGE("Could return characteristic properties for type %X", chr_type);
         return -1;
     }
 }

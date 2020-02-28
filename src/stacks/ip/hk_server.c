@@ -12,7 +12,7 @@
 #include "../../common/hk_pair_setup.h"
 #include "../../common/hk_pair_verify.h"
 #include "../../common/hk_pairings.h"
-#include "hk_characteristics.h"
+#include "hk_chrs.h"
 #include "hk_encryption.h"
 #include "hk_html.h"
 #include "hk_html_parser.h"
@@ -62,13 +62,13 @@ void hk_server_handle(hk_session_t *session)
         HK_LOGD("%d - Returning accessories.", session->socket);
         hk_session_send(session);
     }
-    else if (hk_mem_cmp_str(session->request->url, "/characteristics") && HK_SESSION_HTML_METHOD_GET == session->request->method)
+    else if (hk_mem_cmp_str(session->request->url, "/chrs") && HK_SESSION_HTML_METHOD_GET == session->request->method)
     {
-        hk_characteristics_get(session);
+        hk_chrs_get(session);
     }
-    else if (hk_mem_cmp_str(session->request->url, "/characteristics") && HK_SESSION_HTML_METHOD_PUT == session->request->method)
+    else if (hk_mem_cmp_str(session->request->url, "/chrs") && HK_SESSION_HTML_METHOD_PUT == session->request->method)
     {
-        hk_characteristics_put(session);
+        hk_chrs_put(session);
     }
     else if (hk_mem_cmp_str(session->request->url, "/pairings") && HK_SESSION_HTML_METHOD_POST == session->request->method)
     {
@@ -77,7 +77,7 @@ void hk_server_handle(hk_session_t *session)
     }
     else if (hk_mem_cmp_str(session->request->url, "/identify") && HK_SESSION_HTML_METHOD_POST == session->request->method)
     {
-        hk_characteristics_identify(session);
+        hk_chrs_identify(session);
     }
     else
     {

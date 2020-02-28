@@ -14,12 +14,12 @@
 // {
 //     hk_accessories_store_add_accessory();
 //     hk_accessories_store_add_service(HK_SRV_ACCESSORY_INFORMATION, false, false);
-//     hk_accessories_store_add_characteristic_static_read(HK_CHR_NAME, (void *)"name");
-//     hk_accessories_store_add_characteristic_static_read(HK_CHR_MANUFACTURER, (void *)"manufacturer");
-//     hk_accessories_store_add_characteristic_static_read(HK_CHR_MODEL, (void *)"model");
-//     hk_accessories_store_add_characteristic_static_read(HK_CHR_SERIAL_NUMBER, (void *)"serial_number");
-//     hk_accessories_store_add_characteristic_static_read(HK_CHR_FIRMWARE_REVISION, (void *)"revision");
-//     hk_accessories_store_add_characteristic(HK_CHR_IDENTIFY, NULL, hk_accessories_serializer_tests_dummy, NULL);
+//     hk_accessories_store_add_chr_static_read(HK_CHR_NAME, (void *)"name");
+//     hk_accessories_store_add_chr_static_read(HK_CHR_MANUFACTURER, (void *)"manufacturer");
+//     hk_accessories_store_add_chr_static_read(HK_CHR_MODEL, (void *)"model");
+//     hk_accessories_store_add_chr_static_read(HK_CHR_SERIAL_NUMBER, (void *)"serial_number");
+//     hk_accessories_store_add_chr_static_read(HK_CHR_FIRMWARE_REVISION, (void *)"revision");
+//     hk_accessories_store_add_chr(HK_CHR_IDENTIFY, NULL, hk_accessories_serializer_tests_dummy, NULL);
 //     hk_accessories_store_end_config();
 
 //     hk_mem *out = hk_mem_create();

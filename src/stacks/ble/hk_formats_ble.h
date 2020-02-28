@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../include/homekit_characteristics.h"
-#include "../../common/hk_characteristics_properties.h"
+#include "../../include/homekit_chrs.h"
+#include "../../common/hk_chrs_properties.h"
 
-char* hk_formats_ble_get(hk_characteristic_types_t characteristic_type);
+char* hk_formats_ble_get(hk_chr_types_t chr_type);

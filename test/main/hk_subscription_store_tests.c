@@ -9,10 +9,10 @@
 TEST_CASE("Subscriptions: add subscription", "[subscriptions]")
 {
     hk_session_t *session = malloc(sizeof(hk_session_t));
-    hk_characteristic_t *characteristic = malloc(sizeof(hk_characteristic_t));
-    hk_subscription_store_add_session(characteristic, session);
+    hk_chr_t *chr = malloc(sizeof(hk_chr_t));
+    hk_subscription_store_add_session(chr, session);
 
-    hk_session_t **sessions = hk_subscription_store_get_sessions(characteristic);
+    hk_session_t **sessions = hk_subscription_store_get_sessions(chr);
     hk_ll_foreach(sessions, session_item)
     {
         TEST_ASSERT_EQUAL_PTR(*session_item, session);
@@ -20,98 +20,98 @@ TEST_CASE("Subscriptions: add subscription", "[subscriptions]")
 
     hk_subscription_store_free();
     free(session);
-    free(characteristic);
+    free(chr);
 }
 
 TEST_CASE("Subscriptions: add subscriptions", "[subscriptions]")
 {
     hk_session_t *session1 = malloc(sizeof(hk_session_t));
     hk_session_t *session2 = malloc(sizeof(hk_session_t));
-    hk_characteristic_t *characteristic = malloc(sizeof(hk_characteristic_t));
-    hk_subscription_store_add_session(characteristic, session1);
-    hk_subscription_store_add_session(characteristic, session2);
+    hk_chr_t *chr = malloc(sizeof(hk_chr_t));
+    hk_subscription_store_add_session(chr, session1);
+    hk_subscription_store_add_session(chr, session2);
 
-    hk_session_t **sessions = hk_subscription_store_get_sessions(characteristic);
+    hk_session_t **sessions = hk_subscription_store_get_sessions(chr);
     int session_count = hk_ll_count(sessions);
     TEST_ASSERT_EQUAL_INT(2, session_count);
     hk_subscription_store_free();
     free(session1);
     free(session2);
-    free(characteristic);
+    free(chr);
 }
 
 TEST_CASE("Subscriptions: remove session", "[subscriptions]")
 {
     hk_session_t *session1 = malloc(sizeof(hk_session_t));
     hk_session_t *session2 = malloc(sizeof(hk_session_t));
-    hk_characteristic_t *characteristic1 = malloc(sizeof(hk_characteristic_t));
-    hk_characteristic_t *characteristic2 = malloc(sizeof(hk_characteristic_t));
-    hk_subscription_store_add_session(characteristic1, session1);
-    hk_subscription_store_add_session(characteristic1, session2);
-    hk_subscription_store_add_session(characteristic2, session2);
+    hk_chr_t *chr1 = malloc(sizeof(hk_chr_t));
+    hk_chr_t *chr2 = malloc(sizeof(hk_chr_t));
+    hk_subscription_store_add_session(chr1, session1);
+    hk_subscription_store_add_session(chr1, session2);
+    hk_subscription_store_add_session(chr2, session2);
 
     hk_subscription_store_remove_session(session2);
 
-    hk_session_t **sessions = hk_subscription_store_get_sessions(characteristic1);
+    hk_session_t **sessions = hk_subscription_store_get_sessions(chr1);
     int session_count = hk_ll_count(sessions);
     TEST_ASSERT_EQUAL_INT(1, session_count);
 
-    sessions = hk_subscription_store_get_sessions(characteristic2);
+    sessions = hk_subscription_store_get_sessions(chr2);
     session_count = hk_ll_count(sessions);
     TEST_ASSERT_EQUAL_INT(0, session_count);
 
     hk_subscription_store_free();
     free(session1);
     free(session2);
-    free(characteristic1);
-    free(characteristic2);
+    free(chr1);
+    free(chr2);
 }
 
 TEST_CASE("Subscriptions: mix", "[subscriptions]")
 {
     hk_session_t *session1 = malloc(sizeof(hk_session_t));
     hk_session_t *session2 = malloc(sizeof(hk_session_t));
-    hk_characteristic_t *characteristic1 = malloc(sizeof(hk_characteristic_t));
-    hk_characteristic_t *characteristic2 = malloc(sizeof(hk_characteristic_t));
-    hk_subscription_store_add_session(characteristic1, session1);
-    hk_subscription_store_add_session(characteristic1, session2);
-    hk_subscription_store_add_session(characteristic2, session2);
+    hk_chr_t *chr1 = malloc(sizeof(hk_chr_t));
+    hk_chr_t *chr2 = malloc(sizeof(hk_chr_t));
+    hk_subscription_store_add_session(chr1, session1);
+    hk_subscription_store_add_session(chr1, session2);
+    hk_subscription_store_add_session(chr2, session2);
 
     hk_subscription_store_remove_session(session2);
-    hk_subscription_store_add_session(characteristic1, session2);
-    hk_subscription_store_add_session(characteristic2, session2);
+    hk_subscription_store_add_session(chr1, session2);
+    hk_subscription_store_add_session(chr2, session2);
     hk_subscription_store_remove_session(session1);
-    hk_subscription_store_add_session(characteristic1, session1);
-    hk_subscription_store_remove_session_from_subscription(characteristic1, session2);
-    hk_subscription_store_add_session(characteristic1, session2);
+    hk_subscription_store_add_session(chr1, session1);
+    hk_subscription_store_remove_session_from_subscription(chr1, session2);
+    hk_subscription_store_add_session(chr1, session2);
 
-    hk_session_t **sessions = hk_subscription_store_get_sessions(characteristic1);
+    hk_session_t **sessions = hk_subscription_store_get_sessions(chr1);
     int session_count = hk_ll_count(sessions);
     TEST_ASSERT_EQUAL_INT(2, session_count);
 
-    sessions = hk_subscription_store_get_sessions(characteristic2);
+    sessions = hk_subscription_store_get_sessions(chr2);
     session_count = hk_ll_count(sessions);
     TEST_ASSERT_EQUAL_INT(1, session_count);
 
     HK_LOGI("1");
-    hk_subscription_store_remove_session_from_subscription(characteristic1, session2);
+    hk_subscription_store_remove_session_from_subscription(chr1, session2);
     HK_LOGI("2");
-    hk_subscription_store_remove_session_from_subscription(characteristic1, session2);
+    hk_subscription_store_remove_session_from_subscription(chr1, session2);
     HK_LOGI("3");
-    hk_subscription_store_remove_session_from_subscription(characteristic1, session1);
+    hk_subscription_store_remove_session_from_subscription(chr1, session1);
     HK_LOGI("4");
     hk_subscription_store_remove_session(session1);
     HK_LOGI("5");
     hk_subscription_store_remove_session(session1);
     HK_LOGI("6");
 
-    sessions = hk_subscription_store_get_sessions(characteristic1);
+    sessions = hk_subscription_store_get_sessions(chr1);
     session_count = hk_ll_count(sessions);
     TEST_ASSERT_EQUAL_INT(0, session_count);
 
     hk_subscription_store_free();
     free(session1);
     free(session2);
-    free(characteristic1);
-    free(characteristic2);
+    free(chr1);
+    free(chr2);
 }

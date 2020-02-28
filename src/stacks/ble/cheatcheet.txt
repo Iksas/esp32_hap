@@ -1,14 +1,14 @@
 opcodes
-0x01 HAP-Characteristic-Signature-Read
-0x02 HAP-Characteristic-Write
-0x03 HAP-Characteristic-Read
-0x04 HAP-Characteristic-Timed-Write
-0x05 HAP-Characteristic-Execute-Write
+0x01 HAP-Chr-Signature-Read
+0x02 HAP-Chr-Write
+0x03 HAP-Chr-Read
+0x04 HAP-Chr-Timed-Write
+0x05 HAP-Chr-Execute-Write
 0x06 HAP-Service-Signature-Read
-0x07 HAP-Characteristic-Configuration
+0x07 HAP-Chr-Configuration
 0x08 HAP-Protocol-Configuration
 
-Characteristics
+Chrs
 37: HK_CHR_VERSION
 a5: HK_CHR_SERVICE_SIGNATURE
 4c: HK_CHR_PAIR_SETUP

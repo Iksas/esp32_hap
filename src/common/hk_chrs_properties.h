@@ -2,7 +2,7 @@
 
 #include <freertos/FreeRTOS.h>
 
-#include "../include/homekit_characteristics.h"
+#include "../include/homekit_chrs.h"
 
 typedef enum
 {
@@ -34,5 +34,5 @@ typedef enum
     HK_CHR_PROP_SUPPORTS_BROADCAST_NOTIFY = 0x0200
 } hk_chr_prop_t;
 
- hk_format_t hk_characteristics_properties_get_type(hk_characteristic_types_t characteristic_type);
- uint16_t hk_characteristics_properties_get_prop(hk_characteristic_types_t characteristic_type);
+ hk_format_t hk_chrs_properties_get_type(hk_chr_types_t chr_type);
+ uint16_t hk_chrs_properties_get_prop(hk_chr_types_t chr_type);

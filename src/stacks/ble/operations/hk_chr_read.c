@@ -1,11 +1,11 @@
-#include "hk_characteristic_read.h"
+#include "hk_chr_read.h"
 
 #include "../../../utils/hk_logging.h"
 #include "../../../utils/hk_tlv.h"
 
 #include "../hk_formats_ble.h"
 
-void hk_characteristic_read_response(const ble_uuid128_t *characteristic_uuid, hk_session_t *session, hk_mem *response)
+void hk_chr_read_response(const ble_uuid128_t *chr_uuid, hk_session_t *session, hk_mem *response)
 {
     hk_tlv_t *tlv_data = NULL;
     void *value = NULL;
