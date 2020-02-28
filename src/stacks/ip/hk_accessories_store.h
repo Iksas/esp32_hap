@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../../include/homekit_chrs.h"
-#include "../../include/homekit_services.h"
+#include "../../include/homekit_srvs.h"
 #include "../../include/homekit_chrs.h"
 #include "../../common/hk_chrs_properties.h"
 
@@ -22,20 +22,20 @@ typedef struct
 typedef struct
 {
     size_t iid;
-    hk_service_types_t type;
+    hk_srv_types_t type;
     bool primary;
     bool hidden;
     hk_chr_t *chrs;
-} hk_service_t;
+} hk_srv_t;
 
 typedef struct
 {
     size_t aid;
-    hk_service_t *services;
+    hk_srv_t *srvs;
 } hk_accessory_t;
 
 void hk_accessories_store_add_accessory();
-void hk_accessories_store_add_service(hk_service_types_t service_type, bool primary, bool hidden);
+void hk_accessories_store_add_srv(hk_srv_types_t srv_type, bool primary, bool hidden);
 void* hk_accessories_store_add_chr(hk_chr_types_t chr_type, void *(*read)(), void (*write)(void *), bool can_notify);
 void hk_accessories_store_add_chr_static_read(hk_chr_types_t type, void *value);
 void hk_accessories_store_end_config();

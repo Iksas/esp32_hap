@@ -38,4 +38,4 @@ typedef enum {
     HK_SRV_FILTER_MAINTENANCE = 0xBA,
     HK_SRV_AIR_PURIFIER = 0xBB,
     HK_SRV_SERVICE_LABEL = 0xCC,
-} hk_service_types_t;
+} hk_srv_types_t;

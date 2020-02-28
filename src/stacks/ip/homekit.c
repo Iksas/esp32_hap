@@ -25,7 +25,7 @@ void hk_setup_start()
 void hk_setup_add_accessory(const char *name, const char *manufacturer, const char *model, const char *serial_number, const char *revision, void (*identify)())
 {
     hk_accessories_store_add_accessory();
-    hk_accessories_store_add_service(HK_SRV_ACCESSORY_INFORMATION, false, false);
+    hk_accessories_store_add_srv(HK_SRV_ACCESSORY_INFORMATION, false, false);
 
     hk_accessories_store_add_chr_static_read(HK_CHR_NAME, (void *)name);
     hk_accessories_store_add_chr_static_read(HK_CHR_MANUFACTURER, (void *)manufacturer);
@@ -35,9 +35,9 @@ void hk_setup_add_accessory(const char *name, const char *manufacturer, const ch
     hk_accessories_store_add_chr(HK_CHR_IDENTIFY, NULL, identify, false);
 }
 
-void hk_setup_add_service(hk_service_types_t service_type, bool primary, bool hidden)
+void hk_setup_add_srv(hk_srv_types_t srv_type, bool primary, bool hidden)
 {
-    hk_accessories_store_add_service(service_type, primary, hidden);
+    hk_accessories_store_add_srv(srv_type, primary, hidden);
 }
 
 void *hk_setup_add_chr(hk_chr_types_t type, void *(*read)(), void (*write)(void *, size_t), bool can_notify)

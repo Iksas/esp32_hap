@@ -12,9 +12,9 @@ typedef struct
     const char* static_data;
     void *(*read_callback)(size_t*);
     void *(*write_callback)(void *, size_t, size_t*);
-    char service_index;
-    char service_id;
-    const ble_uuid128_t* service_uuid;
+    char srv_index;
+    char srv_id;
+    const ble_uuid128_t* srv_uuid;
     char chr_index;
     hk_chr_types_t chr_type;
     int16_t max_length;

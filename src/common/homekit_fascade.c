@@ -14,10 +14,10 @@ void *hk_setup_add_switch(
     bool primary, 
     void (*identify)(), 
     void *(*read)(), 
-    void (*write)(void *, size_t))
+    void (*write)(void *, size_t, size_t*))
 {
     hk_setup_add_accessory(name, manufacturer, model, serial_number, revision, identify);
-    hk_setup_add_service(HK_SRV_SWITCH, primary, false);
+    hk_setup_add_srv(HK_SRV_SWITCH, primary, false);
     return hk_setup_add_chr(HK_CHR_ON, read, write, true);
 }
 
@@ -31,7 +31,7 @@ void *hk_setup_add_motion_sensor(
     void *(*read)())
 {
     hk_setup_add_accessory(name, manufacturer, model, serial_number, revision, hk_setup_dummy_identify);
-    //hk_setup_add_service(HK_SRV_MOTION_SENSOR, primary, false);
+    //hk_setup_add_srv(HK_SRV_MOTION_SENSOR, primary, false);
     //return hk_setup_add_chr(HK_CHR_MOTION_DETECTED, read, NULL, true);
     return NULL;
 }

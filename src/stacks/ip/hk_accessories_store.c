@@ -12,24 +12,24 @@ hk_accessory_t *hk_accessories_store_get_accessories()
 void hk_accessories_store_add_accessory()
 {
     hk_accessories = hk_ll_new(hk_accessories);
-    hk_accessories->services = NULL;
+    hk_accessories->srvs = NULL;
 }
 
-void hk_accessories_store_add_service(hk_service_types_t type, bool primary, bool hidden)
+void hk_accessories_store_add_srv(hk_srv_types_t type, bool primary, bool hidden)
 {
-    hk_service_t *service = hk_ll_new(hk_accessories->services);
+    hk_srv_t *srv = hk_ll_new(hk_accessories->srvs);
 
-    service->type = type;
-    service->primary = primary;
-    service->hidden = hidden;
-    service->chrs = NULL;
+    srv->type = type;
+    srv->primary = primary;
+    srv->hidden = hidden;
+    srv->chrs = NULL;
 
-    hk_accessories->services = service;
+    hk_accessories->srvs = srv;
 }
 
 void *hk_accessories_store_add_chr(hk_chr_types_t type, void *(*read)(), void (*write)(void *), bool can_notify)
 {
-    hk_chr_t *chr = hk_ll_new(hk_accessories->services->chrs);
+    hk_chr_t *chr = hk_ll_new(hk_accessories->srvs->chrs);
 
     chr->type = type;
     chr->static_value = NULL;
@@ -37,14 +37,14 @@ void *hk_accessories_store_add_chr(hk_chr_types_t type, void *(*read)(), void (*
     chr->write = write;
     chr->can_notify = can_notify;
 
-    hk_accessories->services->chrs = chr;
+    hk_accessories->srvs->chrs = chr;
 
     return chr;
 }
 
 void hk_accessories_store_add_chr_static_read(hk_chr_types_t type, void *value)
 {
-    hk_chr_t *chr = hk_ll_new(hk_accessories->services->chrs);
+    hk_chr_t *chr = hk_ll_new(hk_accessories->srvs->chrs);
 
     chr->type = type;
     chr->static_value = value;
@@ -52,7 +52,7 @@ void hk_accessories_store_add_chr_static_read(hk_chr_types_t type, void *value)
     chr->write = NULL;
     chr->can_notify = false;
 
-    hk_accessories->services->chrs = chr;
+    hk_accessories->srvs->chrs = chr;
 }
 
 void hk_accessories_store_end_config()
@@ -66,16 +66,16 @@ void hk_accessories_store_end_config()
         {
             iid = 0;
             accessory->aid = ++aid;
-            if (accessory->services)
+            if (accessory->srvs)
             {
-                accessory->services = hk_ll_reverse(accessory->services);
-                hk_ll_foreach(accessory->services, service)
+                accessory->srvs = hk_ll_reverse(accessory->srvs);
+                hk_ll_foreach(accessory->srvs, srv)
                 {
-                    service->iid = ++iid;
-                    if (service->chrs)
+                    srv->iid = ++iid;
+                    if (srv->chrs)
                     {
-                        service->chrs = hk_ll_reverse(service->chrs);
-                        hk_ll_foreach(service->chrs, chr)
+                        srv->chrs = hk_ll_reverse(srv->chrs);
+                        hk_ll_foreach(srv->chrs, chr)
                         {
                             chr->iid = ++iid;
                             chr->aid = accessory->aid;
@@ -93,13 +93,13 @@ hk_chr_t *hk_accessories_store_get_chr(size_t aid, size_t iid)
     {
         hk_ll_foreach(hk_accessories, accessory)
         {
-            if (aid == accessory->aid && accessory->services)
+            if (aid == accessory->aid && accessory->srvs)
             {
-                hk_ll_foreach(accessory->services, service)
+                hk_ll_foreach(accessory->srvs, srv)
                 {
-                    if (service->chrs)
+                    if (srv->chrs)
                     {
-                        hk_ll_foreach(service->chrs, chr)
+                        hk_ll_foreach(srv->chrs, chr)
                         {
                             if (iid == chr->iid)
                             {
@@ -121,13 +121,13 @@ hk_chr_t *hk_accessories_store_get_identify_chr()
     {
         hk_ll_foreach(hk_accessories, accessory)
         {
-            if (accessory->services)
+            if (accessory->srvs)
             {
-                hk_ll_foreach(accessory->services, service)
+                hk_ll_foreach(accessory->srvs, srv)
                 {
-                    if (service->chrs)
+                    if (srv->chrs)
                     {
-                        hk_ll_foreach(service->chrs, chr)
+                        hk_ll_foreach(srv->chrs, chr)
                         {
                             if (HK_CHR_IDENTIFY == chr->type)
                             {

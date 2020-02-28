@@ -9,9 +9,9 @@
 
 void (*hk_identify_callback)();
 
-void *hk_gatt_read_accessory_information_service_signature(size_t* response_length)
+void *hk_gatt_read_accessory_information_srv_signature(size_t* response_length)
 {
-    HK_LOGE("hk_gatt_read_accessory_information_service_signature");
+    HK_LOGE("hk_gatt_read_accessory_information_srv_signature");
     *response_length = 0;
     return NULL;
 }
@@ -52,7 +52,7 @@ void* hk_identify(void* request, size_t request_size, size_t* response_size){
 void hk_setup_add_accessory(const char *name, const char *manufacturer, const char *model, const char *serial_number, const char *revision, void (*identify)())
 {
     hk_identify_callback = identify;
-    hk_gatt_add_service(HK_SRV_ACCESSORY_INFORMATION, false, false);
+    hk_gatt_add_srv(HK_SRV_ACCESSORY_INFORMATION, false, false);
 
     hk_gatt_add_chr_static_read(HK_CHR_NAME, name);
     hk_gatt_add_chr_static_read(HK_CHR_MANUFACTURER, manufacturer);
@@ -61,20 +61,20 @@ void hk_setup_add_accessory(const char *name, const char *manufacturer, const ch
     hk_gatt_add_chr_static_read(HK_CHR_FIRMWARE_REVISION, revision);
     hk_gatt_add_chr(HK_CHR_IDENTIFY, NULL, hk_identify, false, -1, -1); 
 
-    hk_gatt_add_service(HK_SRV_HAP_PROTOCOL_INFORMATION, true, false);
-    hk_gatt_add_chr(HK_CHR_VERSION, hk_gatt_read_accessory_information_service_signature, NULL, true, -1, 64);
+    hk_gatt_add_srv(HK_SRV_HAP_PROTOCOL_INFORMATION, true, false);
+    hk_gatt_add_chr(HK_CHR_VERSION, hk_gatt_read_accessory_information_srv_signature, NULL, true, -1, 64);
     hk_gatt_add_chr(HK_CHR_SERVICE_SIGNATURE, hk_gatt_read_chr_signature, NULL, false, -1, -1);
 
-    hk_gatt_add_service(HK_SRV_PARIRING, true, false);
+    hk_gatt_add_srv(HK_SRV_PARIRING, true, false);
     hk_gatt_add_chr(HK_CHR_PAIR_SETUP, hk_pairing_ble_read_pair_setup, hk_pairing_ble_write_pair_setup, false, -1, -1);
     hk_gatt_add_chr(HK_CHR_PAIR_VERIFY, hk_pairing_ble_read_pair_verify, hk_pairing_ble_write_pair_verify, false, -1, -1);
     hk_gatt_add_chr(HK_CHR_PAIRING_FEATURES, hk_pairing_ble_read_pairing_features, NULL, false, -1, -1);
     hk_gatt_add_chr(HK_CHR_PAIRING_PAIRINGS, hk_pairing_ble_read_pairing_pairings, hk_pairing_ble_write_pairing_pairings, false, -1, -1);
 }
 
-void hk_setup_add_service(hk_service_types_t service_type, bool primary, bool hidden)
+void hk_setup_add_srv(hk_srv_types_t srv_type, bool primary, bool hidden)
 {
-    hk_gatt_add_service(service_type, primary, hidden);
+    hk_gatt_add_srv(srv_type, primary, hidden);
 }
 
 void *hk_setup_add_chr(hk_chr_types_t type, void *(*read)(size_t*), void* (*write)(void *, size_t, size_t*), bool can_notify)

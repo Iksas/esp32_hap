@@ -12,10 +12,10 @@
 // TEST_CASE("Accessories: check getting chr", "[accessories]")
 // {
 //     hk_accessories_store_add_accessory();
-//     hk_accessories_store_add_service(HK_SRV_ACCESSORY_INFORMATION, false, false);
+//     hk_accessories_store_add_srv(HK_SRV_ACCESSORY_INFORMATION, false, false);
 //     hk_accessories_store_add_chr_static_read(HK_CHR_NAME, (void *)"name");
 //     hk_accessories_store_add_chr_static_read(HK_CHR_MANUFACTURER, (void *)"manufacturer");
-//     hk_accessories_store_add_service(HK_SRV_AIR_PURIFIER, true, false);
+//     hk_accessories_store_add_srv(HK_SRV_AIR_PURIFIER, true, false);
 //     hk_accessories_store_end_config();
 
     

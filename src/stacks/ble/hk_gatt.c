@@ -16,24 +16,24 @@
 #include "operations/hk_chr_read.h"
 #include "operations/hk_chr_timed_write.h"
 #include "operations/hk_chr_execute_write.h"
-#include "operations/hk_service_signature_read.h"
+#include "operations/hk_srv_signature_read.h"
 #include "operations/hk_chr_configuration.h"
 #include "operations/hk_protocol_configuration.h"
 
-typedef struct ble_gatt_svc_def hk_ble_service_t;
+typedef struct ble_gatt_svc_def hk_ble_srv_t;
 typedef struct ble_gatt_chr_def hk_ble_chr_t;
 typedef struct ble_gatt_dsc_def hk_ble_descriptor_t;
 
 typedef struct
 {
-    int service_index;
-    char service_id;
+    int srv_index;
+    char srv_id;
     int chr_index;
     uint16_t instance_id;
 } hk_gatt_setup_info_t;
 
 hk_gatt_setup_info_t *hk_gatt_setup_info;
-hk_ble_service_t *hk_gatt_services = NULL;
+hk_ble_srv_t *hk_gatt_srvs = NULL;
 
 static void hk_logu(const char *message, const ble_uuid128_t *uuid)
 {
@@ -54,10 +54,10 @@ static int hk_gatt_read_ble_chr(struct ble_gatt_access_ctxt *ctxt, void *arg)
     hk_logu("Request to read ble characteristic", chr_uuid);
     hk_session_t *session = (hk_session_t *)arg;
 
-    if (hk_gatt_cmp(chr_uuid, (ble_uuid128_t *)&hk_uuid_manager_service_id))
+    if (hk_gatt_cmp(chr_uuid, (ble_uuid128_t *)&hk_uuid_manager_srv_id))
     {
-        HK_LOGD("Returning instance id for service: %d", session->service_id);
-        uint16_t id = session->service_id;
+        HK_LOGD("Returning instance id for service: %d", session->srv_id);
+        uint16_t id = session->srv_id;
         rc = os_mbuf_append(ctxt->om, &id, sizeof(uint16_t));
     }
     else
@@ -88,7 +88,7 @@ static int hk_gatt_read_ble_chr(struct ble_gatt_access_ctxt *ctxt, void *arg)
             hk_chr_execute_write_response(chr_uuid, session, response);
             break;
         case 6:
-            hk_service_signature_read_response(chr_uuid, session, response);
+            hk_srv_signature_read_response(chr_uuid, session, response);
             break;
         case 7:
             hk_chr_configuration_response(chr_uuid, session, response);
@@ -217,26 +217,26 @@ void *hk_gatt_alloc(void *ptr, size_t size)
     return ptr;
 }
 
-hk_ble_service_t *hk_gatt_alloc_new_service()
+hk_ble_srv_t *hk_gatt_alloc_new_srv()
 {
-    hk_gatt_setup_info->service_index++;
-    hk_gatt_services = (hk_ble_service_t *)hk_gatt_alloc(
-        hk_gatt_services,
-        (hk_gatt_setup_info->service_index + 1) * sizeof(hk_ble_service_t));
-    hk_ble_service_t *service = &hk_gatt_services[hk_gatt_setup_info->service_index];
-    memset((void *)service, 0, sizeof(hk_ble_service_t));
+    hk_gatt_setup_info->srv_index++;
+    hk_gatt_srvs = (hk_ble_srv_t *)hk_gatt_alloc(
+        hk_gatt_srvs,
+        (hk_gatt_setup_info->srv_index + 1) * sizeof(hk_ble_srv_t));
+    hk_ble_srv_t *srv = &hk_gatt_srvs[hk_gatt_setup_info->srv_index];
+    memset((void *)srv, 0, sizeof(hk_ble_srv_t));
 
-    return service;
+    return srv;
 }
 
-hk_ble_chr_t *hk_gatt_alloc_new_chr(hk_ble_service_t *current_service)
+hk_ble_chr_t *hk_gatt_alloc_new_chr(hk_ble_srv_t *current_srv)
 {
     hk_gatt_setup_info->chr_index++;
-    current_service->characteristics = (hk_ble_chr_t *)hk_gatt_alloc(
-        (void *)current_service->characteristics,
+    current_srv->characteristics = (hk_ble_chr_t *)hk_gatt_alloc(
+        (void *)current_srv->characteristics,
         (hk_gatt_setup_info->chr_index + 1) * sizeof(hk_ble_chr_t));
     hk_ble_chr_t *chr =
-        (hk_ble_chr_t *)&current_service->characteristics[hk_gatt_setup_info->chr_index];
+        (hk_ble_chr_t *)&current_srv->characteristics[hk_gatt_setup_info->chr_index];
 
     memset(chr, 0, sizeof(hk_ble_chr_t));
 
@@ -245,7 +245,7 @@ hk_ble_chr_t *hk_gatt_alloc_new_chr(hk_ble_service_t *current_service)
 
 void hk_gatt_chr_init(
     hk_ble_chr_t *chr,
-    const ble_uuid_t *service_uuid,
+    const ble_uuid_t *srv_uuid,
     ble_uuid128_t *chr_uuid,
     ble_gatt_chr_flags flags,
     hk_session_t *session,
@@ -276,33 +276,33 @@ void hk_gatt_init()
     HK_LOGD("Initializing GATT.");
 
     hk_gatt_setup_info = malloc(sizeof(hk_gatt_setup_info_t));
-    hk_gatt_setup_info->service_index = -1;
+    hk_gatt_setup_info->srv_index = -1;
     hk_gatt_setup_info->chr_index = -1;
     hk_gatt_setup_info->instance_id = 0;
 }
 
-void hk_gatt_add_service(hk_service_types_t service_type, bool primary, bool hidden)
+void hk_gatt_add_srv(hk_srv_types_t srv_type, bool primary, bool hidden)
 {
-    if (hk_gatt_setup_info->service_index >= 0)
+    if (hk_gatt_setup_info->srv_index >= 0)
     {
-        // add end marker to chr array of last service
-        hk_ble_service_t *last_service = &hk_gatt_services[hk_gatt_setup_info->service_index];
-        hk_gatt_alloc_new_chr(last_service);
+        // add end marker to chr array of last srv
+        hk_ble_srv_t *last_srv = &hk_gatt_srvs[hk_gatt_setup_info->srv_index];
+        hk_gatt_alloc_new_chr(last_srv);
         hk_gatt_setup_info->chr_index = -1;
     }
 
-    hk_ble_service_t *service = hk_gatt_alloc_new_service();
+    hk_ble_srv_t *srv = hk_gatt_alloc_new_srv();
 
-    ble_uuid128_t *service_uuid = hk_uuid_manager_get((uint8_t)service_type);
-    service->type = 1;
-    service->uuid = &service_uuid->u;
+    ble_uuid128_t *srv_uuid = hk_uuid_manager_get((uint8_t)srv_type);
+    srv->type = 1;
+    srv->uuid = &srv_uuid->u;
 
-    // add service id chr
-    hk_ble_chr_t *chr = hk_gatt_alloc_new_chr(service); // todo: combine in one function
+    // add srv id chr
+    hk_ble_chr_t *chr = hk_gatt_alloc_new_chr(srv); // todo: combine in one function
     hk_session_t *session = (hk_session_t *)malloc(sizeof(hk_session_t));
     session->static_data = NULL;
-    session->service_id = hk_gatt_setup_info->service_id = session->chr_index = hk_gatt_setup_info->instance_id++;
-    hk_gatt_chr_init(chr, service->uuid, (ble_uuid128_t *)&hk_uuid_manager_service_id, BLE_GATT_CHR_F_READ, session, false);
+    session->srv_id = hk_gatt_setup_info->srv_id = session->chr_index = hk_gatt_setup_info->instance_id++;
+    hk_gatt_chr_init(chr, srv->uuid, (ble_uuid128_t *)&hk_uuid_manager_srv_id, BLE_GATT_CHR_F_READ, session, false);
 }
 
 void *hk_gatt_add_chr(
@@ -313,14 +313,14 @@ void *hk_gatt_add_chr(
     int16_t min_length,
     int16_t max_length)
 {
-    hk_ble_service_t *current_service = &hk_gatt_services[hk_gatt_setup_info->service_index];
+    hk_ble_srv_t *current_srv = &hk_gatt_srvs[hk_gatt_setup_info->srv_index];
     ble_uuid128_t *chr_uuid = hk_uuid_manager_get((uint8_t)chr_type);
-    hk_ble_chr_t *chr = hk_gatt_alloc_new_chr(current_service);
+    hk_ble_chr_t *chr = hk_gatt_alloc_new_chr(current_srv);
     hk_session_t *session = (hk_session_t *)malloc(sizeof(hk_session_t));
     session->static_data = NULL;
-    session->service_uuid = (ble_uuid128_t *)current_service->uuid;
-    session->service_index = hk_gatt_setup_info->service_index;
-    session->service_id = hk_gatt_setup_info->service_id;
+    session->srv_uuid = (ble_uuid128_t *)current_srv->uuid;
+    session->srv_index = hk_gatt_setup_info->srv_index;
+    session->srv_id = hk_gatt_setup_info->srv_id;
     session->chr_index = hk_gatt_setup_info->instance_id++;
     session->chr_type = chr_type;
     session->transaction_id = -1;
@@ -340,7 +340,7 @@ void *hk_gatt_add_chr(
 
     hk_gatt_chr_init(
         chr,
-        current_service->uuid,
+        current_srv->uuid,
         chr_uuid,
         flags,
         session, true);
@@ -349,14 +349,14 @@ void *hk_gatt_add_chr(
 
 void hk_gatt_add_chr_static_read(hk_chr_types_t chr_type, const char *value)
 {
-    hk_ble_service_t *current_service = &hk_gatt_services[hk_gatt_setup_info->service_index];
+    hk_ble_srv_t *current_srv = &hk_gatt_srvs[hk_gatt_setup_info->srv_index];
     ble_uuid128_t *chr_uuid = hk_uuid_manager_get((uint8_t)chr_type);
-    hk_ble_chr_t *chr = hk_gatt_alloc_new_chr(current_service);
+    hk_ble_chr_t *chr = hk_gatt_alloc_new_chr(current_srv);
     hk_session_t *session = (hk_session_t *)malloc(sizeof(hk_session_t));
     session->static_data = value;
-    session->service_uuid = (ble_uuid128_t *)current_service->uuid;
-    session->service_index = hk_gatt_setup_info->service_index;
-    session->service_id = hk_gatt_setup_info->service_id;
+    session->srv_uuid = (ble_uuid128_t *)current_srv->uuid;
+    session->srv_index = hk_gatt_setup_info->srv_index;
+    session->srv_id = hk_gatt_setup_info->srv_id;
     session->chr_index = hk_gatt_setup_info->instance_id++;
     session->chr_type = chr_type;
     session->transaction_id = -1;
@@ -367,7 +367,7 @@ void hk_gatt_add_chr_static_read(hk_chr_types_t chr_type, const char *value)
 
     hk_gatt_chr_init(
         chr,
-        current_service->uuid,
+        current_srv->uuid,
         chr_uuid,
         BLE_GATT_CHR_F_READ | BLE_GATT_CHR_F_WRITE | BLE_GATT_CHR_PROP_READ,
         session, true);
@@ -375,15 +375,15 @@ void hk_gatt_add_chr_static_read(hk_chr_types_t chr_type, const char *value)
 
 void hk_gatt_end_config()
 {
-    if (hk_gatt_setup_info->service_index >= 0)
+    if (hk_gatt_setup_info->srv_index >= 0)
     {
-        // add end marker to chr array of last service
-        hk_ble_service_t *last_service = &hk_gatt_services[hk_gatt_setup_info->service_index];
-        hk_gatt_alloc_new_chr(last_service);
+        // add end marker to chr array of last srv
+        hk_ble_srv_t *last_srv = &hk_gatt_srvs[hk_gatt_setup_info->srv_index];
+        hk_gatt_alloc_new_chr(last_srv);
     }
 
-    // add end marker to services array
-    hk_gatt_alloc_new_service();
+    // add end marker to srvs array
+    hk_gatt_alloc_new_srv();
 
     free(hk_gatt_setup_info);
 }
@@ -393,14 +393,14 @@ void hk_gatt_start()
     HK_LOGD("Starting GATT.");
     ble_svc_gatt_init();
 
-    int rc = ble_gatts_count_cfg(hk_gatt_services);
+    int rc = ble_gatts_count_cfg(hk_gatt_srvs);
     if (rc != 0)
     {
         HK_LOGE("gatt_svr_init ble_gatts_count_cfg: %d", rc);
         //return rc;
     }
 
-    rc = ble_gatts_add_svcs(hk_gatt_services);
+    rc = ble_gatts_add_svcs(hk_gatt_srvs);
     if (rc != 0)
     {
         HK_LOGE("Error setting gatt config: %d", rc);

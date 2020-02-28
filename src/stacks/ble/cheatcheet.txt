@@ -4,7 +4,7 @@ opcodes
 0x03 HAP-Chr-Read
 0x04 HAP-Chr-Timed-Write
 0x05 HAP-Chr-Execute-Write
-0x06 HAP-Service-Signature-Read
+0x06 HAP-Srv-Signature-Read
 0x07 HAP-Chr-Configuration
 0x08 HAP-Protocol-Configuration
 

@@ -1,6 +1,6 @@
 #include "hk_accessories_serializer.h"
 
-#include "../../include/homekit_services.h"
+#include "../../include/homekit_srvs.h"
 #include "../../include/homekit_chrs.h"
 #include "../../common/hk_chrs_properties.h"
 #include "../../utils/hk_logging.h"
@@ -122,24 +122,24 @@ void hk_accessories_serializer_chr(hk_chr_t *chr, cJSON *j_chrs)
     hk_accessories_serializer_value(chr, j_chr);
 }
 
-void hk_accessories_serializer_service(hk_service_t *service, cJSON *j_services)
+void hk_accessories_serializer_srv(hk_srv_t *srv, cJSON *j_srvs)
 {
-    cJSON *j_service = cJSON_CreateObject();
-    cJSON_AddItemToArray(j_services, j_service);
+    cJSON *j_srv = cJSON_CreateObject();
+    cJSON_AddItemToArray(j_srvs, j_srv);
 
     char type[37] = {
         0,
     };
-    sprintf(type, HAP_UUID, service->type); // todo: check if full type is needed
-    cJSON_AddStringToObject(j_service, "type", type);
-    cJSON_AddNumberToObject(j_service, "iid", service->iid);
-    cJSON_AddBoolToObject(j_service, "primary", service->primary);
-    //cJSON_AddBoolToObject(j_service, "hidden", service->hidden);
+    sprintf(type, HAP_UUID, srv->type); // todo: check if full type is needed
+    cJSON_AddStringToObject(j_srv, "type", type);
+    cJSON_AddNumberToObject(j_srv, "iid", srv->iid);
+    cJSON_AddBoolToObject(j_srv, "primary", srv->primary);
+    //cJSON_AddBoolToObject(j_srv, "hidden", srv->hidden);
 
     cJSON *j_chrs = cJSON_CreateArray();
-    cJSON_AddItemToObject(j_service, "chrs", j_chrs);
+    cJSON_AddItemToObject(j_srv, "chrs", j_chrs);
 
-    hk_ll_foreach(service->chrs, chr)
+    hk_ll_foreach(srv->chrs, chr)
     {
         hk_accessories_serializer_chr(chr, j_chrs);
     }
@@ -151,12 +151,12 @@ void hk_accessories_serializer_accessory(hk_accessory_t *accessory, cJSON *j_acc
     cJSON_AddNumberToObject(j_accessory, "aid", accessory->aid);
     cJSON_AddItemToArray(j_accessories, j_accessory);
 
-    cJSON *j_services = cJSON_CreateArray();
-    cJSON_AddItemToObject(j_accessory, "services", j_services);
+    cJSON *j_srvs = cJSON_CreateArray();
+    cJSON_AddItemToObject(j_accessory, "srvs", j_srvs);
 
-    hk_ll_foreach(accessory->services, service)
+    hk_ll_foreach(accessory->srvs, srv)
     {
-        hk_accessories_serializer_service(service, j_services);
+        hk_accessories_serializer_srv(srv, j_srvs);
     }
 }
 
