@@ -1,5 +1,7 @@
 #pragma once
 
+#include <freertos/FreeRTOS.h>
+
 #include "../include/homekit_characteristics.h"
 
 typedef enum
@@ -17,4 +19,20 @@ typedef enum
     HK_FORMAT_UNKNOWN
 } hk_format_t;
 
+
+typedef enum
+{
+    HK_CHR_PROP_SUPPORTS_READ = 0x0001,
+    HK_CHR_PROP_SUPPORTS_WRITE = 0x0002,
+    HK_CHR_PROP_SUPPORTS_ADDITIONAL_AUTH_DATA = 0x0004,
+    HK_CHR_PROP_REQUIRES_TIMED_WRITE = 0x0008,
+    HK_CHR_PROP_SUPPORTS_SECURE_READS = 0x0010,
+    HK_CHR_PROP_SUPPORTS_SECURE_WRITES = 0x0020,
+    HK_CHR_PROP_HIDDEN_FROM_USER = 0x0040,
+    HK_CHR_PROP_NOTIFIES_EVENTS_CONNECTED_STATE = 0x0080,
+    HK_CHR_PROP_NOTIFIES_EVENTS_DISCONNECTED_STATE = 0x0100,
+    HK_CHR_PROP_SUPPORTS_BROADCAST_NOTIFY = 0x0200
+} hk_chr_prop_t;
+
  hk_format_t hk_characteristics_properties_get_type(hk_characteristic_types_t characteristic_type);
+ uint16_t hk_characteristics_properties_get_prop(hk_characteristic_types_t characteristic_type);

@@ -87,3 +87,5 @@ void hk_tlv_free(hk_tlv_t *tlv_list);
 void hk_tlv_serialize(hk_tlv_t *tlv_list, hk_mem *result);
 hk_tlv_t *hk_tlv_deserialize(hk_mem *data);
 hk_tlv_t *hk_tlv_deserialize_buffer(char *data, size_t size);
+
+void hk_tlv_log(const char *title, hk_tlv_t *tlv_list, bool with_value, bool formatted);

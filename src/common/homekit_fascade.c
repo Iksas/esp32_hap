@@ -14,7 +14,7 @@ void *hk_setup_add_switch(
     bool primary, 
     void (*identify)(), 
     void *(*read)(), 
-    void (*write)(void *))
+    void (*write)(void *, size_t))
 {
     hk_setup_add_accessory(name, manufacturer, model, serial_number, revision, identify);
     hk_setup_add_service(HK_SRV_SWITCH, primary, false);

@@ -38,8 +38,8 @@ char* hk_formats_ble_get(hk_characteristic_types_t characteristic_type)
         case HK_FORMAT_DATA:
             return (char*)hk_formats_ble_data;
         default:
-            HK_LOGE("Cannot convert, because format not known: %d", characteristic_type);
-    return NULL;
+            HK_LOGE("Cannot convert, because format not known: %d", characteristic_format);
+            return NULL;
     }
     
 }

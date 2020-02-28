@@ -14,5 +14,5 @@
 #define HK_LOGE(message, ...) ESP_LOGE(TAG, "%s(%d)-> " message, __FILENAME__, __LINE__, ##__VA_ARGS__) 
 #define HK_LOGEE(error) ESP_LOGE(TAG, "%s", esp_err_to_name(error))
 
-void hk_log_print_bytewise(const char *title, char *data, size_t size);
+void hk_log_print_bytewise(const char *title, char *data, size_t size, bool formatted);
 void hk_log_print_as_string(const char *title, char *data, size_t size);

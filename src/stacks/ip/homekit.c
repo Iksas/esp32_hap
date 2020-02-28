@@ -40,7 +40,7 @@ void hk_setup_add_service(hk_service_types_t service_type, bool primary, bool hi
     hk_accessories_store_add_service(service_type, primary, hidden);
 }
 
-void *hk_setup_add_characteristic(hk_characteristic_types_t type, void *(*read)(), void (*write)(void *), bool can_notify)
+void *hk_setup_add_characteristic(hk_characteristic_types_t type, void *(*read)(), void (*write)(void *, size_t), bool can_notify)
 {
     return hk_accessories_store_add_characteristic(type, read, write, can_notify);
 }

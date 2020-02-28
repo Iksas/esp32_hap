@@ -1,4 +1,4 @@
-set(COMPONENT_SRCDIRS src src/common src/crypto src/stacks src/utils )
+set(COMPONENT_SRCDIRS src src/common src/crypto src/utils )
 set(COMPONENT_PRIV_REQUIRES bt esp32_hap_wolfssl esp_http_server json mdns nghttp nvs_flash)
 
 if(CONFIG_ESP32_HAP_STACK_IP)

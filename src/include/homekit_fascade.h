@@ -9,7 +9,7 @@ void *hk_setup_add_switch(
     bool primary,
     void (*identify)(),
     void *(*read)(),
-    void (*write)(void *));
+    void (*write)(void *, size_t));
 
 void *hk_setup_add_motion_sensor(
     const char *name,

@@ -55,12 +55,14 @@ hk_tlv_t *hk_tlv_add(hk_tlv_t *tlv_list, char type, hk_mem *data)
     return hk_tlv_add_buffer(tlv_list, type, data->ptr, data->size);
 }
 
-hk_tlv_t *hk_tlv_add_uint8(hk_tlv_t *tlv_list, char type, uint8_t data){
-    return hk_tlv_add_buffer(tlv_list, type, (char*)&data, 1);
+hk_tlv_t *hk_tlv_add_uint8(hk_tlv_t *tlv_list, char type, uint8_t data)
+{
+    return hk_tlv_add_buffer(tlv_list, type, (char *)&data, 1);
 }
 
-hk_tlv_t *hk_tlv_add_uint16(hk_tlv_t *tlv_list, char type, uint16_t data){
-    return hk_tlv_add_buffer(tlv_list, type, (char*)&data, 2);
+hk_tlv_t *hk_tlv_add_uint16(hk_tlv_t *tlv_list, char type, uint16_t data)
+{
+    return hk_tlv_add_buffer(tlv_list, type, (char *)&data, 2);
 }
 
 esp_err_t hk_tlv_get_mem_by_type(hk_tlv_t *tlv, char type, hk_mem *result)
@@ -118,7 +120,7 @@ hk_tlv_t *hk_tlv_deserialize(hk_mem *data)
 hk_tlv_t *hk_tlv_deserialize_buffer(char *data, size_t size)
 {
     hk_tlv_t *tlv_list = NULL;
-    
+
     for (size_t i = 0; i < size;)
     {
         char type = data[i++];
@@ -141,7 +143,7 @@ hk_tlv_t *hk_tlv_deserialize_buffer(char *data, size_t size)
 size_t hk_tlv_get_size(hk_tlv_t *tlv_list)
 {
     size_t size = 0;
-    
+
     hk_ll_foreach(tlv_list, tlv)
     {
         size += 2;
@@ -160,4 +162,39 @@ void hk_tlv_free(hk_tlv_t *tlv_list)
     }
 
     hk_ll_free(tlv_list);
+}
+
+void hk_tlv_log(const char *title, hk_tlv_t *tlv_list, bool with_value, bool formatted)
+{
+    printf("-------------- %s --------------\n", title);
+    hk_ll_foreach(tlv_list, tlv)
+    {
+        printf("type: %d", tlv->type);
+        printf(", length: %d, value:", tlv->length);
+
+        if (with_value)
+        {
+            for (size_t i = 0; i < tlv->length; i++)
+            {
+                if (i % 8 == 0 && i != 0 && formatted)
+                {
+                    printf("\t");
+                }
+
+                if (i % 16 == 0 && formatted)
+                {
+                    printf("\n");
+                }
+                if(formatted){
+                    printf("0x%02x, ", tlv->value[i]);
+                }else{
+                    printf("%02x", tlv->value[i]);
+                }
+            }
+        }
+
+        printf("\n");
+    }
+
+    printf("------------------------------------------\n");
 }
