@@ -15,7 +15,6 @@ hk_session_t *hk_session_create(hk_chr_types_t chr_type, hk_session_setup_info_t
     session->transaction_id = -1;
     session->last_opcode = -1;
     session->request_length = -1;
-    session->request_received = -1;
     session->max_length = -1;
     session->min_length = -1;
     session->read_callback = NULL;

@@ -39,6 +39,69 @@ static bool hk_gatt_cmp(const ble_uuid128_t *uuid1, const ble_uuid128_t *uuid2)
     return ble_uuid_cmp(&uuid1->u, &uuid2->u) == 0;
 }
 
+static int hk_gatt_read_ble_descriptor(struct ble_gatt_access_ctxt *ctxt, void *arg)
+{
+    int rc = 0;
+    const ble_uuid128_t *chr_uuid = BLE_UUID128(ctxt->chr->uuid);
+    hk_logu("Read descriptor of  chr", chr_uuid);
+    const ble_uuid128_t *descriptor_uuid = BLE_UUID128(ctxt->dsc->uuid);
+    hk_logu("with id", descriptor_uuid);
+    hk_session_t *session = (hk_session_t *)arg;
+
+    if (hk_gatt_cmp(descriptor_uuid, (ble_uuid128_t *)&hk_uuid_manager_desciptor_instance_id))
+    {
+        HK_LOGD("Returning instance id for chr: %d", session->chr_index);
+        uint16_t id = session->chr_index;
+        rc = os_mbuf_append(ctxt->om, &id, sizeof(uint16_t));
+    }
+    else
+    {
+        HK_LOGE("Operation not implemented.");
+    }
+
+    return rc == 0 ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES;
+}
+
+static int hk_gatt_write_ble_chr(struct ble_gatt_access_ctxt *ctxt, void *arg)
+{
+    int rc = 0;
+    const ble_uuid128_t *chr_uuid = BLE_UUID128(ctxt->chr->uuid);
+    hk_session_t *session = (hk_session_t *)arg;
+    hk_logu("Request to write ble chr", chr_uuid);
+
+    uint8_t buffer_len = OS_MBUF_PKTLEN(ctxt->om);
+    uint8_t buffer[buffer_len];
+    uint16_t out_len = 0;
+    rc = ble_hs_mbuf_to_flat(ctxt->om, buffer, buffer_len, &out_len);
+    hk_log_print_bytewise("Request", (char*)buffer, out_len, false);
+    uint8_t control_field = buffer[0];
+    if (control_field && 0b10000000)
+    {
+        // continuation
+        hk_mem_append_buffer(session->request, buffer + 2, out_len - 1); //continuation is preceeded by controlfield and transaction id
+    }
+    else
+    {
+        session->last_opcode = buffer[1];
+        session->transaction_id = buffer[2];
+
+        hk_mem_set(session->request, 0);
+        if (out_len > 5)
+        {
+            memcpy(&session->request_length, buffer + 5, 2);
+            hk_mem_append_buffer(session->request, buffer + 7, out_len -7); // -7 because of PDU start
+        }
+    }
+
+    if(session->request_length == session->request->size){
+        // todo, execute functions
+    }
+
+    rc = rc == 0 ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES;
+
+    return rc;
+}
+
 static int hk_gatt_read_ble_chr(struct ble_gatt_access_ctxt *ctxt, void *arg)
 {
     int rc = 0;
@@ -54,13 +117,6 @@ static int hk_gatt_read_ble_chr(struct ble_gatt_access_ctxt *ctxt, void *arg)
     }
     else
     {
-        // todo: next 5 lines probably not needed
-        // int buffer_len = OS_MBUF_PKTLEN(ctxt->om);
-        // char buffer[buffer_len];
-        // uint16_t out_len = 0;
-        // rc = ble_hs_mbuf_to_flat(ctxt->om, buffer, buffer_len, &out_len);
-        // hk_log_print_bytewise("Request", buffer, out_len, false);
-
         hk_mem *response = hk_mem_create();
         switch (session->last_opcode)
         {
@@ -100,67 +156,21 @@ static int hk_gatt_read_ble_chr(struct ble_gatt_access_ctxt *ctxt, void *arg)
         {
             //write body length
             uint16_t body_length = response->size;
-            hk_mem_prepend_buffer(response, (char*)&body_length, sizeof(uint16_t));
-            hk_mem_prepend_buffer(response, (char*)out_buffer, 3);
+            hk_mem_prepend_buffer(response, (char *)&body_length, sizeof(uint16_t));
+            hk_mem_prepend_buffer(response, (char *)out_buffer, 3);
 
             //write body
             rc = os_mbuf_append(ctxt->om, response->ptr, response->size);
             hk_log_print_bytewise("Response with body", response->ptr, response->size, false);
-
-        } else {
+        }
+        else
+        {
             rc = os_mbuf_append(ctxt->om, out_buffer, 3);
-            hk_log_print_bytewise("Response without body", (char*)out_buffer, 3, false);
+            hk_log_print_bytewise("Response without body", (char *)out_buffer, 3, false);
         }
     }
 
     return rc == 0 ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES;
-}
-
-static int hk_gatt_read_ble_descriptor(struct ble_gatt_access_ctxt *ctxt, void *arg)
-{
-    int rc = 0;
-    const ble_uuid128_t *chr_uuid = BLE_UUID128(ctxt->chr->uuid);
-    hk_logu("Read descriptor of  chr", chr_uuid);
-    const ble_uuid128_t *descriptor_uuid = BLE_UUID128(ctxt->dsc->uuid);
-    hk_logu("with id", descriptor_uuid);
-    hk_session_t *session = (hk_session_t *)arg;
-
-    if (hk_gatt_cmp(descriptor_uuid, (ble_uuid128_t *)&hk_uuid_manager_desciptor_instance_id))
-    {
-        HK_LOGD("Returning instance id for chr: %d", session->chr_index);
-        uint16_t id = session->chr_index;
-        rc = os_mbuf_append(ctxt->om, &id, sizeof(uint16_t));
-    }
-    else
-    {
-        HK_LOGE("Operation not implemented.");
-    }
-
-    return rc == 0 ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES;
-}
-
-static int hk_gatt_write_ble_chr(struct ble_gatt_access_ctxt *ctxt, void *arg)
-{
-    int rc = 0;
-    const ble_uuid128_t *chr_uuid = BLE_UUID128(ctxt->chr->uuid);
-    hk_session_t *session = (hk_session_t *)arg;
-    hk_logu("Request to write ble chr", chr_uuid);
-
-    uint8_t buffer_len = OS_MBUF_PKTLEN(ctxt->om);
-    char buffer[buffer_len];
-    uint16_t out_len = 0;
-    rc = ble_hs_mbuf_to_flat(ctxt->om, buffer, buffer_len, &out_len);
-    hk_log_print_bytewise("Request", buffer, out_len, false);
-    session->last_opcode = buffer[1];
-    session->transaction_id = buffer[2];
-    uint16_t body_length = buffer[5];
-    
-    hk_mem_set(session->request, 0);
-    hk_mem_append_buffer(session->request, buffer + 7, body_length);
-
-    rc = rc == 0 ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES;
-
-    return rc;
 }
 
 static int hk_gatt_access_callback(uint16_t conn_handle, uint16_t attr_handle, struct ble_gatt_access_ctxt *ctxt, void *arg)
@@ -299,8 +309,8 @@ void hk_gatt_add_srv(hk_srv_types_t srv_type, bool primary, bool hidden)
 
 void *hk_gatt_add_chr(
     hk_chr_types_t chr_type,
-    void (*read)(hk_mem* response),
-    void (*write)(hk_mem* request, hk_mem* response),
+    void (*read)(hk_mem *response),
+    void (*write)(hk_mem *request, hk_mem *response),
     bool can_notify,
     int16_t min_length,
     int16_t max_length)
@@ -337,7 +347,6 @@ void hk_gatt_add_chr_static_read(hk_chr_types_t chr_type, const char *value)
     hk_ble_srv_t *current_srv = &hk_gatt_srvs[hk_gatt_setup_info->srv_index];
     ble_uuid128_t *chr_uuid = hk_uuid_manager_get((uint8_t)chr_type);
     hk_ble_chr_t *chr = hk_gatt_alloc_new_chr(current_srv);
-
 
     hk_session_t *session = hk_session_create(chr_type, hk_gatt_setup_info);
     session->srv_uuid = (ble_uuid128_t *)current_srv->uuid;

@@ -14,15 +14,15 @@ void hk_read_accessory_information_srv_signature(hk_mem* response)
     HK_LOGE("hk_gatt_read_accessory_information_srv_signature");
 }
 
-void hk_read_chr_signature(hk_mem* response)
-{
-    HK_LOGE("hk_gatt_read_chr_signature");
-}
-
 void hk_identify(hk_mem* request, hk_mem* response){
     if(hk_identify_callback != NULL){
         hk_identify_callback();
     }
+}
+
+void hk_read_chr_signature(hk_mem* response)
+{
+    HK_LOGE("hk_gatt_read_chr_signature");
 }
 
 void hk_init(const char *name, const hk_categories_t category, const char *code)
