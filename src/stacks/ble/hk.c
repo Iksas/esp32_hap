@@ -9,18 +9,20 @@
 
 void (*hk_identify_callback)();
 
-void *hk_gatt_read_accessory_information_srv_signature(size_t* response_length)
+void hk_read_accessory_information_srv_signature(hk_mem* response)
 {
     HK_LOGE("hk_gatt_read_accessory_information_srv_signature");
-    *response_length = 0;
-    return NULL;
 }
 
-void *hk_gatt_read_chr_signature(size_t* response_length)
+void hk_read_chr_signature(hk_mem* response)
 {
     HK_LOGE("hk_gatt_read_chr_signature");
-    *response_length = 0;
-    return NULL;
+}
+
+void hk_identify(hk_mem* request, hk_mem* response){
+    if(hk_identify_callback != NULL){
+        hk_identify_callback();
+    }
 }
 
 void hk_init(const char *name, const hk_categories_t category, const char *code)
@@ -41,14 +43,6 @@ void hk_setup_start()
     hk_gatt_init();
 }
 
-void* hk_identify(void* request, size_t request_size, size_t* response_size){
-    if(hk_identify_callback != NULL){
-        hk_identify_callback();
-    }
-
-    return NULL;
-}
-
 void hk_setup_add_accessory(const char *name, const char *manufacturer, const char *model, const char *serial_number, const char *revision, void (*identify)())
 {
     hk_identify_callback = identify;
@@ -62,8 +56,8 @@ void hk_setup_add_accessory(const char *name, const char *manufacturer, const ch
     hk_gatt_add_chr(HK_CHR_IDENTIFY, NULL, hk_identify, false, -1, -1); 
 
     hk_gatt_add_srv(HK_SRV_HAP_PROTOCOL_INFORMATION, true, false);
-    hk_gatt_add_chr(HK_CHR_VERSION, hk_gatt_read_accessory_information_srv_signature, NULL, true, -1, 64);
-    hk_gatt_add_chr(HK_CHR_SERVICE_SIGNATURE, hk_gatt_read_chr_signature, NULL, false, -1, -1);
+    hk_gatt_add_chr(HK_CHR_VERSION, hk_read_accessory_information_srv_signature, NULL, true, -1, 64);
+    hk_gatt_add_chr(HK_CHR_SERVICE_SIGNATURE, hk_read_chr_signature, NULL, false, -1, -1);
 
     hk_gatt_add_srv(HK_SRV_PARIRING, true, false);
     hk_gatt_add_chr(HK_CHR_PAIR_SETUP, hk_pairing_ble_read_pair_setup, hk_pairing_ble_write_pair_setup, false, -1, -1);

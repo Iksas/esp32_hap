@@ -24,15 +24,7 @@ typedef struct ble_gatt_svc_def hk_ble_srv_t;
 typedef struct ble_gatt_chr_def hk_ble_chr_t;
 typedef struct ble_gatt_dsc_def hk_ble_descriptor_t;
 
-typedef struct
-{
-    int srv_index;
-    char srv_id;
-    int chr_index;
-    uint16_t instance_id;
-} hk_gatt_setup_info_t;
-
-hk_gatt_setup_info_t *hk_gatt_setup_info;
+hk_session_setup_info_t *hk_gatt_setup_info;
 hk_ble_srv_t *hk_gatt_srvs = NULL;
 
 static void hk_logu(const char *message, const ble_uuid128_t *uuid)
@@ -275,7 +267,7 @@ void hk_gatt_init()
 {
     HK_LOGD("Initializing GATT.");
 
-    hk_gatt_setup_info = malloc(sizeof(hk_gatt_setup_info_t));
+    hk_gatt_setup_info = malloc(sizeof(hk_session_setup_info_t));
     hk_gatt_setup_info->srv_index = -1;
     hk_gatt_setup_info->chr_index = -1;
     hk_gatt_setup_info->instance_id = 0;
@@ -307,8 +299,8 @@ void hk_gatt_add_srv(hk_srv_types_t srv_type, bool primary, bool hidden)
 
 void *hk_gatt_add_chr(
     hk_chr_types_t chr_type,
-    void *(*read)(size_t*),
-    void *(*write)(void *, size_t, size_t*),
+    void (*read)(hk_mem* response),
+    void (*write)(hk_mem* request, hk_mem* response),
     bool can_notify,
     int16_t min_length,
     int16_t max_length)
@@ -316,20 +308,13 @@ void *hk_gatt_add_chr(
     hk_ble_srv_t *current_srv = &hk_gatt_srvs[hk_gatt_setup_info->srv_index];
     ble_uuid128_t *chr_uuid = hk_uuid_manager_get((uint8_t)chr_type);
     hk_ble_chr_t *chr = hk_gatt_alloc_new_chr(current_srv);
-    hk_session_t *session = (hk_session_t *)malloc(sizeof(hk_session_t));
-    session->static_data = NULL;
+
+    hk_session_t *session = hk_session_create(chr_type, hk_gatt_setup_info);
     session->srv_uuid = (ble_uuid128_t *)current_srv->uuid;
-    session->srv_index = hk_gatt_setup_info->srv_index;
-    session->srv_id = hk_gatt_setup_info->srv_id;
-    session->chr_index = hk_gatt_setup_info->instance_id++;
-    session->chr_type = chr_type;
-    session->transaction_id = -1;
-    session->last_opcode = -1;
     session->read_callback = read;
     session->write_callback = write;
     session->max_length = max_length;
     session->min_length = min_length;
-    session->request = hk_mem_create();
 
     ble_gatt_chr_flags flags = BLE_GATT_CHR_F_READ | BLE_GATT_CHR_F_WRITE | BLE_GATT_CHR_PROP_READ;
 
@@ -352,18 +337,11 @@ void hk_gatt_add_chr_static_read(hk_chr_types_t chr_type, const char *value)
     hk_ble_srv_t *current_srv = &hk_gatt_srvs[hk_gatt_setup_info->srv_index];
     ble_uuid128_t *chr_uuid = hk_uuid_manager_get((uint8_t)chr_type);
     hk_ble_chr_t *chr = hk_gatt_alloc_new_chr(current_srv);
-    hk_session_t *session = (hk_session_t *)malloc(sizeof(hk_session_t));
-    session->static_data = value;
+
+
+    hk_session_t *session = hk_session_create(chr_type, hk_gatt_setup_info);
     session->srv_uuid = (ble_uuid128_t *)current_srv->uuid;
-    session->srv_index = hk_gatt_setup_info->srv_index;
-    session->srv_id = hk_gatt_setup_info->srv_id;
-    session->chr_index = hk_gatt_setup_info->instance_id++;
-    session->chr_type = chr_type;
-    session->transaction_id = -1;
-    session->last_opcode = -1;
-    session->max_length = -1;
-    session->min_length = -1;
-    session->request = hk_mem_create();
+    session->static_data = value;
 
     hk_gatt_chr_init(
         chr,

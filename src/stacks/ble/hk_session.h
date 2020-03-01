@@ -7,6 +7,14 @@
 
 typedef struct
 {
+    int srv_index;
+    char srv_id;
+    int chr_index;
+    uint16_t instance_id;
+} hk_session_setup_info_t;
+
+typedef struct
+{
     uint8_t transaction_id;
     uint8_t last_opcode;
     const char* static_data;
@@ -20,4 +28,8 @@ typedef struct
     int16_t max_length;
     int16_t min_length;
     hk_mem *request;
+    size_t request_received;
+    size_t request_length;
 } hk_session_t;
+
+hk_session_t* hk_session_create(hk_chr_types_t chr_type, hk_session_setup_info_t *hk_gatt_setup_info);
