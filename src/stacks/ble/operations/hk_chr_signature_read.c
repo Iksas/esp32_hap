@@ -6,7 +6,7 @@
 
 #include "../hk_formats_ble.h"
 
-void hk_chr_signature_read_response(const ble_uuid128_t *chr_uuid, hk_session_t *session, hk_mem* response)
+void hk_chr_signature_read_response(const ble_uuid128_t *chr_uuid, hk_session_t *session)
 {
     hk_tlv_t *tlv_data = NULL;
     tlv_data = hk_tlv_add_buffer(tlv_data, HK_TLV_CHRARACTERISTIC_TYPE, (char*)chr_uuid->value, 16);
@@ -36,5 +36,5 @@ void hk_chr_signature_read_response(const ble_uuid128_t *chr_uuid, hk_session_t 
     //tlv_data = hk_tlv_add_str(tlv_data, HK_TLV_STEP_VALUE, HK_CHR_VERSION);
     //size_t tlv_size = hk_tlv_get_size(tlv_data);
 
-    hk_tlv_serialize(tlv_data, response);
+    hk_tlv_serialize(tlv_data, session->response);
 }

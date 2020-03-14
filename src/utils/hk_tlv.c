@@ -71,13 +71,15 @@ hk_tlv_t *hk_tlv_add_uint16(hk_tlv_t *tlv_list, char type, uint16_t data)
 esp_err_t hk_tlv_get_mem_by_type(hk_tlv_t *tlv, char type, hk_mem *result)
 {
     esp_err_t res = HK_RES_MALFORMED_REQUEST;
-    for (; tlv; tlv = hk_ll_next(tlv))
-    {
+
+    while(tlv) {
         if (tlv->type == type)
         {
             hk_mem_append_buffer(result, tlv->value, tlv->length);
             res = HK_RES_OK;
         }
+
+        tlv = hk_ll_next(tlv);
     }
 
     if (res != HK_RES_OK)

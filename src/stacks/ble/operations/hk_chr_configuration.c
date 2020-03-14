@@ -5,7 +5,7 @@
 
 #include "../hk_formats_ble.h"
 
-void hk_chr_configuration_response(const ble_uuid128_t *chr_uuid, hk_session_t *session, hk_mem* response)
+void hk_chr_configuration_response(const ble_uuid128_t *chr_uuid, hk_session_t *session)
 {
     HK_LOGE("Not implemented.");
 }

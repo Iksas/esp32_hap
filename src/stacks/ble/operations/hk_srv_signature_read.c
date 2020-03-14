@@ -19,7 +19,7 @@ enum hk_srv_signature_read_chr_properties
     CHARACTERISTIC_SUPPORTS_BROADCAST_NOTIFICATION = 0x0200
 };
 
-void hk_srv_signature_read_response(const ble_uuid128_t *chr_uuid, hk_session_t *session, hk_mem* response)
+void hk_srv_signature_read_response(const ble_uuid128_t *chr_uuid, hk_session_t *session)
 {
     uint16_t properties = CHARACTERISTIC_SUPPORTS_ADDITONAL_AUTHORIZATION_DATA;
     hk_tlv_t *tlv_data = NULL;
@@ -29,5 +29,5 @@ void hk_srv_signature_read_response(const ble_uuid128_t *chr_uuid, hk_session_t 
     tlv_data = hk_tlv_add_buffer(tlv_data, HK_TLV_HAP_LINKED_SERVICES, 
         NULL, 0);
 
-    hk_tlv_serialize(tlv_data, response);
+    hk_tlv_serialize(tlv_data, session->response);
 }

@@ -28,7 +28,9 @@ typedef struct
     int16_t max_length;
     int16_t min_length;
     hk_mem *request;
+    hk_mem *response;
     uint16_t request_length;
+    uint16_t response_sent;
 } hk_session_t;
 
 hk_session_t* hk_session_create(hk_chr_types_t chr_type, hk_session_setup_info_t *hk_gatt_setup_info);

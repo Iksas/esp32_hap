@@ -1,6 +1,0 @@
-- Pair device and enter wrong PIN
-- Pair device
-- Check if device is visible under new devices after pairing
-- Switch on&off
-- Disconnect device
-- Check reconnection after router off 

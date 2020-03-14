@@ -12,14 +12,16 @@ hk_session_t *hk_session_create(hk_chr_types_t chr_type, hk_session_setup_info_t
 
     session->chr_type = chr_type;
     session->static_data = NULL;
-    session->transaction_id = -1;
-    session->last_opcode = -1;
-    session->request_length = -1;
+    session->transaction_id = 0;
+    session->last_opcode = 0;
+    session->request_length = 0;
+    session->response_sent = 0;
     session->max_length = -1;
     session->min_length = -1;
     session->read_callback = NULL;
     session->write_callback = NULL;
     session->request = hk_mem_create();
+    session->response = hk_mem_create();
 
     return session;
 }

@@ -73,15 +73,16 @@ static int hk_gatt_write_ble_chr(struct ble_gatt_access_ctxt *ctxt, void *arg)
     uint8_t buffer[buffer_len];
     uint16_t out_len = 0;
     rc = ble_hs_mbuf_to_flat(ctxt->om, buffer, buffer_len, &out_len);
-    hk_log_print_bytewise("Request", (char*)buffer, out_len, false);
     uint8_t control_field = buffer[0];
-    if (control_field && 0b10000000)
+    if (control_field && 0b01000000) // according specification bit 7 (zero based) should be set to 1. But it isnt????
     {
         // continuation
-        hk_mem_append_buffer(session->request, buffer + 2, out_len - 1); //continuation is preceeded by controlfield and transaction id
+        hk_mem_append_buffer(session->request, buffer + 2, out_len - 2); //continuation is preceeded by controlfield and transaction id
+        HK_LOGD("Received continuation %d of %d.", session->request->size, session->request_length);
     }
     else
     {
+        hk_log_print_bytewise("Received start", (char *)buffer, out_len > 5 ? 7 : 5, false);
         session->last_opcode = buffer[1];
         session->transaction_id = buffer[2];
 
@@ -89,12 +90,53 @@ static int hk_gatt_write_ble_chr(struct ble_gatt_access_ctxt *ctxt, void *arg)
         if (out_len > 5)
         {
             memcpy(&session->request_length, buffer + 5, 2);
-            hk_mem_append_buffer(session->request, buffer + 7, out_len -7); // -7 because of PDU start
+            hk_mem_append_buffer(session->request, buffer + 7, out_len - 7); // -7 because of PDU start
+        }
+        else
+        {
+            session->request_length = 0;
         }
     }
 
-    if(session->request_length == session->request->size){
-        // todo, execute functions
+    if (session->request_length == session->request->size)
+    {
+        hk_log_print_bytewise("Executing", session->request->ptr, session->request->size, false);
+        hk_mem_set(session->response, 0);
+        session->response_sent = 0;
+        // todo, execute functionshk_mem *response = hk_mem_create();
+        switch (session->last_opcode)
+        {
+        case 1:
+            hk_chr_signature_read_response(chr_uuid, session);
+            break;
+        case 2:
+            hk_chr_write_response(chr_uuid, session);
+            break;
+        case 3:
+            hk_chr_read_response(chr_uuid, session);
+            break;
+        case 4:
+            hk_chr_timed_write_response(chr_uuid, session);
+            break;
+        case 5:
+            hk_chr_execute_write_response(chr_uuid, session);
+            break;
+        case 6:
+            hk_srv_signature_read_response(chr_uuid, session);
+            break;
+        case 7:
+            hk_chr_configuration_response(chr_uuid, session);
+            break;
+        case 8:
+            hk_protocol_configuration_response(chr_uuid, session);
+            break;
+        default:
+            HK_LOGE("Unknown opcode.");
+        }
+    }
+    else
+    {
+        HK_LOGD("Received %d of %d. Waiting for continuation of fragmentation.", session->request->size, session->request_length);
     }
 
     rc = rc == 0 ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES;
@@ -118,56 +160,46 @@ static int hk_gatt_read_ble_chr(struct ble_gatt_access_ctxt *ctxt, void *arg)
     else
     {
         hk_mem *response = hk_mem_create();
-        switch (session->last_opcode)
+        uint8_t control_field = session->response_sent < 1 ? 0b00000010 : 0b010100010;
+        hk_mem_append_buffer(response, (char *)&control_field, 1);
+
+        hk_mem_append_buffer(response, (char *)&session->transaction_id, 1);
+
+        if (session->response_sent < 1) // no continuation
         {
-        case 1:
-            hk_chr_signature_read_response(chr_uuid, session, response);
-            break;
-        case 2:
-            hk_chr_write_response(chr_uuid, session, response);
-            break;
-        case 3:
-            hk_chr_read_response(chr_uuid, session, response);
-            break;
-        case 4:
-            hk_chr_timed_write_response(chr_uuid, session, response);
-            break;
-        case 5:
-            hk_chr_execute_write_response(chr_uuid, session, response);
-            break;
-        case 6:
-            hk_srv_signature_read_response(chr_uuid, session, response);
-            break;
-        case 7:
-            hk_chr_configuration_response(chr_uuid, session, response);
-            break;
-        case 8:
-            hk_protocol_configuration_response(chr_uuid, session, response);
-            break;
-        default:
-            HK_LOGE("Unknown opcode.");
+            hk_log_print_bytewise("Response without header", session->response->ptr, session->response->size, false);
+            uint8_t status = 0; // status is zero, success
+            hk_mem_append_buffer(response, (char *)&status, 1);
+
+            if (session->response->size > 0) // has body
+            {
+                uint16_t size = session->response->size;
+                hk_mem_insert_buffer(response, (char *)&size, 2, 3);
+            }
         }
 
-        uint8_t out_buffer[3];
-        out_buffer[0] = 0b00000010; // control field, always 1
-        out_buffer[1] = session->transaction_id;
-        out_buffer[2] = 0; // status: zero for successful
-        if (response->size > 0)
+        if (session->response->size > 0)
         {
-            //write body length
-            uint16_t body_length = response->size;
-            hk_mem_prepend_buffer(response, (char *)&body_length, sizeof(uint16_t));
-            hk_mem_prepend_buffer(response, (char *)out_buffer, 3);
+            size_t response_size = session->response->size - session->response_sent;
+            if (response_size > 512)
+            {
+                response_size = 512;
+            }
 
-            //write body
-            rc = os_mbuf_append(ctxt->om, response->ptr, response->size);
-            hk_log_print_bytewise("Response with body", response->ptr, response->size, false);
+            hk_mem_append_buffer(response, session->response->ptr + session->response_sent, response_size);
+            session->response_sent += response_size;
         }
-        else
-        {
-            rc = os_mbuf_append(ctxt->om, out_buffer, 3);
-            hk_log_print_bytewise("Response without body", (char *)out_buffer, 3, false);
+
+        hk_log_print_bytewise("Response", response->ptr, response->size, false);
+        HK_LOGD("databuf %d", ctxt->om->om_omp->omp_databuf_len);
+        rc = os_mbuf_append(ctxt->om, response->ptr, response->size);
+        HK_LOGD("Sent %d of %d", session->response_sent, session->response->size);
+
+        if(session->response_sent == session->response->size){ //todo: this should not be neede, but homkit controller keeps asking even if everything was sent. Mybe a problem with fragmentation?
+            session->response_sent = 0;
         }
+
+        hk_mem_free(response);
     }
 
     return rc == 0 ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES;

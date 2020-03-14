@@ -5,4 +5,4 @@
 
 #include "../hk_session.h"
 
-void hk_protocol_configuration_response(const ble_uuid128_t *chr_uuid, hk_session_t *session, hk_mem* response);
+void hk_protocol_configuration_response(const ble_uuid128_t *chr_uuid, hk_session_t *session);
