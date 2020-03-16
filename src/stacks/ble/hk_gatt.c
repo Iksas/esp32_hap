@@ -167,7 +167,6 @@ static int hk_gatt_read_ble_chr(struct ble_gatt_access_ctxt *ctxt, void *arg)
 
         if (session->response_sent < 1) // no continuation
         {
-            hk_log_print_bytewise("Response without header", session->response->ptr, session->response->size, false);
             uint8_t status = 0; // status is zero, success
             hk_mem_append_buffer(response, (char *)&status, 1);
 
@@ -186,13 +185,11 @@ static int hk_gatt_read_ble_chr(struct ble_gatt_access_ctxt *ctxt, void *arg)
                 response_size = 246;
             }
 
-            HK_LOGD("Sening %d of %d. Already sent %d", response_size, session->response->size, session->response_sent);
             hk_mem_append_buffer(response, session->response->ptr + session->response_sent, response_size);
             session->response_sent += response_size;
         }
 
         hk_log_print_bytewise("Response", response->ptr, response->size, false);
-        HK_LOGD("databuf %d", ctxt->om->om_omp->omp_databuf_len);
         rc = os_mbuf_append(ctxt->om, response->ptr, response->size);
         HK_LOGD("Sent %d of %d", session->response_sent, session->response->size);
 

@@ -226,10 +226,27 @@ bool hk_pairings_store_has_admin_pairing()
         }
     }
 
-    hk_pairings_store_set(j_root);
     cJSON_Delete(j_root);
 
     return admin_found;
+}
+
+bool hk_pairings_store_has_pairing()
+{
+    cJSON *j_root = hk_pairings_store_get();
+    cJSON *j_pairings = hk_pairings_store_get_j_parings_array(j_root);
+    cJSON *j_pairing = j_pairings->child;
+
+    bool found = false;
+    while (j_pairing)
+    {
+        found = true;
+        break;
+    }
+
+    cJSON_Delete(j_root);
+
+    return found;
 }
 
 void hk_pairings_store_remove_all()

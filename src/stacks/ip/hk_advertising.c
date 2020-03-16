@@ -3,9 +3,11 @@
 #include <mdns.h>
 
 #include "../../utils/hk_logging.h"
-#include "../../utils/hk_store.h"
+#include "../../common/hk_pairings_store.h"
 #include "../../utils/hk_util.h"
 #include "../../include/hk_categories.h"
+
+bool hk_advertising_is_running = false;
 
 void hk_advertising_add_txt(const char *key, const char *format, ...)
 {
@@ -64,18 +66,19 @@ void hk_advertising_init(const char *name, hk_categories_t category, size_t conf
     hk_advertising_add_txt("ff", "0");
     // accessory category identifier
     hk_advertising_add_txt("ci", "%d", category);
-    hk_advertising_update_paired(true);
+    hk_advertising_update_paired();
+    hk_advertising_is_running = true;
 }
 
-void hk_advertising_update_paired(bool initial)
+void hk_advertising_update_paired()
 {
     // if item is not paired, we need this flag. Otherwise not.
-    if (!initial)
+    if (hk_advertising_is_running)
     {
         ESP_ERROR_CHECK(mdns_service_txt_item_remove("_hap", "_tcp", "sf"));
     }
 
-    bool paired = hk_store_is_paired_get();
+    bool paired = hk_pairings_store_has_pairing();
     if (!paired)
     {
         // status flags

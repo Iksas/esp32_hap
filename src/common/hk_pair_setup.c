@@ -269,8 +269,7 @@ void hk_pairing_setup_exchange_response(hk_tlv_t *tlv, hk_mem *result, hk_mem *d
 
     if (!ret)
     {
-        hk_store_is_paired_set(true);
-        hk_advertising_update_paired(false);
+        hk_advertising_update_paired();
         HK_LOGI("Accessory paired.");
     }
 

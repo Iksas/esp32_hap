@@ -108,22 +108,6 @@ TEST_CASE("Store: check writing/reading bool.", "[store]")
     hk_store_free();
 }
 
-TEST_CASE("Store: check writing/reading is paired.", "[store]")
-{
-    TEST_ASSERT_FALSE(nvs_flash_erase());
-    TEST_ASSERT_FALSE(hk_store_init());
-    //
-
-    TEST_ASSERT_FALSE(hk_store_is_paired_get()); // check uninitialized
-    hk_store_is_paired_set(true);
-    TEST_ASSERT_TRUE(hk_store_is_paired_get());
-    hk_store_is_paired_set(false);
-    TEST_ASSERT_FALSE(hk_store_is_paired_get());
-
-    //
-    hk_store_free();
-}
-
 TEST_CASE("Store: check writing/reading of keys.", "[store]")
 {
     TEST_ASSERT_FALSE(nvs_flash_erase());

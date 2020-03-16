@@ -55,8 +55,7 @@ void hk_reset()
 {
     HK_LOGW("Resetting homekit for this device.");
     hk_pairings_store_remove_all();
-    hk_store_is_paired_set(false);
-    hk_advertising_update_paired(false);
+    hk_advertising_update_paired();
 }
 
 void hk_notify(void *chr)

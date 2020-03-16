@@ -71,23 +71,6 @@ void hk_store_key_pub_set(hk_mem *value)
     hk_store_blob_set(HK_STORE_ACC_PUB_KEY, value);
 }
 
-bool hk_store_is_paired_get()
-{
-    bool value;
-    esp_err_t ret = hk_store_bool_get(HK_STORE_PAIRED, &value);
-    if (ret == ESP_ERR_NVS_NOT_FOUND)
-    {
-        return false;
-    }
-
-    return value;
-}
-
-void hk_store_is_paired_set(bool paired)
-{
-    hk_store_bool_set(HK_STORE_PAIRED, paired);
-}
-
 void hk_store_pairings_get(hk_mem *pairings)
 {
     size_t required_size;

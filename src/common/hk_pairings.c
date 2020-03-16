@@ -24,8 +24,7 @@ esp_err_t hk_pairings_remove(hk_tlv_t *tlv_data, hk_mem *result)
             {
                 HK_LOGD("Removing all pairings, because no further admin pairing.");
                 hk_pairings_store_remove_all();
-                hk_store_is_paired_set(false);
-                hk_advertising_update_paired(false);
+                hk_advertising_update_paired();
             }
         }
         else

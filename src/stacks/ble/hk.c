@@ -3,7 +3,7 @@
 #include "../../utils/hk_store.h"
 #include "../../common/hk_pairings_store.h"
 #include "hk_nimble.h"
-#include "hk_gap.h"
+#include "hk_advertising.h"
 #include "hk_gatt.h"
 #include "hk_pairing_ble.h"
 
@@ -29,7 +29,7 @@ void hk_init(const char *name, const hk_categories_t category, const char *code)
 {
     hk_store_code_set(code);
     hk_nimble_init();
-    hk_gap_init(name, category, 2);
+    hk_advertising_init(name, category, 2);
     hk_gatt_start();
     hk_nimble_start();
 
@@ -86,8 +86,7 @@ void hk_reset()
 {
     HK_LOGW("Resetting homekit for this device.");
     hk_pairings_store_remove_all();
-    hk_store_is_paired_set(false);
-    hk_advertising_update_paired(false);
+    hk_advertising_update_paired();
 }
 
 void hk_notify(void *chr)
