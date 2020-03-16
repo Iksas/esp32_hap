@@ -160,7 +160,7 @@ static int hk_gatt_read_ble_chr(struct ble_gatt_access_ctxt *ctxt, void *arg)
     else
     {
         hk_mem *response = hk_mem_create();
-        uint8_t control_field = session->response_sent < 1 ? 0b00000010 : 0b010100010;
+        uint8_t control_field = session->response_sent < 1 ? 0b00000010 : 0b10000010;
         hk_mem_append_buffer(response, (char *)&control_field, 1);
 
         hk_mem_append_buffer(response, (char *)&session->transaction_id, 1);
@@ -181,11 +181,12 @@ static int hk_gatt_read_ble_chr(struct ble_gatt_access_ctxt *ctxt, void *arg)
         if (session->response->size > 0)
         {
             size_t response_size = session->response->size - session->response_sent;
-            if (response_size > 512)
+            if (response_size > 246)
             {
-                response_size = 512;
+                response_size = 246;
             }
 
+            HK_LOGD("Sening %d of %d. Already sent %d", response_size, session->response->size, session->response_sent);
             hk_mem_append_buffer(response, session->response->ptr + session->response_sent, response_size);
             session->response_sent += response_size;
         }
@@ -195,7 +196,7 @@ static int hk_gatt_read_ble_chr(struct ble_gatt_access_ctxt *ctxt, void *arg)
         rc = os_mbuf_append(ctxt->om, response->ptr, response->size);
         HK_LOGD("Sent %d of %d", session->response_sent, session->response->size);
 
-        if(session->response_sent == session->response->size){ //todo: this should not be neede, but homkit controller keeps asking even if everything was sent. Mybe a problem with fragmentation?
+        if(session->response_sent == session->response->size){ //todo: this should not be needed, but homkit controller keeps asking even if everything was sent. Mybe a problem with fragmentation?
             session->response_sent = 0;
         }
 
