@@ -211,7 +211,7 @@ esp_err_t hk_pairing_setup_exchange_response_generation(hk_mem *result, hk_mem *
 
     if (!ret)
     {
-        hk_util_get_accessory_id(accessory_id);
+        hk_util_get_accessory_id_serialized(accessory_id);
         hk_mem_append_buffer(accessory_info, accessory_id->ptr, accessory_id->size);
         hk_mem_append_buffer(accessory_info, accessory_public_key->ptr, accessory_public_key->size);
         ret = hk_ed25519_sign(accessory_key, accessory_info, accessory_signature);

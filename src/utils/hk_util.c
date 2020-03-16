@@ -1,22 +1,26 @@
 #include "hk_util.h"
 #include "hk_logging.h"
 
-#include <esp_system.h>
-
-size_t hk_util_get_accessory_id(hk_mem *id)
+esp_err_t hk_util_get_accessory_id(uint8_t id[])
 {
-    uint8_t mac[6] = {0, 0, 0, 0, 0, 0};
-
-    esp_err_t ret = esp_efuse_mac_get_default(mac);
+    esp_err_t ret = esp_efuse_mac_get_default(id);
     if (ret)
     {
         HK_LOGEE(ret);
     }
 
+    return ret;
+}
+
+esp_err_t hk_util_get_accessory_id_serialized(hk_mem *id)
+{
+    uint8_t mac[6] = {0, 0, 0, 0, 0, 0};
+
+    esp_err_t ret = hk_util_get_accessory_id(mac);
+
     char accessory_id[18];
     sprintf(accessory_id, "%2X:%2X:%2X:%2X:%2X:%2X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
     hk_mem_append_buffer(id, accessory_id, 17);
-    //hk_mem_append_buffer(id, "00:00:00:00:01:32", 17);
 
     return ret;
 }

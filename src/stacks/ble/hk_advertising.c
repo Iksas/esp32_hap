@@ -3,6 +3,7 @@
 #include <services/gap/ble_svc_gap.h>
 
 #include "../../utils/hk_logging.h"
+#include "../../utils/hk_util.h"
 #include "../../common/hk_pairings_store.h"
 
 static uint8_t hk_advertising_own_addr_type;
@@ -109,18 +110,24 @@ void hk_advertising_start_advertising()
     HK_LOGD("Starting advertising.");
     int res;
 
+    uint8_t device_id[6] = {0, 0, 0, 0, 0, 0};
+    if(hk_util_get_accessory_id(device_id)){
+        HK_LOGE("Could not start advertising, because getting device id failed.");
+        return;
+    }
+
     uint8_t manufacturer_data[17];
     manufacturer_data[0] = 0x4c;                   // company id
     manufacturer_data[1] = 0x00;                   // company id
     manufacturer_data[2] = 0x06;                   // type
     manufacturer_data[3] = 0xcd;                   // subtype and length
     manufacturer_data[4] = 0x01; // todo: this was uncommented for debugging: hk_pairings_store_has_pairing() ? 0x00 : 0x01;                   // pairing status flat
-    manufacturer_data[5] = 0x01;                   // device id // todo: make dynamic
-    manufacturer_data[6] = 0x23;                   // device id
-    manufacturer_data[7] = 0x45;                   // device id
-    manufacturer_data[8] = 0x67;                   // device id
-    manufacturer_data[9] = 0x89;                   // device id
-    manufacturer_data[10] = 0x99;                  // device id
+    manufacturer_data[5] = device_id[0];                   // device id
+    manufacturer_data[6] = device_id[1];                   // device id
+    manufacturer_data[7] = device_id[2];                   // device id
+    manufacturer_data[8] = device_id[3];                   // device id
+    manufacturer_data[9] = device_id[4];                   // device id
+    manufacturer_data[10] = device_id[5];                  // device id
     manufacturer_data[11] = (char)hk_advertising_category; // accessory category identifier
     manufacturer_data[12] = 0x00;                  // accessory category identifier
     manufacturer_data[13] = 0x01;                  // global state number // todo: should be changed. See chapter 7.4.1.8
@@ -140,7 +147,7 @@ void hk_advertising_start_advertising()
     res = ble_gap_adv_set_fields(&fields);
     if (res != 0)
     {
-        HK_LOGE("Could not set advertising. Errorcode: %d", res);
+        HK_LOGE("Could not start advertising, because fields could not be set. Errorcode: %d", res);
         return;
     }
 

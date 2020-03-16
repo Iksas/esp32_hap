@@ -82,7 +82,7 @@ esp_err_t hk_pair_verify_start(hk_pair_verify_keys_t *keys, hk_tlv_t *tlv, hk_me
 
     if (!ret)
     {
-        hk_util_get_accessory_id(accessory_id);
+        hk_util_get_accessory_id_serialized(accessory_id);
         hk_mem_append(accessory_info, keys->accessory_curve_public_key);
         hk_mem_append(accessory_info, accessory_id);
         hk_mem_append(accessory_info, keys->device_curve_public_key);

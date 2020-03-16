@@ -49,7 +49,7 @@ void hk_advertising_init(const char *name, hk_categories_t category, size_t conf
     // device ID (required)
     // should be in format XX:XX:XX:XX:XX:XX, otherwise devices will ignore it
     hk_mem *id = hk_mem_create();
-    hk_util_get_accessory_id(id);
+    hk_util_get_accessory_id_serialized(id);
     char* id_str = hk_mem_get_str(id);
     hk_advertising_add_txt("id", "%s", id_str);
     hk_mem_free(id);
