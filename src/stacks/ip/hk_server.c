@@ -38,13 +38,8 @@ void hk_server_handle(hk_session_t *session)
     else if (hk_mem_cmp_str(session->request->url, "/pair-verify") && HK_SESSION_HTML_METHOD_POST == session->request->method)
     {
         bool session_is_encrypted = false;
-        hk_mem *device_id = hk_mem_create();
         session->response->result = hk_pair_verify(session->request->content, session->keys, 
-            session->response->content, &session_is_encrypted, device_id);
-        if (device_id->size > 0)
-        {
-            session->device_id = hk_mem_get_str(device_id);
-        }
+            session->response->content, &session_is_encrypted);
 
         hk_session_send(session);
 
@@ -53,7 +48,6 @@ void hk_server_handle(hk_session_t *session)
             session->is_encrypted = true;
             HK_LOGD("%d - Pairing verified, now communicating encrypted.", session->socket);
         }
-        hk_mem_free(device_id);
     }
     else if (hk_mem_cmp_str(session->request->url, "/accessories") && HK_SESSION_HTML_METHOD_GET == session->request->method)
     {
