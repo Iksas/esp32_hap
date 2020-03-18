@@ -59,6 +59,6 @@ typedef struct hk_session
 void hk_session_init(hk_session_t *session, int socket);
 void hk_session_clean(hk_session_t *session);
 void hk_session_clean_response(hk_session_t *session);
-void hk_session_dispose(hk_session_t *session_context);
+void hk_session_free(hk_session_t *session_context);
 
 void hk_session_send(hk_session_t *session);

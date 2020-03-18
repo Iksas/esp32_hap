@@ -5,4 +5,4 @@
 
 #include <esp_err.h>
 
-int hk_pair_verify(hk_mem *request, hk_pair_verify_keys_t *keys, hk_mem *result, bool *is_session_encrypted, hk_mem *device_id);
+int hk_pair_verify(hk_mem *request, hk_pair_verify_keys_t *keys, hk_mem *result, bool *is_session_encrypted);

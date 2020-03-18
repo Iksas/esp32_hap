@@ -13,3 +13,6 @@ typedef struct hk_pair_verify_keys
     hk_mem *accessory_curve_public_key;
     hk_mem *device_curve_public_key;
 } hk_pair_verify_keys_t;
+
+hk_pair_verify_keys_t *hk_pair_verify_keys_init();
+void hk_pair_verify_keys_free(hk_pair_verify_keys_t *keys);

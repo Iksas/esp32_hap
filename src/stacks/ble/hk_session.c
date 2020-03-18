@@ -1,6 +1,6 @@
 #include "hk_session.h"
 
-hk_session_t *hk_session_create(hk_chr_types_t chr_type, hk_session_setup_info_t *setup_info)
+hk_session_t *hk_session_init(hk_chr_types_t chr_type, hk_session_setup_info_t *setup_info)
 {
     hk_session_t * session = (hk_session_t *)malloc(sizeof(hk_session_t));
 

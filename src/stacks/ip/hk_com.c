@@ -206,7 +206,7 @@ void hk_com_close_connections(hk_session_t **connections, fd_set *active_fds)
             HK_LOGD("Closing socket %d", connection->socket);
             close(connection->socket);
 
-            hk_session_dispose(connection);
+            hk_session_free(connection);
 
             hk_session_t *next = hk_ll_next(connection);
             *connections = hk_ll_remove(*connections, connection);

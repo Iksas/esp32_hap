@@ -139,7 +139,7 @@ esp_err_t hk_pair_verify_start(hk_pair_verify_keys_t *keys, hk_tlv_t *tlv, hk_me
     return ret;
 }
 
-esp_err_t hk_pair_verify_finish(hk_pair_verify_keys_t *keys, hk_tlv_t *tlv, hk_mem *result, hk_mem *device_id)
+esp_err_t hk_pair_verify_finish(hk_pair_verify_keys_t *keys, hk_tlv_t *tlv, hk_mem *result)
 {
     hk_ed25519_key_t *device_key = hk_ed25519_init_key();
     hk_mem *encrypted_data = hk_mem_create();
@@ -147,6 +147,7 @@ esp_err_t hk_pair_verify_finish(hk_pair_verify_keys_t *keys, hk_tlv_t *tlv, hk_m
     hk_mem *device_signature = hk_mem_create();
     hk_mem *device_public_key = hk_mem_create();
     hk_mem *device_info = hk_mem_create();
+    hk_mem *device_id = hk_mem_create();
     hk_tlv_t *tlv_data_decrypted = NULL;
     hk_tlv_t *tlv_data = NULL;
 
@@ -205,6 +206,7 @@ esp_err_t hk_pair_verify_finish(hk_pair_verify_keys_t *keys, hk_tlv_t *tlv, hk_m
     hk_mem_free(decrypted_data);
     hk_mem_free(device_signature);
     hk_mem_free(device_public_key);
+    hk_mem_free(device_id);
 
     hk_mem_free(keys->session_key);
     hk_mem_free(keys->accessory_curve_public_key);
@@ -213,7 +215,7 @@ esp_err_t hk_pair_verify_finish(hk_pair_verify_keys_t *keys, hk_tlv_t *tlv, hk_m
     return ret;
 }
 
-int hk_pair_verify(hk_mem *request, hk_pair_verify_keys_t *keys, hk_mem *result, bool *is_session_encrypted, hk_mem *device_id)
+int hk_pair_verify(hk_mem *request, hk_pair_verify_keys_t *keys, hk_mem *result, bool *is_session_encrypted)
 {
     int res = HK_RES_OK;
     hk_tlv_t *tlv_data = hk_tlv_deserialize(request);
@@ -232,7 +234,7 @@ int hk_pair_verify(hk_mem *request, hk_pair_verify_keys_t *keys, hk_mem *result,
             res = hk_pair_verify_start(keys, tlv_data, result);
             break;
         case 3:
-            res = hk_pair_verify_finish(keys, tlv_data, result, device_id);
+            res = hk_pair_verify_finish(keys, tlv_data, result);
             break;
         default:
             HK_LOGE("Unexpected value in tlv in pair setup: %d", *type_tlv->value);

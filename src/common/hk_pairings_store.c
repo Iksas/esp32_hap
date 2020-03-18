@@ -59,31 +59,29 @@ cJSON *hk_pairings_store_get_j_parings_array(cJSON *j_root)
     return j_pairings;
 }
 
-void hk_pairings_store_to_str(hk_mem *mem, hk_mem *str){
-    hk_mem_set(str, 0);
-    hk_mem_append(str, mem);
-    hk_mem_append_string_terminator(str);
-}
-
 void hk_pairings_store_add(hk_mem *device_id, hk_mem *device_ltpk, bool is_admin)
 {
     cJSON *j_root = hk_pairings_store_get();
     cJSON *j_pairings = hk_pairings_store_get_j_parings_array(j_root);
 
-    hk_mem *str = hk_mem_create();
     cJSON *j_pairing = cJSON_CreateObject();
-    hk_pairings_store_to_str(device_id, str);
-    HK_LOGD("Adding pairing for device '%s'.", str->ptr);
-    cJSON_AddItemToObject(j_pairing, HK_PAIRINGS_STORE_DEVICE_ID, cJSON_CreateString(str->ptr));
-    hk_pairings_store_to_str(device_ltpk, str);
-    cJSON_AddItemToObject(j_pairing, HK_PAIRINGS_STORE_DEVICE_LTPK, cJSON_CreateString(str->ptr));
+
+    char* str = hk_mem_get_str(device_id);
+    HK_LOGV("Adding pairing for device '%s'.", str);
+    cJSON_AddItemToObject(j_pairing, HK_PAIRINGS_STORE_DEVICE_ID, cJSON_CreateString(str));
+    free(str);
+
+    str = hk_mem_get_str(device_ltpk);
+    cJSON_AddItemToObject(j_pairing, HK_PAIRINGS_STORE_DEVICE_LTPK, cJSON_CreateString(str));
+    free(str);
+
     cJSON_AddItemToObject(j_pairing, HK_PAIRINGS_STORE_IS_ADMIN, cJSON_CreateBool(is_admin));
+    
     cJSON_AddItemToArray(j_pairings, j_pairing);
 
     hk_pairings_store_set(j_root);
 
     cJSON_Delete(j_root);
-    hk_mem_free(str);
 }
 
 esp_err_t hk_pairings_store_ltpk_get(hk_mem *device_id, hk_mem *device_ltpk)

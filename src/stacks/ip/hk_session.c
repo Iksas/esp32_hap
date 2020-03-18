@@ -29,9 +29,7 @@ void hk_session_init(hk_session_t *session, int socket)
     session->response->type = HK_SESSION_RESPONSE_MESSAGE;
     session->response->content_type = HK_SESSION_CONTENT_TLV;
 
-    session->keys = (hk_pair_verify_keys_t *)malloc(sizeof(hk_pair_verify_keys_t));
-    session->keys->response_key = hk_mem_create();
-    session->keys->request_key = hk_mem_create();
+    session->keys = hk_pair_verify_keys_init();
 }
 
 void hk_session_clean_response(hk_session_t *session)
@@ -52,7 +50,7 @@ void hk_session_clean(hk_session_t *session)
     hk_session_clean_response(session);
 }
 
-void hk_session_dispose(hk_session_t *session)
+void hk_session_free(hk_session_t *session)
 {
     hk_mem_free(session->request->url);
     hk_mem_free(session->request->query);
@@ -70,10 +68,7 @@ void hk_session_dispose(hk_session_t *session)
     }
     vQueueDelete(session->response->data_to_send);
     free(session->response);
-
-    hk_mem_free(session->keys->request_key);
-    hk_mem_free(session->keys->response_key);
-    free(session->keys);
+    hk_pair_verify_keys_free(session->keys);
 }
 
 const char *hk_session_get_status(hk_session_t *session)

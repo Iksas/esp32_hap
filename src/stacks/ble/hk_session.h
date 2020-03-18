@@ -33,4 +33,4 @@ typedef struct
     uint16_t response_sent;
 } hk_session_t;
 
-hk_session_t* hk_session_create(hk_chr_types_t chr_type, hk_session_setup_info_t *hk_gatt_setup_info);
+hk_session_t* hk_session_init(hk_chr_types_t chr_type, hk_session_setup_info_t *hk_gatt_setup_info);

@@ -73,6 +73,8 @@ static int hk_gatt_write_ble_chr(struct ble_gatt_access_ctxt *ctxt, void *arg)
     uint8_t buffer[buffer_len];
     uint16_t out_len = 0;
     rc = ble_hs_mbuf_to_flat(ctxt->om, buffer, buffer_len, &out_len);
+    hk_log_print_bytewise("Received", (char *)buffer, out_len > 5 ? 7 : 5, false);
+    
     uint8_t control_field = buffer[0];
     if (control_field && 0b01000000) // according specification bit 7 (zero based) should be set to 1. But it isnt????
     {
@@ -82,7 +84,6 @@ static int hk_gatt_write_ble_chr(struct ble_gatt_access_ctxt *ctxt, void *arg)
     }
     else
     {
-        hk_log_print_bytewise("Received start", (char *)buffer, out_len > 5 ? 7 : 5, false);
         session->last_opcode = buffer[1];
         session->transaction_id = buffer[2];
 
@@ -349,7 +350,7 @@ void *hk_gatt_add_chr(
     ble_uuid128_t *chr_uuid = hk_uuid_manager_get((uint8_t)chr_type);
     hk_ble_chr_t *chr = hk_gatt_alloc_new_chr(current_srv);
 
-    hk_session_t *session = hk_session_create(chr_type, hk_gatt_setup_info);
+    hk_session_t *session = hk_session_init(chr_type, hk_gatt_setup_info);
     session->srv_uuid = (ble_uuid128_t *)current_srv->uuid;
     session->read_callback = read;
     session->write_callback = write;
@@ -378,7 +379,7 @@ void hk_gatt_add_chr_static_read(hk_chr_types_t chr_type, const char *value)
     ble_uuid128_t *chr_uuid = hk_uuid_manager_get((uint8_t)chr_type);
     hk_ble_chr_t *chr = hk_gatt_alloc_new_chr(current_srv);
 
-    hk_session_t *session = hk_session_create(chr_type, hk_gatt_setup_info);
+    hk_session_t *session = hk_session_init(chr_type, hk_gatt_setup_info);
     session->srv_uuid = (ble_uuid128_t *)current_srv->uuid;
     session->static_data = value;
 
