@@ -150,7 +150,7 @@ size_t hk_srp_verify(hk_srp_key_t *key, hk_mem *proof)
     size_t ret = wc_SrpVerifyPeersProof((Srp *)key->internal, (byte *)proof->ptr, proof->size);
     if (ret == SRP_VERIFY_E)
     {
-        HK_LOGW("Error verifying client proof. Maybe on IOS entered password was wrong. Error: %d", ret);
+        HK_LOGW("Error verifying client proof. Maybe the password entered on ios device was wrong. Error: %d", ret);
     }
     else if (ret)
     {

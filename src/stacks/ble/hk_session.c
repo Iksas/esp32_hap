@@ -10,6 +10,10 @@ hk_session_t *hk_session_init(hk_chr_types_t chr_type, hk_session_setup_info_t *
         session->chr_index = setup_info->instance_id++;
     }
 
+    session->encryption_data->is_encrypted = false;
+    session->encryption_data->sent_frame_count = 0;
+    session->encryption_data->received_frame_count = 0;
+    
     session->chr_type = chr_type;
     session->static_data = NULL;
     session->transaction_id = 0;

@@ -15,6 +15,7 @@ typedef struct
 
 typedef struct
 {
+    hk_encryption_information_t encryption_data;
     uint8_t transaction_id;
     uint8_t last_opcode;
     const char* static_data;

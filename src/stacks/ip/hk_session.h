@@ -7,6 +7,7 @@
 
 #include "../../include/hk_mem.h"
 #include "../../common/hk_pair_verify_keys.h"
+#include "../../common/hk_encryption.h"
 
 #define HK_SESSION_RESPONSE_MESSAGE 0
 #define HK_SESSION_RESPONSE_EVENT 1
@@ -45,15 +46,14 @@ typedef struct
 typedef struct hk_session
 {
     hk_session_request_t *request;
-    hk_session_response_t *response;
+    hk_session_response_t *response;    
+    hk_encryption_data_t* encryption_data;
+    hk_pair_verify_keys_t *keys;
+
     char *device_id;
-    bool is_encrypted; // states that verification was done
     int socket;
     bool should_close;
     bool kill; // states that all sessions with the same device id have to be killed
-    int received_frame_count;
-    int sent_frame_count;
-    hk_pair_verify_keys_t *keys;
 } hk_session_t;
 
 void hk_session_init(hk_session_t *session, int socket);

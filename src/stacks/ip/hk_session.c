@@ -9,9 +9,6 @@ void hk_session_init(hk_session_t *session, int socket)
 {
     session->socket = socket;
     session->should_close = false;
-    session->is_encrypted = false;
-    session->sent_frame_count = 0;
-    session->received_frame_count = 0;
     session->device_id = NULL;
     session->kill = false;
 
@@ -30,6 +27,7 @@ void hk_session_init(hk_session_t *session, int socket)
     session->response->content_type = HK_SESSION_CONTENT_TLV;
 
     session->keys = hk_pair_verify_keys_init();
+    session->encryption_data = hk_encryption_data_init();
 }
 
 void hk_session_clean_response(hk_session_t *session)
@@ -69,6 +67,7 @@ void hk_session_free(hk_session_t *session)
     vQueueDelete(session->response->data_to_send);
     free(session->response);
     hk_pair_verify_keys_free(session->keys);
+    hk_encryption_data_free(session->encryption_data);
 }
 
 const char *hk_session_get_status(hk_session_t *session)
