@@ -12,7 +12,7 @@
 #include "../../common/hk_pair_setup.h"
 #include "../../common/hk_pair_verify.h"
 #include "../../common/hk_pairings.h"
-#include "../../common/hk_encryption.h"
+#include "hk_encryption.h"
 #include "hk_chrs.h"
 #include "hk_html.h"
 #include "hk_html_parser.h"
@@ -89,7 +89,7 @@ esp_err_t hk_server_receiver(hk_session_t *session, hk_mem *data)
     hk_mem *response = hk_mem_create();
 
     // encryption decrypts the data
-    esp_err_t ret = hk_encryption_preprocessor(session->encryption_data, session->keys, data, decrypted);
+    esp_err_t ret = hk_session_security_decrypt_frames(session->encryption_data, session->keys, data, decrypted);
     if (ret != ESP_OK)
     {
         HK_LOGE("Could not pre process received data of socket %d.", session->socket);

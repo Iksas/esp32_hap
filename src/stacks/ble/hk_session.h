@@ -15,7 +15,6 @@ typedef struct
 
 typedef struct
 {
-    hk_encryption_information_t encryption_data;
     uint8_t transaction_id;
     uint8_t last_opcode;
     const char* static_data;
@@ -29,7 +28,9 @@ typedef struct
     int16_t max_length;
     int16_t min_length;
     hk_mem *request;
+    hk_mem *request_encrypted;
     hk_mem *response;
+    hk_mem *response_encrypted;
     uint16_t request_length;
     uint16_t response_sent;
 } hk_session_t;

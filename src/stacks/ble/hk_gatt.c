@@ -11,6 +11,7 @@
 
 #include "hk_session.h"
 #include "hk_uuid_manager.h"
+#include "hk_session_security.h"
 #include "operations/hk_chr_signature_read.h"
 #include "operations/hk_chr_write.h"
 #include "operations/hk_chr_read.h"
@@ -20,11 +21,13 @@
 #include "operations/hk_chr_configuration.h"
 #include "operations/hk_protocol_configuration.h"
 
+#include "../../crypto/hk_chacha20poly1305.h"
+
 typedef struct ble_gatt_svc_def hk_ble_srv_t;
 typedef struct ble_gatt_chr_def hk_ble_chr_t;
 typedef struct ble_gatt_dsc_def hk_ble_descriptor_t;
 
-hk_session_setup_info_t *hk_gatt_setup_info;
+hk_session_setup_info_t *hk_gatt_setup_info = NULL;
 hk_ble_srv_t *hk_gatt_srvs = NULL;
 
 static void hk_logu(const char *message, const ble_uuid128_t *uuid)
@@ -73,25 +76,44 @@ static int hk_gatt_write_ble_chr(struct ble_gatt_access_ctxt *ctxt, void *arg)
     uint8_t buffer[buffer_len];
     uint16_t out_len = 0;
     rc = ble_hs_mbuf_to_flat(ctxt->om, buffer, buffer_len, &out_len);
-    hk_log_print_bytewise("Received", (char *)buffer, out_len > 5 ? 7 : 5, false);
-    
-    uint8_t control_field = buffer[0];
+    hk_mem *received = hk_mem_create();
+    const ble_uuid128_t *chr_uuid_pair_verify = hk_uuid_manager_get((uint8_t)HK_CHR_PAIR_VERIFY);
+    if (hk_session_security_is_secured_get() && !hk_gatt_cmp(chr_uuid, chr_uuid_pair_verify))
+    {
+        hk_mem *received_before_encryption = hk_mem_create();
+        hk_mem_append_buffer(received_before_encryption, buffer, out_len);
+        hk_session_security_decrypt(
+            received_before_encryption,
+            received);
+        hk_mem_free(received_before_encryption);
+    }
+    else
+    {
+        hk_mem_append_buffer(received, buffer, out_len);
+    }
+
+    hk_mem_log("Received", received);
+
+    uint8_t control_field = received->ptr[0];
     if (control_field && 0b01000000) // according specification bit 7 (zero based) should be set to 1. But it isnt????
     {
         // continuation
-        hk_mem_append_buffer(session->request, buffer + 2, out_len - 2); //continuation is preceeded by controlfield and transaction id
+        hk_mem_append_buffer(session->request, received->ptr + 2, out_len - 2); //continuation is preceeded by controlfield and transaction id
         HK_LOGD("Received continuation %d of %d.", session->request->size, session->request_length);
     }
     else
     {
-        session->last_opcode = buffer[1];
-        session->transaction_id = buffer[2];
+        session->last_opcode = received->ptr[1];
+        session->transaction_id = received->ptr[2];
+
+        HK_LOGD("CharId: %x%x", received->ptr[4], received->ptr[3]);
 
         hk_mem_set(session->request, 0);
-        if (out_len > 5)
+        hk_mem_set(session->request, 0);
+        if (received->size > 5)
         {
-            memcpy(&session->request_length, buffer + 5, 2);
-            hk_mem_append_buffer(session->request, buffer + 7, out_len - 7); // -7 because of PDU start
+            session->request_length = received->ptr[5] + received->ptr[6] * 256;
+            hk_mem_append_buffer(session->request, received->ptr + 7, out_len - 7); // -7 because of PDU start
         }
         else
         {
@@ -101,7 +123,7 @@ static int hk_gatt_write_ble_chr(struct ble_gatt_access_ctxt *ctxt, void *arg)
 
     if (session->request_length == session->request->size)
     {
-        hk_log_print_bytewise("Executing", session->request->ptr, session->request->size, false);
+        HK_LOGD("Request complete, executing");
         hk_mem_set(session->response, 0);
         session->response_sent = 0;
         // todo, execute functionshk_mem *response = hk_mem_create();
@@ -139,6 +161,8 @@ static int hk_gatt_write_ble_chr(struct ble_gatt_access_ctxt *ctxt, void *arg)
     {
         HK_LOGD("Received %d of %d. Waiting for continuation of fragmentation.", session->request->size, session->request_length);
     }
+
+    hk_mem_free(received);
 
     rc = rc == 0 ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES;
 
@@ -191,10 +215,24 @@ static int hk_gatt_read_ble_chr(struct ble_gatt_access_ctxt *ctxt, void *arg)
         }
 
         hk_log_print_bytewise("Response", response->ptr, response->size, false);
-        rc = os_mbuf_append(ctxt->om, response->ptr, response->size);
-        HK_LOGD("Sent %d of %d", session->response_sent, session->response->size);
 
-        if(session->response_sent == session->response->size){ //todo: this should not be needed, but homkit controller keeps asking even if everything was sent. Mybe a problem with fragmentation?
+        const ble_uuid128_t *chr_uuid_pair_verify = hk_uuid_manager_get((uint8_t)HK_CHR_PAIR_VERIFY);
+        if (hk_session_security_is_secured_get() && !hk_gatt_cmp(chr_uuid, chr_uuid_pair_verify))
+        {
+            hk_mem *encrypted_response = hk_mem_create();
+            hk_session_security_encrypt(
+                response,
+                encrypted_response);
+            rc = os_mbuf_append(ctxt->om, encrypted_response->ptr, encrypted_response->size);
+            hk_mem_free(encrypted_response);
+        }
+        else
+        {
+            rc = os_mbuf_append(ctxt->om, response->ptr, response->size);
+        }
+
+        if (session->response_sent == session->response->size)
+        { //this should not be needed, but homkit controller keeps asking even if everything was sent. Mybe a problem with fragmentation?
             session->response_sent = 0;
         }
 

@@ -7,7 +7,7 @@
 
 #include "../../include/hk_mem.h"
 #include "../../common/hk_pair_verify_keys.h"
-#include "../../common/hk_encryption.h"
+#include "hk_encryption.h"
 
 #define HK_SESSION_RESPONSE_MESSAGE 0
 #define HK_SESSION_RESPONSE_EVENT 1

@@ -9,10 +9,6 @@ hk_session_t *hk_session_init(hk_chr_types_t chr_type, hk_session_setup_info_t *
         session->srv_id = setup_info->srv_id;
         session->chr_index = setup_info->instance_id++;
     }
-
-    session->encryption_data->is_encrypted = false;
-    session->encryption_data->sent_frame_count = 0;
-    session->encryption_data->received_frame_count = 0;
     
     session->chr_type = chr_type;
     session->static_data = NULL;
@@ -25,7 +21,9 @@ hk_session_t *hk_session_init(hk_chr_types_t chr_type, hk_session_setup_info_t *
     session->read_callback = NULL;
     session->write_callback = NULL;
     session->request = hk_mem_create();
+    session->request_encrypted = hk_mem_create();
     session->response = hk_mem_create();
+    session->response_encrypted = hk_mem_create();
 
     return session;
 }

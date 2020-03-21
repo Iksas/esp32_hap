@@ -140,18 +140,31 @@ uint16_t hk_chrs_properties_get_prop(hk_chr_types_t chr_type)
     {
     case HK_CHR_VERSION:
         return HK_CHR_PROP_NOTIFIES_EVENTS_CONNECTED_STATE | HK_CHR_PROP_SUPPORTS_SECURE_READS;
+
     case HK_CHR_SERVICE_SIGNATURE:
         return HK_CHR_PROP_SUPPORTS_SECURE_READS | HK_CHR_PROP_SUPPORTS_SECURE_WRITES;
+
+    case HK_CHR_FIRMWARE_REVISION:
+    case HK_CHR_HARDWARE_REVISION:
+    case HK_CHR_MANUFACTURER:
+    case HK_CHR_MODEL:
+    case HK_CHR_NAME:
+    case HK_CHR_SERIAL_NUMBER:
+        return HK_CHR_PROP_SUPPORTS_SECURE_READS;
+
+    case HK_CHR_IDENTIFY:
+        return HK_CHR_PROP_SUPPORTS_SECURE_WRITES;
+
     case HK_CHR_PAIR_SETUP:
     case HK_CHR_PAIR_VERIFY:
     case HK_CHR_PAIRING_PAIRINGS:
         return HK_CHR_PROP_SUPPORTS_READ | HK_CHR_PROP_SUPPORTS_WRITE;
+        
     case HK_CHR_PAIRING_FEATURES:
         return HK_CHR_PROP_SUPPORTS_READ;
 
     case HK_CHR_ADMINISTRATOR_ONLY_ACCESS:
     case HK_CHR_AUDIO_FEEDBACK:
-    case HK_CHR_IDENTIFY:
     case HK_CHR_MOTION_DETECTED:
     case HK_CHR_OBSTRUCTION_DETECTED:
     case HK_CHR_ON:
@@ -238,12 +251,6 @@ uint16_t hk_chrs_properties_get_prop(hk_chr_types_t chr_type)
     case HK_CHR_PM25_DENSITY:
     case HK_CHR_PM10_DENSITY:
     case HK_CHR_VOC_DENSITY:
-    case HK_CHR_FIRMWARE_REVISION:
-    case HK_CHR_HARDWARE_REVISION:
-    case HK_CHR_MANUFACTURER:
-    case HK_CHR_MODEL:
-    case HK_CHR_NAME:
-    case HK_CHR_SERIAL_NUMBER:
     case HK_CHR_TARGET_RELATIVE_HUMIDITY:
     case HK_CHR_TARGET_TEMPERATURE:
     case HK_CHR_LOCK_CONTROL_POINT:
@@ -255,7 +262,7 @@ uint16_t hk_chrs_properties_get_prop(hk_chr_types_t chr_type)
     case HK_CHR_SETUP_ENDPOINTS:
     case HK_CHR_SELECTED_RTP_STREAM_CONFIGURATION:
     default:
-        HK_LOGE("Could return characteristic properties for type %X", chr_type);
+        HK_LOGE("Could not return characteristic properties for type %X", chr_type);
         return -1;
     }
 }

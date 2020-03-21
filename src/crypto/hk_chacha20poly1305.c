@@ -17,7 +17,8 @@ size_t hk_chacha20poly1305_encrypt_buffer(hk_mem *key, const char *nonce, char *
 {
     int ret = wc_ChaCha20Poly1305_Encrypt(
         (byte *)key->ptr,
-        (byte *)nonce, (byte *)aad, aad_size,
+        (byte *)nonce, 
+        (byte *)aad, aad_size,
         (byte *)message, message_size,
         (byte *)encrypted, (byte *)(encrypted + message_size));
 

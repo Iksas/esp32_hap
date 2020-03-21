@@ -82,7 +82,12 @@ bool hk_mem_cmp(hk_mem *mem1, hk_mem *mem2)
     return strncmp(mem1->ptr, mem2->ptr, mem1->size) == 0;
 }
 
-void hk_mem_log(const char *title, hk_mem *mem)
+void hk_mem_log_as_string(const char *title, hk_mem *mem)
 {
     hk_log_print_as_string(title, mem->ptr, mem->size);
+}
+
+void hk_mem_log(const char *title, hk_mem *mem)
+{
+    hk_log_print_bytewise(title, mem->ptr, mem->size, false);
 }
