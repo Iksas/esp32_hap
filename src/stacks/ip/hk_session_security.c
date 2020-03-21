@@ -1,7 +1,7 @@
-#include "hk_encryption.h"
+#include "hk_session_security.h"
 
-#include "../crypto/hk_chacha20poly1305.h"
-#include "../utils/hk_logging.h"
+#include "../../crypto/hk_chacha20poly1305.h"
+#include "../../utils/hk_logging.h"
 
 #define HK_AAD_SIZE 2
 #define HK_AUTHTAG_SIZE 16 //16 = CHACHA20_POLY1305_AUTH_TAG_LENGTH
@@ -39,7 +39,8 @@ esp_err_t hk_session_security_decrypt_frames(hk_encryption_data_t *encryption_da
     return ESP_OK;
 }
 
-esp_err_t hk_session_security_encrypt_frames(hk_encryption_data_t *encryption_data, hk_pair_verify_keys_t *keys, hk_mem *in, hk_mem *out)
+esp_err_t hk_session_security_encrypt_frames(hk_encryption_data_t *encryption_data, hk_pair_verify_keys_t *keys, hk_mem *in, 
+    esp_err_t (*callback)(hk_mem *frame_data, void *args), void* args)
 {
     char nonce[12] = {
         0,
@@ -64,8 +65,13 @@ esp_err_t hk_session_security_encrypt_frames(hk_encryption_data_t *encryption_da
         {
             return ret;
         }
-
-        hk_mem_append_buffer(out, encrypted, encrypted_size);
+        hk_mem* frame_data = hk_mem_create(); // is disposed by server, after it was sent
+        hk_mem_append_buffer(frame_data, encrypted, encrypted_size);
+        ret = callback(frame_data, args);
+        if (ret < 0)
+        {
+            return ret;
+        }
 
         pending += chunk_size;
     }

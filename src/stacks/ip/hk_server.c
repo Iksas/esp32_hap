@@ -12,7 +12,6 @@
 #include "../../common/hk_pair_setup.h"
 #include "../../common/hk_pair_verify.h"
 #include "../../common/hk_pairings.h"
-#include "hk_encryption.h"
 #include "hk_chrs.h"
 #include "hk_html.h"
 #include "hk_html_parser.h"
@@ -37,15 +36,15 @@ void hk_server_handle(hk_session_t *session)
     }
     else if (hk_mem_cmp_str(session->request->url, "/pair-verify") && HK_SESSION_HTML_METHOD_POST == session->request->method)
     {
-        bool session_is_encrypted = false;
+        bool session_is_secure = false;
         session->response->result = hk_pair_verify(session->request->content, session->keys, 
-            session->response->content, &session_is_encrypted);
+            session->response->content, &session_is_secure);
 
         hk_session_send(session);
 
-        if (session_is_encrypted)
+        if (session_is_secure)
         {
-            session->encryption_data->is_encrypted = true;
+            session->is_secure = true;
             HK_LOGD("%d - Pairing verified, now communicating encrypted.", session->socket);
         }
     }
@@ -85,18 +84,10 @@ void hk_server_handle(hk_session_t *session)
 esp_err_t hk_server_receiver(hk_session_t *session, hk_mem *data)
 {
     hk_session_clean(session);
-    hk_mem *decrypted = hk_mem_create();
     hk_mem *response = hk_mem_create();
 
-    // encryption decrypts the data
-    esp_err_t ret = hk_session_security_decrypt_frames(session->encryption_data, session->keys, data, decrypted);
-    if (ret != ESP_OK)
-    {
-        HK_LOGE("Could not pre process received data of socket %d.", session->socket);
-    }
-
     // html parses the content of request data and calls the configured handler
-    ret = hk_html_parser_parse(decrypted, session);
+    esp_err_t ret = hk_html_parser_parse(data, session);
     if (ret != ESP_OK)
     {
         HK_LOGE("Could not process received data of socket %d.", session->socket);
@@ -104,7 +95,6 @@ esp_err_t hk_server_receiver(hk_session_t *session, hk_mem *data)
 
     hk_server_handle(session);
 
-    hk_mem_free(decrypted);
     hk_mem_free(response);
 
     return ret;

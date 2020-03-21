@@ -11,6 +11,7 @@
 #include "../../utils/hk_logging_lwip.h"
 #include "../../utils/hk_math.h"
 #include "hk_subscription_store.h"
+#include "hk_session_security.h"
 
 typedef struct
 {
@@ -18,15 +19,38 @@ typedef struct
     esp_err_t (*receiver)(hk_session_t *connection, hk_mem *data);
 } hk_com_arguments_t;
 
-esp_err_t hk_com_send_data(hk_session_t *connection, hk_mem *data_to_send)
+esp_err_t hk_com_queue_frame(hk_mem *frame_data, void *args)
 {
-    if (xQueueSendToBack(connection->response->data_to_send, &data_to_send, 10) != pdPASS)
+    hk_session_t *connection = (hk_session_t *)args;
+    if (xQueueSendToBack(connection->response->data_to_send, &frame_data, 10) != pdPASS)
     {
         HK_LOGE("Error queuing data to send.");
         return ESP_FAIL;
     }
 
     return ESP_OK;
+}
+
+esp_err_t hk_com_send_data(hk_session_t *connection)
+{
+    esp_err_t ret;
+    if (connection->is_secure)
+    {
+        ret = hk_session_security_encrypt_frames(
+            connection->encryption_data,
+            connection->keys,
+            connection->response->data,
+            hk_com_queue_frame,
+            (void *)connection);
+    }
+    else
+    {
+        hk_mem *frame_data = hk_mem_create(); // is disposed by server, after it was sent
+        hk_mem_append(frame_data, connection->response->data);
+        ret = hk_com_queue_frame(frame_data, (void *)connection);
+    }
+
+    return ret;
 }
 
 esp_err_t hk_com_open_connection(hk_session_t **connections, int listen_socket, fd_set *active_fds)
@@ -94,7 +118,23 @@ void hk_com_handle_receive(hk_session_t *connection, esp_err_t (*receiver)(hk_se
     {
         HK_LOGV("%d - Received %d bytes", connection->socket, recv_size);
         hk_mem *data = hk_mem_create();
-        hk_mem_append_buffer(data, buffer, recv_size);
+
+        if (connection->is_secure)
+        {
+            hk_mem *encrypted_data = hk_mem_create();
+            hk_mem_append_buffer(encrypted_data, buffer, recv_size);
+            esp_err_t ret = hk_session_security_decrypt_frames(connection->encryption_data, connection->keys, encrypted_data, data);
+            if (ret != ESP_OK)
+            {
+                HK_LOGE("Could not pre process received data of socket %d.", connection->socket);
+            }
+            hk_mem_free(encrypted_data);
+        }
+        else
+        {
+            hk_mem_append_buffer(data, buffer, recv_size);
+        }
+
         if (receiver(connection, data) != ESP_OK)
         {
             HK_LOGE("%d - Could not process received data.", connection->socket);

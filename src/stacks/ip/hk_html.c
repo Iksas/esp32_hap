@@ -1,20 +1,11 @@
 #include "hk_html.h"
 
-#include "hk_encryption.h"
 #include "../../utils/hk_logging.h"
 #include "hk_com.h"
 
 esp_err_t hk_html_send(hk_session_t *session)
-{
-    //hk_mem_log_as_string("Sending response with content", session->response->data);
-    
-    hk_mem *out = hk_mem_create(); //freed by hk_com after sending, as we dont know when sending is done
-    esp_err_t ret = hk_session_security_encrypt_frames(session->encryption_data, session->keys, session->response->data, out);
-    hk_com_send_data(session, out);
-
-    hk_session_clean_response(session);
-
-    return ret;
+{    
+    return hk_com_send_data(session);
 }
 
 void hk_html_append_response_start(hk_session_t *session, const char* protocol, const char* status)

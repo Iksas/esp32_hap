@@ -7,7 +7,7 @@
 
 #include "../../include/hk_mem.h"
 #include "../../common/hk_pair_verify_keys.h"
-#include "hk_encryption.h"
+#include "hk_session_security.h"
 
 #define HK_SESSION_RESPONSE_MESSAGE 0
 #define HK_SESSION_RESPONSE_EVENT 1
@@ -53,6 +53,7 @@ typedef struct hk_session
     char *device_id;
     int socket;
     bool should_close;
+    bool is_secure;
     bool kill; // states that all sessions with the same device id have to be killed
 } hk_session_t;
 

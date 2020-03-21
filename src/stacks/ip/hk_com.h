@@ -10,6 +10,6 @@ esp_err_t hk_com_start(
     esp_err_t (*receiver)(hk_session_t *connection, hk_mem* data)
 );
 
-esp_err_t hk_com_send_data(hk_session_t *connection, hk_mem *data_to_send);
+esp_err_t hk_com_send_data(hk_session_t *connection);
 
 void hk_com_kill_sessions_of_device(hk_session_t *session);

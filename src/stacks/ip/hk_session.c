@@ -11,6 +11,7 @@ void hk_session_init(hk_session_t *session, int socket)
     session->should_close = false;
     session->device_id = NULL;
     session->kill = false;
+    session->is_secure = false;
 
     session->request = (hk_session_request_t *)malloc(sizeof(hk_session_request_t));
     session->request->url = hk_mem_create();
