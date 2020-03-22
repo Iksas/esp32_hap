@@ -70,7 +70,6 @@ static int hk_gatt_write_ble_chr(struct ble_gatt_access_ctxt *ctxt, void *arg)
     int rc = 0;
     const ble_uuid128_t *chr_uuid = BLE_UUID128(ctxt->chr->uuid);
     hk_session_t *session = (hk_session_t *)arg;
-    hk_logu("Request to write ble chr", chr_uuid);
 
     uint8_t buffer_len = OS_MBUF_PKTLEN(ctxt->om);
     uint8_t buffer[buffer_len];
@@ -105,8 +104,6 @@ static int hk_gatt_write_ble_chr(struct ble_gatt_access_ctxt *ctxt, void *arg)
     {
         session->last_opcode = received->ptr[1];
         session->transaction_id = received->ptr[2];
-
-        HK_LOGD("CharId: %x%x", received->ptr[4], received->ptr[3]);
 
         hk_mem_set(session->request, 0);
         hk_mem_set(session->request, 0);
@@ -247,22 +244,22 @@ static int hk_gatt_access_callback(uint16_t conn_handle, uint16_t attr_handle, s
     int rc = 0;
     if (ctxt->op == BLE_GATT_ACCESS_OP_READ_CHR)
     {
-        HK_LOGD("BLE_GATT_ACCESS_OP_READ_CHR");
+        HK_LOGV("BLE_GATT_ACCESS_OP_READ_CHR");
         rc = hk_gatt_read_ble_chr(ctxt, arg);
     }
     else if (ctxt->op == BLE_GATT_ACCESS_OP_READ_DSC)
     {
-        HK_LOGD("BLE_GATT_ACCESS_OP_READ_DSC");
+        HK_LOGV("BLE_GATT_ACCESS_OP_READ_DSC");
         rc = hk_gatt_read_ble_descriptor(ctxt, arg);
     }
     else if (ctxt->op == BLE_GATT_ACCESS_OP_WRITE_CHR)
     {
-        HK_LOGD("BLE_GATT_ACCESS_OP_WRITE_CHR");
+        HK_LOGV("BLE_GATT_ACCESS_OP_WRITE_CHR");
         rc = hk_gatt_write_ble_chr(ctxt, arg);
     }
     else if (ctxt->op == BLE_GATT_ACCESS_OP_WRITE_DSC)
     {
-        HK_LOGD("BLE_GATT_ACCESS_OP_WRITE_DSC");
+        HK_LOGV("BLE_GATT_ACCESS_OP_WRITE_DSC");
         HK_LOGE("Operation not implemented.");
     }
     else
@@ -349,10 +346,11 @@ void hk_gatt_init()
     hk_gatt_setup_info = malloc(sizeof(hk_session_setup_info_t));
     hk_gatt_setup_info->srv_index = -1;
     hk_gatt_setup_info->chr_index = -1;
-    hk_gatt_setup_info->instance_id = 0;
+    hk_gatt_setup_info->instance_id = 1;
 }
 
-void hk_gatt_add_srv(hk_srv_types_t srv_type, bool primary, bool hidden)
+void hk_gatt_add_srv(hk_srv_types_t srv_type, bool primary, bool hidden,
+                     bool supports_configuration)
 {
     if (hk_gatt_setup_info->srv_index >= 0)
     {
@@ -373,6 +371,9 @@ void hk_gatt_add_srv(hk_srv_types_t srv_type, bool primary, bool hidden)
     hk_session_t *session = (hk_session_t *)malloc(sizeof(hk_session_t));
     session->static_data = NULL;
     session->srv_id = hk_gatt_setup_info->srv_id = session->chr_index = hk_gatt_setup_info->instance_id++;
+    session->srv_primary = hk_gatt_setup_info->srv_primary = primary;
+    session->srv_hidden = hk_gatt_setup_info->srv_hidden = hidden;
+    session->srv_supports_configuration = hk_gatt_setup_info->srv_supports_configuration = supports_configuration;
     hk_gatt_chr_init(chr, srv->uuid, (ble_uuid128_t *)&hk_uuid_manager_srv_id, BLE_GATT_CHR_F_READ, session, false);
 }
 
@@ -381,8 +382,8 @@ void *hk_gatt_add_chr(
     void (*read)(hk_mem *response),
     void (*write)(hk_mem *request, hk_mem *response),
     bool can_notify,
-    int16_t min_length,
-    int16_t max_length)
+    float min_length,
+    float max_length)
 {
     hk_ble_srv_t *current_srv = &hk_gatt_srvs[hk_gatt_setup_info->srv_index];
     ble_uuid128_t *chr_uuid = hk_uuid_manager_get((uint8_t)chr_type);
@@ -390,6 +391,11 @@ void *hk_gatt_add_chr(
 
     hk_session_t *session = hk_session_init(chr_type, hk_gatt_setup_info);
     session->srv_uuid = (ble_uuid128_t *)current_srv->uuid;
+    session->srv_id = hk_gatt_setup_info->srv_id;
+    session->srv_primary = hk_gatt_setup_info->srv_primary;
+    session->srv_hidden = hk_gatt_setup_info->srv_hidden;
+    session->srv_supports_configuration = hk_gatt_setup_info->srv_supports_configuration;
+
     session->read_callback = read;
     session->write_callback = write;
     session->max_length = max_length;
@@ -408,6 +414,7 @@ void *hk_gatt_add_chr(
         chr_uuid,
         flags,
         session, true);
+
     return NULL;
 }
 
@@ -419,6 +426,11 @@ void hk_gatt_add_chr_static_read(hk_chr_types_t chr_type, const char *value)
 
     hk_session_t *session = hk_session_init(chr_type, hk_gatt_setup_info);
     session->srv_uuid = (ble_uuid128_t *)current_srv->uuid;
+    session->srv_id = hk_gatt_setup_info->srv_id;
+    session->srv_primary = hk_gatt_setup_info->srv_primary;
+    session->srv_hidden = hk_gatt_setup_info->srv_hidden;
+    session->srv_supports_configuration = hk_gatt_setup_info->srv_supports_configuration;
+
     session->static_data = value;
 
     hk_gatt_chr_init(

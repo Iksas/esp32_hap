@@ -11,6 +11,9 @@ typedef struct
     char srv_id;
     int chr_index;
     uint16_t instance_id;
+    bool srv_primary;
+    bool srv_hidden;
+    bool srv_supports_configuration;
 } hk_session_setup_info_t;
 
 typedef struct
@@ -22,11 +25,14 @@ typedef struct
     void (*write_callback)(hk_mem* request, hk_mem* response);
     char srv_index;
     char srv_id;
+    bool srv_primary;
+    bool srv_hidden;
+    bool srv_supports_configuration;
     const ble_uuid128_t* srv_uuid;
     char chr_index;
     hk_chr_types_t chr_type;
-    int16_t max_length;
-    int16_t min_length;
+    float max_length;
+    float min_length;
     hk_mem *request;
     hk_mem *request_encrypted;
     hk_mem *response;

@@ -31,7 +31,6 @@ void *hk_setup_add_motion_sensor(
     void (*read)(hk_mem* response))
 {
     hk_setup_add_accessory(name, manufacturer, model, serial_number, revision, hk_setup_dummy_identify);
-    //hk_setup_add_srv(HK_SRV_MOTION_SENSOR, primary, false);
-    //return hk_setup_add_chr(HK_CHR_MOTION_DETECTED, read, NULL, true);
-    return NULL;
+    hk_setup_add_srv(HK_SRV_MOTION_SENSOR, primary, false);
+    return hk_setup_add_chr(HK_CHR_MOTION_DETECTED, read, NULL, true);
 }

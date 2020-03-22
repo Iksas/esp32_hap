@@ -9,15 +9,17 @@ hk_session_t *hk_session_init(hk_chr_types_t chr_type, hk_session_setup_info_t *
         session->srv_id = setup_info->srv_id;
         session->chr_index = setup_info->instance_id++;
     }
-    
+    session->srv_primary = false;
+    session->srv_hidden = false;
+    session->srv_supports_configuration = false;
     session->chr_type = chr_type;
     session->static_data = NULL;
     session->transaction_id = 0;
     session->last_opcode = 0;
     session->request_length = 0;
     session->response_sent = 0;
-    session->max_length = -1;
-    session->min_length = -1;
+    session->max_length = 0;
+    session->min_length = 0;
     session->read_callback = NULL;
     session->write_callback = NULL;
     session->request = hk_mem_create();

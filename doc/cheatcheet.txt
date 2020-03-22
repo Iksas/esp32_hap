@@ -9,13 +9,27 @@ opcodes
 0x08 HAP-Protocol-Configuration
 
 Chrs
+0c: HK_CHR_MOTION_DETECTED
+14: HK_CHR_IDENTIFY
+20: HK_CHR_MANUFACTURER
+21: HK_CHR_MODEL
+23: HK_CHR_NAME
+30: HK_CHR_SERIAL_NUMBER
 37: HK_CHR_VERSION
-a5: HK_CHR_SERVICE_SIGNATURE
 4c: HK_CHR_PAIR_SETUP
 4e: HK_CHR_PAIR_VERIFY
 4f: HK_CHR_PAIRING_FEATURES
 50: HK_CHR_PAIRING_PAIRINGS
+52: HK_CHR_FIRMWARE_REVISION
+a5: HK_CHR_SERVICE_SIGNATURE
 
+srvs:
+3e: HK_SRV_ACCESSORY_INFORMATION
+55: HK_SRV_PARIRING
+85: HK_SRV_MOTION_SENSOR
+a2: HK_SRV_HAP_PROTOCOL_INFORMATION
+
+HK_CHR_SERVICE_SIGNATURE
 HK_TLV_VALUE = 0x01,
 HK_TLV_PARAM_ADDITIONAL_AUTHORIZATION_DATA = 0x02,
 HK_TLV_PARAM_ORIGIN = 0x03,
@@ -56,3 +70,14 @@ HK_TLV_FragmentData = 13, // (bytes) Non-last fragment of data. If length is 0,
                             // it's an ACK.
 HK_TLV_FragmentLast = 14, // (bytes) Last fragment of data
 HK_TLV_Separator = 0xff,
+
+ble formats:
+01: bool
+04: uint8
+06: uint16
+08: uint32
+0a: uint64
+10: int
+14: float
+19: string
+1B: data
