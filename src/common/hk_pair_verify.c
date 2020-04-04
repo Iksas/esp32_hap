@@ -11,14 +11,16 @@
 #include "../crypto/hk_ed25519.h"
 #include "hk_pairings_store.h"
 
-esp_err_t hk_create_session_security(hk_pair_verify_keys_t *keys, hk_mem *shared_secret)
+esp_err_t hk_create_session_security(hk_pair_verify_keys_t *keys)
 {
     esp_err_t ret = ESP_OK;
 
-    ret = hk_hkdf(HK_HKDF_CONTROL_READ, shared_secret, keys->response_key);
+    ret = hk_hkdf(HK_HKDF_CONTROL_READ, keys->shared_secret, keys->response_key);
 
     if (!ret)
-        ret = hk_hkdf(HK_HKDF_CONTROL_WRITE, shared_secret, keys->request_key);
+    {
+        ret = hk_hkdf(HK_HKDF_CONTROL_WRITE, keys->shared_secret, keys->request_key);
+    }
 
     return ret;
 }
@@ -32,7 +34,6 @@ esp_err_t hk_pair_verify_start(hk_pair_verify_keys_t *keys, hk_tlv_t *tlv, hk_me
     keys->session_key = hk_mem_create();
     keys->accessory_curve_public_key = hk_mem_create();
     keys->device_curve_public_key = hk_mem_create();
-    hk_mem *shared_secret = hk_mem_create();
     hk_mem *accessory_info = hk_mem_create();
     hk_mem *accessory_id = hk_mem_create();
     hk_mem *accessory_signature = hk_mem_create();
@@ -70,7 +71,7 @@ esp_err_t hk_pair_verify_start(hk_pair_verify_keys_t *keys, hk_tlv_t *tlv, hk_me
         ret = hk_curve25519_generate_key(accessory_curve);
 
     if (!ret)
-        ret = hk_curve25519_shared_secret(accessory_curve, device_curve, shared_secret);
+        ret = hk_curve25519_shared_secret(accessory_curve, device_curve, keys->shared_secret);
 
     if (!ret)
         ret = hk_curve25519_export_public_key(accessory_curve, keys->accessory_curve_public_key);
@@ -99,14 +100,14 @@ esp_err_t hk_pair_verify_start(hk_pair_verify_keys_t *keys, hk_tlv_t *tlv, hk_me
     }
 
     if (!ret)
-        ret = hk_hkdf(HK_HKDF_PAIR_VERIFY_ENCRYPT, shared_secret, keys->session_key);
+        ret = hk_hkdf(HK_HKDF_PAIR_VERIFY_ENCRYPT, keys->shared_secret, keys->session_key);
 
     if (!ret)
         ret = hk_chacha20poly1305_encrypt(keys->session_key, HK_CHACHA_VERIFY_MSG2, sub_result, encrypted);
 
     if (!ret)
     {
-        ret = hk_create_session_security(keys, shared_secret);
+        ret = hk_create_session_security(keys);
     }
 
     tlv_data = hk_tlv_add_state(tlv_data, 2);
@@ -124,7 +125,6 @@ esp_err_t hk_pair_verify_start(hk_pair_verify_keys_t *keys, hk_tlv_t *tlv, hk_me
 
     hk_tlv_free(tlv_data);
     hk_tlv_free(sub_tlv_data);
-    hk_mem_free(shared_secret);
     hk_mem_free(accessory_info);
     hk_mem_free(accessory_id);
     hk_mem_free(accessory_signature);
@@ -241,7 +241,6 @@ int hk_pair_verify(hk_mem *request, hk_pair_verify_keys_t *keys, hk_mem *result,
             res = HK_RES_MALFORMED_REQUEST;
         }
     }
-
 
     if (*type_tlv->value == 3 && res == HK_RES_OK)
     {

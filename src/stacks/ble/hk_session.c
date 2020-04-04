@@ -9,10 +9,11 @@ hk_session_t *hk_session_init(hk_chr_types_t chr_type, hk_session_setup_info_t *
         session->srv_id = setup_info->srv_id;
         session->chr_index = setup_info->instance_id++;
     }
-    session->srv_primary = false;
+    session->srv_primary = false;// todo: put this stuff in an service object
     session->srv_hidden = false;
     session->srv_supports_configuration = false;
     session->chr_type = chr_type;
+    session->connection_handle = -1;
     session->static_data = NULL;
     session->transaction_id = 0;
     session->last_opcode = 0;
@@ -25,6 +26,7 @@ hk_session_t *hk_session_init(hk_chr_types_t chr_type, hk_session_setup_info_t *
     session->request = hk_mem_create();
     session->request_encrypted = hk_mem_create();
     session->response = hk_mem_create();
+    session->response_status = 0;
     session->response_encrypted = hk_mem_create();
 
     return session;

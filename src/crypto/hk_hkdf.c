@@ -38,6 +38,10 @@ static struct hk_hkdf_salt_info hk_hkdf_salt_infos[] = {
     {  
         .salt = "Control-Salt",
         .info = "Control-Write-Encryption-Key",
+    },
+    {  
+        .salt = "external",
+        .info = "Broadcast-Encryption-Key",
     }
 };
 
@@ -52,6 +56,22 @@ size_t hk_hkdf(enum hk_hkdf_types type, hk_mem *key_in, hk_mem* key_out)
         SHA512,
         (byte*)key_in->ptr, key_in->size,
         (byte *)salt, strlen(salt),
+        (byte *)info, strlen(info),
+        (byte*)key_out->ptr, key_out->size);
+        
+    return ret;
+}
+
+size_t hk_hkdf_with_external_salt(enum hk_hkdf_types type, hk_mem *salt, hk_mem *key_in, hk_mem* key_out)
+{
+    hk_mem_set(key_out, 32);
+
+    char* info = hk_hkdf_salt_infos[type].info;
+
+    int ret = wc_HKDF(
+        SHA512,
+        (byte*)key_in->ptr, key_in->size,
+        (byte *)salt->ptr, salt->size,
         (byte *)info, strlen(info),
         (byte*)key_out->ptr, key_out->size);
         

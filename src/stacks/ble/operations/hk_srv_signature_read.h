@@ -5,4 +5,4 @@
 
 #include "../hk_session.h"
 
-void hk_srv_signature_read_response(const ble_uuid128_t *chr_uuid, hk_session_t *session);
+esp_err_t hk_srv_signature_read_response(const ble_uuid128_t *chr_uuid, hk_session_t *session);

@@ -5,4 +5,5 @@
 
 #include "../hk_session.h"
 
-void hk_chr_timed_write_response(const ble_uuid128_t *chr_uuid, hk_session_t *session);
+esp_err_t hk_chr_timed_write_response(const ble_uuid128_t *chr_uuid, hk_session_t *session);
+esp_err_t hk_chr_execute_write_response(const ble_uuid128_t *chr_uuid, hk_session_t *session);

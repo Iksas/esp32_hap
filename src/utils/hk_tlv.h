@@ -4,29 +4,7 @@
 #include "../include/hk_mem.h"
 #include "hk_res.h"
 
-enum hk_tlv_params
-{
-    HK_TLV_VALUE = 0x01,
-    HK_TLV_PARAM_ADDITIONAL_AUTHORIZATION_DATA = 0x02,
-    HK_TLV_PARAM_ORIGIN = 0x03,
-    HK_TLV_CHRARACTERISTIC_TYPE = 0x04,
-    HK_TLV_CHARACTERISTIC_ID = 0x05,
-    HK_TLV_SERVICE_TYPE = 0x06,
-    HK_TLV_SERVICE_ID = 0x07,
-    HK_TLV_PARAM_TTL = 0x08,
-    HK_TLV_PARAM_RETURN_RESPONSE = 0x09,
-    HK_TLV_CHARACTERISTIC_PROPERTIES = 0x0a,
-    HK_TLV_USER_DESCRIPTION = 0X0b,
-    HK_TLV_PRESENTATION_FORMAT= 0X0c,
-    HK_TLV_VALID_RANGE = 0X0d,
-    HK_TLV_STEP_VALUE = 0X0e,
-    HK_TLV_HAP_SERVICE_PROPERTIES = 0X0f,
-    HK_TLV_HAP_LINKED_SERVICES = 0X10,
-    HK_TLV_HAP_VALID_VALUES_DESCRIPTOR = 0X11,
-    HK_TLV_HAP_VALID_VALUES_RANGE_DESCRIPTOR = 0X12,
-};
-
-enum hk_tlv_types
+enum hk_tlv_types //todo: move to usages
 {
     HK_TLV_Method = 0,        // (integer) Method to use for pairing. See PairMethod
     HK_TLV_Identifier = 1,    // (UTF-8) Identifier for authentication

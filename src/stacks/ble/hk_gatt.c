@@ -5,18 +5,17 @@
 #include <services/gap/ble_svc_gap.h>
 #include <services/gatt/ble_svc_gatt.h>
 #include <host/ble_hs.h>
-//#include <esp_heap_caps.h> heap_caps_check_integrity_addr(0x3ffbd868, true);
 
 #include "../../utils/hk_logging.h"
 
 #include "hk_session.h"
 #include "hk_uuid_manager.h"
 #include "hk_session_security.h"
+#include "hk_advertising.h"
 #include "operations/hk_chr_signature_read.h"
 #include "operations/hk_chr_write.h"
 #include "operations/hk_chr_read.h"
 #include "operations/hk_chr_timed_write.h"
-#include "operations/hk_chr_execute_write.h"
 #include "operations/hk_srv_signature_read.h"
 #include "operations/hk_chr_configuration.h"
 #include "operations/hk_protocol_configuration.h"
@@ -46,12 +45,12 @@ static int hk_gatt_read_ble_descriptor(struct ble_gatt_access_ctxt *ctxt, void *
 {
     int rc = 0;
     const ble_uuid128_t *chr_uuid = BLE_UUID128(ctxt->chr->uuid);
-    hk_logu("Read descriptor of  chr", chr_uuid);
+    hk_logu("Read descriptor of chr", chr_uuid);
     const ble_uuid128_t *descriptor_uuid = BLE_UUID128(ctxt->dsc->uuid);
     hk_logu("with id", descriptor_uuid);
     hk_session_t *session = (hk_session_t *)arg;
 
-    if (hk_gatt_cmp(descriptor_uuid, (ble_uuid128_t *)&hk_uuid_manager_desciptor_instance_id))
+    if (hk_gatt_cmp(descriptor_uuid, (ble_uuid128_t *)&hk_uuid_manager_descriptor_instance_id))
     {
         HK_LOGD("Returning instance id for chr: %d", session->chr_index);
         uint16_t id = session->chr_index;
@@ -65,11 +64,14 @@ static int hk_gatt_read_ble_descriptor(struct ble_gatt_access_ctxt *ctxt, void *
     return rc == 0 ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES;
 }
 
-static int hk_gatt_write_ble_chr(struct ble_gatt_access_ctxt *ctxt, void *arg)
+static int hk_gatt_write_ble_chr(uint16_t connection_handle, struct ble_gatt_access_ctxt *ctxt, void *arg)
 {
     int rc = 0;
+    esp_err_t res = ESP_OK;
     const ble_uuid128_t *chr_uuid = BLE_UUID128(ctxt->chr->uuid);
     hk_session_t *session = (hk_session_t *)arg;
+    session->connection_handle = connection_handle;
+    session->response_status = 0;
 
     uint8_t buffer_len = OS_MBUF_PKTLEN(ctxt->om);
     uint8_t buffer[buffer_len];
@@ -91,26 +93,30 @@ static int hk_gatt_write_ble_chr(struct ble_gatt_access_ctxt *ctxt, void *arg)
         hk_mem_append_buffer(received, buffer, out_len);
     }
 
-    hk_mem_log("Received", received);
-
     uint8_t control_field = received->ptr[0];
     if (control_field && 0b01000000) // according specification bit 7 (zero based) should be set to 1. But it isnt????
     {
         // continuation
         hk_mem_append_buffer(session->request, received->ptr + 2, out_len - 2); //continuation is preceeded by controlfield and transaction id
+        hk_mem_log("Received continuation", received);
         HK_LOGD("Received continuation %d of %d.", session->request->size, session->request_length);
     }
     else
     {
+        printf("\n");
+        hk_logu("Received new request", chr_uuid);
+        hk_mem_log("Received new request data", received);
         session->last_opcode = received->ptr[1];
+        HK_LOGD("Set op code to %x", session->last_opcode);
         session->transaction_id = received->ptr[2];
+        HK_LOGD("Set transaction id to %x", session->transaction_id);
 
         hk_mem_set(session->request, 0);
-        hk_mem_set(session->request, 0);
+        hk_mem_set(session->response, 0);
         if (received->size > 5)
         {
             session->request_length = received->ptr[5] + received->ptr[6] * 256;
-            hk_mem_append_buffer(session->request, received->ptr + 7, out_len - 7); // -7 because of PDU start
+            hk_mem_append_buffer(session->request, received->ptr + 7, received->size - 7); // -7 because of PDU start
         }
         else
         {
@@ -120,38 +126,45 @@ static int hk_gatt_write_ble_chr(struct ble_gatt_access_ctxt *ctxt, void *arg)
 
     if (session->request_length == session->request->size)
     {
-        HK_LOGD("Request complete, executing");
         hk_mem_set(session->response, 0);
         session->response_sent = 0;
-        // todo, execute functionshk_mem *response = hk_mem_create();
         switch (session->last_opcode)
         {
         case 1:
-            hk_chr_signature_read_response(chr_uuid, session);
+            HK_LOGD("Request complete, executing signature read.");
+            res = hk_chr_signature_read_response(chr_uuid, session);
             break;
         case 2:
-            hk_chr_write_response(chr_uuid, session);
+            HK_LOGD("Request complete, executing characteristic write.");
+            res = hk_chr_write_response(chr_uuid, session);
             break;
         case 3:
-            hk_chr_read_response(chr_uuid, session);
+            HK_LOGD("Request complete, executing characteristic read.");
+            res = hk_chr_read_response(chr_uuid, session);
             break;
         case 4:
-            hk_chr_timed_write_response(chr_uuid, session);
+            HK_LOGD("Request complete, executing characteristic timed write.");
+            res = hk_chr_timed_write_response(chr_uuid, session);
             break;
         case 5:
-            hk_chr_execute_write_response(chr_uuid, session);
+            HK_LOGD("Request complete, executing characteristic execute write.");
+            res = hk_chr_execute_write_response(chr_uuid, session);
             break;
         case 6:
-            hk_srv_signature_read_response(chr_uuid, session);
+            HK_LOGD("Request complete, executing signature read.");
+            res = hk_srv_signature_read_response(chr_uuid, session);
             break;
         case 7:
-            hk_chr_configuration_response(chr_uuid, session);
+            HK_LOGD("Request complete, executing characteristic configuration.");
+            res = hk_chr_configuration_response(chr_uuid, session);
             break;
         case 8:
-            hk_protocol_configuration_response(chr_uuid, session);
+            HK_LOGD("Request complete, executing protocol configuration.");
+            res = hk_protocol_configuration_response(chr_uuid, session);
             break;
         default:
             HK_LOGE("Unknown opcode.");
+            res = ESP_ERR_NOT_SUPPORTED;
         }
     }
     else
@@ -160,6 +173,24 @@ static int hk_gatt_write_ble_chr(struct ble_gatt_access_ctxt *ctxt, void *arg)
     }
 
     hk_mem_free(received);
+
+    if (res == ESP_ERR_HK_TERMINATE)
+    {
+        hk_advertising_terminate_connection(connection_handle);
+    }
+    else if (res != ESP_OK)
+    {
+        session->response_status = 0x06;
+    }
+    else
+    {
+        session->response_status = 0x00;
+    }
+
+    if (session->response_status != 0x00)
+    {
+        HK_LOGE("Setting response status to %d.", session->response_status);
+    }
 
     rc = rc == 0 ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES;
 
@@ -189,7 +220,7 @@ static int hk_gatt_read_ble_chr(struct ble_gatt_access_ctxt *ctxt, void *arg)
 
         if (session->response_sent < 1) // no continuation
         {
-            uint8_t status = 0; // status is zero, success
+            uint8_t status = session->response_status; // status is zero, success
             hk_mem_append_buffer(response, (char *)&status, 1);
 
             if (session->response->size > 0) // has body
@@ -239,7 +270,7 @@ static int hk_gatt_read_ble_chr(struct ble_gatt_access_ctxt *ctxt, void *arg)
     return rc == 0 ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES;
 }
 
-static int hk_gatt_access_callback(uint16_t conn_handle, uint16_t attr_handle, struct ble_gatt_access_ctxt *ctxt, void *arg)
+static int hk_gatt_access_callback(uint16_t connection_handle, uint16_t attr_handle, struct ble_gatt_access_ctxt *ctxt, void *arg)
 {
     int rc = 0;
     if (ctxt->op == BLE_GATT_ACCESS_OP_READ_CHR)
@@ -247,20 +278,15 @@ static int hk_gatt_access_callback(uint16_t conn_handle, uint16_t attr_handle, s
         HK_LOGV("BLE_GATT_ACCESS_OP_READ_CHR");
         rc = hk_gatt_read_ble_chr(ctxt, arg);
     }
-    else if (ctxt->op == BLE_GATT_ACCESS_OP_READ_DSC)
-    {
-        HK_LOGV("BLE_GATT_ACCESS_OP_READ_DSC");
-        rc = hk_gatt_read_ble_descriptor(ctxt, arg);
-    }
     else if (ctxt->op == BLE_GATT_ACCESS_OP_WRITE_CHR)
     {
         HK_LOGV("BLE_GATT_ACCESS_OP_WRITE_CHR");
-        rc = hk_gatt_write_ble_chr(ctxt, arg);
+        rc = hk_gatt_write_ble_chr(connection_handle, ctxt, arg);
     }
-    else if (ctxt->op == BLE_GATT_ACCESS_OP_WRITE_DSC)
+    else if (ctxt->op == BLE_GATT_ACCESS_OP_READ_DSC)
     {
-        HK_LOGV("BLE_GATT_ACCESS_OP_WRITE_DSC");
-        HK_LOGE("Operation not implemented.");
+        HK_LOGI("BLE_GATT_ACCESS_OP_READ_DSC");
+        rc = hk_gatt_read_ble_descriptor(ctxt, arg);
     }
     else
     {
@@ -317,26 +343,36 @@ void hk_gatt_chr_init(
     ble_uuid128_t *chr_uuid,
     ble_gatt_chr_flags flags,
     hk_session_t *session,
-    bool add_descriptors)
+    bool add_descriptors, // todo: remove
+    bool can_notify)
 {
     chr->uuid = &chr_uuid->u;
     chr->access_cb = hk_gatt_access_callback;
     chr->flags = flags;
     chr->arg = (void *)session;
 
-    size_t memory_size = 3 * sizeof(hk_ble_descriptor_t);
-    chr->descriptors = (hk_ble_descriptor_t *)malloc(memory_size);
-    memset((void *)chr->descriptors, 0, memory_size);
+    uint8_t number_of_descriptors = 2; // one for instance id and one for array end marker
+    if (can_notify)
+    {
+        number_of_descriptors++;
+    }
 
-    chr->descriptors[0].uuid = &hk_uuid_manager_desciptor_instance_id.u;
+    size_t memory_size = number_of_descriptors * sizeof(hk_ble_descriptor_t);
+    chr->descriptors = (hk_ble_descriptor_t *)malloc(memory_size);
+    memset((void *)chr->descriptors, 0, memory_size); // set everything to zero. Especially important for array end marker
+
+    chr->descriptors[0].uuid = &hk_uuid_manager_descriptor_instance_id.u;
     chr->descriptors[0].att_flags = BLE_ATT_F_READ;
     chr->descriptors[0].arg = (void *)session;
     chr->descriptors[0].access_cb = hk_gatt_access_callback;
 
-    // chr->descriptors[1].uuid = &hk_uuid_manager_descriptor_format.u;
-    // chr->descriptors[1].att_flags = BLE_ATT_F_READ;
-    // chr->descriptors[1].arg = (void *)session;
-    // chr->descriptors[1].access_cb = hk_gatt_access_callback;
+    if (can_notify)
+    {
+        chr->descriptors[1].uuid = &hk_uuid_manager_descriptor_client_configuration.u;
+        chr->descriptors[1].att_flags = BLE_ATT_F_READ;
+        chr->descriptors[1].arg = (void *)session;
+        chr->descriptors[1].access_cb = hk_gatt_access_callback;
+    }
 }
 
 void hk_gatt_init()
@@ -374,13 +410,13 @@ void hk_gatt_add_srv(hk_srv_types_t srv_type, bool primary, bool hidden,
     session->srv_primary = hk_gatt_setup_info->srv_primary = primary;
     session->srv_hidden = hk_gatt_setup_info->srv_hidden = hidden;
     session->srv_supports_configuration = hk_gatt_setup_info->srv_supports_configuration = supports_configuration;
-    hk_gatt_chr_init(chr, srv->uuid, (ble_uuid128_t *)&hk_uuid_manager_srv_id, BLE_GATT_CHR_F_READ, session, false);
+    hk_gatt_chr_init(chr, srv->uuid, (ble_uuid128_t *)&hk_uuid_manager_srv_id, BLE_GATT_CHR_F_READ, session, false, false);
 }
 
 void *hk_gatt_add_chr(
     hk_chr_types_t chr_type,
-    void (*read)(hk_mem *response),
-    void (*write)(hk_mem *request, hk_mem *response),
+    esp_err_t (*read)(hk_mem *response),
+    esp_err_t (*write)(hk_mem *request, hk_mem *response),
     bool can_notify,
     float min_length,
     float max_length)
@@ -413,7 +449,7 @@ void *hk_gatt_add_chr(
         current_srv->uuid,
         chr_uuid,
         flags,
-        session, true);
+        session, true, can_notify);
 
     return NULL;
 }
@@ -438,7 +474,7 @@ void hk_gatt_add_chr_static_read(hk_chr_types_t chr_type, const char *value)
         current_srv->uuid,
         chr_uuid,
         BLE_GATT_CHR_F_READ | BLE_GATT_CHR_F_WRITE | BLE_GATT_CHR_PROP_READ,
-        session, true);
+        session, true, false);
 }
 
 void hk_gatt_end_config()
@@ -464,7 +500,7 @@ void hk_gatt_start()
     int rc = ble_gatts_count_cfg(hk_gatt_srvs);
     if (rc != 0)
     {
-        HK_LOGE("gatt_svr_init ble_gatts_count_cfg: %d", rc);
+        HK_LOGE("Error initializing services: %d", rc);
         //return rc;
     }
 

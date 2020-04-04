@@ -8,6 +8,7 @@
 #define HK_STORE_ACC_PRV_KEY "hk_acc_prv_key"
 #define HK_STORE_ACC_PUB_KEY "hk_acc_pub_key"
 #define HK_STORE_PAIRINGS "hk_pairings"
+#define HK_STORE_CONFIGURATION "hk_config"
 
 nvs_handle hk_store_handle;
 const char *hk_store_name = "hk_store";
@@ -21,6 +22,22 @@ void hk_store_bool_set(const char *key, bool value)
 esp_err_t hk_store_bool_get(const char *key, bool *value)
 {
     esp_err_t ret = nvs_get_u8(hk_store_handle, key, (uint8_t *)value);
+    if (ret != ESP_ERR_NVS_NOT_FOUND)
+    {
+        ESP_ERROR_CHECK(ret);
+    }
+
+    return ret;
+}
+
+void hk_store_uint8_t_set(const char *key, uint8_t value)
+{
+    ESP_ERROR_CHECK(nvs_set_u8(hk_store_handle, key, value));
+}
+
+esp_err_t hk_store_uint8_t_get(const char *key, uint8_t *value)
+{
+    esp_err_t ret = nvs_get_u8(hk_store_handle, key, value);
     if (ret != ESP_ERR_NVS_NOT_FOUND)
     {
         ESP_ERROR_CHECK(ret);
@@ -99,6 +116,18 @@ const char *hk_store_code_get()
 void hk_store_code_set(const char *code)
 {
     hk_store_code = code;
+}
+
+uint8_t hk_store_configuration_get()
+{
+    uint8_t value;
+    hk_store_uint8_t_get(HK_STORE_CONFIGURATION , &value);
+    return value;
+}
+
+void hk_store_configuration_set(uint8_t configuration)
+{
+    hk_store_uint8_t_set(HK_STORE_CONFIGURATION, configuration);
 }
 
 size_t hk_store_init()

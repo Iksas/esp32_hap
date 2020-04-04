@@ -9,6 +9,7 @@
 #include <stdbool.h>
 
 #include "host/ble_gatt.h"
+#include "../../common/hk_errors.h"
 
 void hk_gatt_init();
 void hk_gatt_add_srv(
@@ -18,8 +19,8 @@ void hk_gatt_add_srv(
     bool supports_configuration);
 void* hk_gatt_add_chr(
     hk_chr_types_t chr_type, 
-    void (*read)(hk_mem* response),
-    void (*write)(hk_mem* request, hk_mem* response), 
+    esp_err_t (*read)(hk_mem* response),
+    esp_err_t (*write)(hk_mem* request, hk_mem* response), 
     bool can_notify, 
     float min_length, 
     float max_length);

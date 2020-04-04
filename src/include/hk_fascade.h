@@ -1,6 +1,7 @@
 #pragma once
 
 #include "hk_mem.h"
+#include "esp_err.h"
 
 void *hk_setup_add_switch(
     const char *name,
@@ -10,8 +11,8 @@ void *hk_setup_add_switch(
     const char *revision,
     bool primary,
     void (*identify)(),
-    void (*read)(hk_mem* response),
-    void (*write)(hk_mem* request, hk_mem* response));
+    esp_err_t (*read)(hk_mem* response),
+    esp_err_t (*write)(hk_mem* request, hk_mem* response));
 
 void *hk_setup_add_motion_sensor(
     const char *name,
@@ -20,4 +21,4 @@ void *hk_setup_add_motion_sensor(
     const char *serial_number,
     const char *revision,
     bool primary,
-    void (*read)(hk_mem* response));
+    esp_err_t (*read)(hk_mem* response));

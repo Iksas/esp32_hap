@@ -4,7 +4,11 @@
 
 #include "../../utils/hk_logging.h"
 #include "../../utils/hk_util.h"
+#include "../../utils/hk_store.h"
 #include "../../common/hk_pairings_store.h"
+#include "../../common/hk_global_state.h"
+
+#include "hk_session_security.h"
 
 static uint8_t hk_advertising_own_addr_type;
 const char *hk_advertising_name; // todo: move to config
@@ -35,11 +39,12 @@ static int hk_advertising_gap_event(struct ble_gap_event *event, void *arg)
     {
     case BLE_GAP_EVENT_CONNECT:
         /* A new connection was established or a connection attempt failed. */
-        HK_LOGI("connection %s; status=%d ",
+        HK_LOGD("connection %s; status=%d ",
                 event->connect.status == 0 ? "established" : "failed",
                 event->connect.status);
         if (event->connect.status == 0)
         {
+            hk_session_security_init_or_reset();
             rc = ble_gap_conn_find(event->connect.conn_handle, &desc);
         }
 
@@ -51,25 +56,25 @@ static int hk_advertising_gap_event(struct ble_gap_event *event, void *arg)
         rc = 0;
         break;
     case BLE_GAP_EVENT_DISCONNECT:
-        HK_LOGI("disconnect; reason=%d ", event->disconnect.reason);
+        HK_LOGD("disconnect; reason=%d ", event->disconnect.reason);
         hk_advertising_start_advertising(hk_advertising_own_addr_type);
         rc = 0;
         break;
     case BLE_GAP_EVENT_CONN_UPDATE:
-        HK_LOGI("connection updated; status=%d ", event->conn_update.status);
+        HK_LOGD("connection updated; status=%d ", event->conn_update.status);
         rc = 0;
         break;
     case BLE_GAP_EVENT_ADV_COMPLETE:
-        HK_LOGI("advertise complete; reason=%d", event->adv_complete.reason);
+        HK_LOGD("advertise complete; reason=%d", event->adv_complete.reason);
         hk_advertising_start_advertising(hk_advertising_own_addr_type);
         rc = 0;
         break;
     case BLE_GAP_EVENT_ENC_CHANGE:
-        HK_LOGI("encryption change event; status=%d ", event->enc_change.status);
+        HK_LOGD("encryption change event; status=%d ", event->enc_change.status);
         rc = 0;
         break;
     case BLE_GAP_EVENT_SUBSCRIBE:
-        HK_LOGI("subscribe event; conn_handle=%d attr_handle=%d "
+        HK_LOGD("subscribe event; conn_handle=%d attr_handle=%d "
                 "reason=%d prevn=%d curn=%d previ=%d curi=%d\n",
                 event->subscribe.conn_handle,
                 event->subscribe.attr_handle,
@@ -81,18 +86,18 @@ static int hk_advertising_gap_event(struct ble_gap_event *event, void *arg)
         rc = 0;
         break;
     case BLE_GAP_EVENT_MTU:
-        HK_LOGI("mtu update event; conn_handle=%d cid=%d mtu=%d",
+        HK_LOGD("mtu update event; conn_handle=%d cid=%d mtu=%d",
                 event->mtu.conn_handle,
                 event->mtu.channel_id,
                 event->mtu.value);
         rc = 0;
         break;
     case BLE_GAP_EVENT_REPEAT_PAIRING:
-        HK_LOGI("Repeat pairing");
+        HK_LOGD("Repeat pairing");
         rc = 0;
         break;
     case BLE_GAP_EVENT_PASSKEY_ACTION:
-        HK_LOGI("PASSKEY_ACTION_EVENT started");
+        HK_LOGD("PASSKEY_ACTION_EVENT started");
         rc = 0;
         break;
     }
@@ -111,29 +116,32 @@ void hk_advertising_start_advertising()
     int res;
 
     uint8_t device_id[6] = {0, 0, 0, 0, 0, 0};
-    if(hk_util_get_accessory_id(device_id)){
+    if (hk_util_get_accessory_id(device_id))
+    {
         HK_LOGE("Could not start advertising, because getting device id failed.");
         return;
     }
 
+    uint16_t global_state = hk_global_state_get();
+
     uint8_t manufacturer_data[17];
-    manufacturer_data[0] = 0x4c;                   // company id
-    manufacturer_data[1] = 0x00;                   // company id
-    manufacturer_data[2] = 0x06;                   // type
-    manufacturer_data[3] = 0xcd;                   // subtype and length
-    manufacturer_data[4] = 0x01; // todo: this was uncommented for debugging: hk_pairings_store_has_pairing() ? 0x00 : 0x01;                   // pairing status flat
-    manufacturer_data[5] = device_id[0];                   // device id
-    manufacturer_data[6] = device_id[1];                   // device id
-    manufacturer_data[7] = device_id[2];                   // device id
-    manufacturer_data[8] = device_id[3];                   // device id
-    manufacturer_data[9] = device_id[4];                   // device id
-    manufacturer_data[10] = device_id[5];                  // device id
-    manufacturer_data[11] = (char)hk_advertising_category; // accessory category identifier
-    manufacturer_data[12] = 0x00;                  // accessory category identifier
-    manufacturer_data[13] = 0x01;                  // global state number // todo: should be changed. See chapter 7.4.1.8
-    manufacturer_data[14] = 0x00;                  // global state number
-    manufacturer_data[15] = 0x01;                  // configuration number // todo: make configurable
-    manufacturer_data[16] = 0x02;                  // HAP BLE version
+    manufacturer_data[0] = 0x4c;                                          // company id
+    manufacturer_data[1] = 0x00;                                          // company id
+    manufacturer_data[2] = 0x06;                                          // type
+    manufacturer_data[3] = 0xcd;                                          // subtype and length
+    manufacturer_data[4] = hk_pairings_store_has_pairing() ? 0x00 : 0x01; // pairing status flat
+    manufacturer_data[5] = device_id[0];                                  // device id
+    manufacturer_data[6] = device_id[1];                                  // device id
+    manufacturer_data[7] = device_id[2];                                  // device id
+    manufacturer_data[8] = device_id[3];                                  // device id
+    manufacturer_data[9] = device_id[4];                                  // device id
+    manufacturer_data[10] = device_id[5];                                 // device id
+    manufacturer_data[11] = (char)hk_advertising_category;                // accessory category identifier
+    manufacturer_data[12] = 0x00;                                         // accessory category identifier
+    manufacturer_data[13] = global_state % 256;                           // global state number
+    manufacturer_data[14] = global_state / 256;                           // global state number
+    manufacturer_data[15] = hk_store_configuration_get();                 // configuration number
+    manufacturer_data[16] = 0x02;                                         // HAP BLE version
 
     struct ble_hs_adv_fields fields;
     memset(&fields, 0, sizeof fields);
@@ -192,4 +200,9 @@ void hk_advertising_update_paired()
 {
     //hk_advertising_stop_advertising();
     //hk_advertising_start_advertising();
+}
+
+void hk_advertising_terminate_connection(uint16_t connection_handle)
+{
+    ble_gap_terminate(connection_handle, BLE_ERR_REM_USER_CONN_TERM);
 }

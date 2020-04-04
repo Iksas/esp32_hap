@@ -20,3 +20,5 @@ void hk_store_code_set(const char* code);
 
 void hk_store_pairings_get(hk_mem *pairings);
 void hk_store_pairings_set(hk_mem *pairings);
+uint8_t hk_store_configuration_get();
+void hk_store_configuration_set(uint8_t configuration);
