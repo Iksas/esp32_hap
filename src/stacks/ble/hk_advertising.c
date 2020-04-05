@@ -8,11 +8,21 @@
 #include "../../common/hk_pairings_store.h"
 #include "../../common/hk_global_state.h"
 
-#include "hk_session_security.h"
+#include "hk_connection_security.h"
+#include "hk_connection.h"
 
 static uint8_t hk_advertising_own_addr_type;
 const char *hk_advertising_name; // todo: move to config
 size_t hk_advertising_category;  // todo: move to config, type to char
+
+static void hk_advertising_connect(uint16_t connection_handle)
+{
+    hk_connection_init(connection_handle);
+}
+
+static void hk_advertising_disconnect(uint16_t connection_handle){
+    hk_connection_free(connection_handle);
+}
 
 /**
  * The nimble host executes this callback when a GAP event occurs.  The
@@ -31,34 +41,26 @@ size_t hk_advertising_category;  // todo: move to config, type to char
  */
 static int hk_advertising_gap_event(struct ble_gap_event *event, void *arg)
 {
-    //HK_LOGI("event");
-    struct ble_gap_conn_desc desc;
-    int rc;
+    int rc = 0;
 
     switch (event->type)
     {
     case BLE_GAP_EVENT_CONNECT:
-        /* A new connection was established or a connection attempt failed. */
-        HK_LOGD("connection %s; status=%d ",
-                event->connect.status == 0 ? "established" : "failed",
-                event->connect.status);
+        HK_LOGI("Connect event; status=%d ", event->connect.status);
         if (event->connect.status == 0)
         {
-            hk_session_security_init_or_reset();
-            rc = ble_gap_conn_find(event->connect.conn_handle, &desc);
+            hk_advertising_connect(event->connect.conn_handle);
         }
-
-        if (event->connect.status != 0)
+        else
         {
-            /* Connection failed; resume advertising. */
+            //Connection failed; resume advertising.
             hk_advertising_start_advertising(hk_advertising_own_addr_type);
         }
-        rc = 0;
         break;
     case BLE_GAP_EVENT_DISCONNECT:
-        HK_LOGD("disconnect; reason=%d ", event->disconnect.reason);
+        HK_LOGI("Disconnect event; reason=%d ", event->disconnect.reason);
+        hk_advertising_disconnect(event->disconnect.conn.conn_handle);
         hk_advertising_start_advertising(hk_advertising_own_addr_type);
-        rc = 0;
         break;
     case BLE_GAP_EVENT_CONN_UPDATE:
         HK_LOGD("connection updated; status=%d ", event->conn_update.status);

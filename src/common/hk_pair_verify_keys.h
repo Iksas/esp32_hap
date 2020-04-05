@@ -17,3 +17,4 @@ typedef struct hk_pair_verify_keys
 
 hk_pair_verify_keys_t *hk_pair_verify_keys_init();
 void hk_pair_verify_keys_free(hk_pair_verify_keys_t *keys);
+void hk_pair_verify_keys_reset(hk_pair_verify_keys_t *keys);

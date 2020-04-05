@@ -17,3 +17,10 @@ void hk_pair_verify_keys_free(hk_pair_verify_keys_t *keys)
     hk_mem_free(keys->shared_secret);
     free(keys);
 }
+
+void hk_pair_verify_keys_reset(hk_pair_verify_keys_t *keys)
+{
+    hk_mem_set(keys->request_key, 0);
+    hk_mem_set(keys->response_key, 0);
+    hk_mem_set(keys->shared_secret, 0);
+}

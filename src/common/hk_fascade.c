@@ -14,7 +14,7 @@ void *hk_setup_add_switch(
     bool primary, 
     void (*identify)(), 
     esp_err_t (*read)(hk_mem* response), 
-    esp_err_t (*write)(hk_mem* request, hk_mem* response))
+    esp_err_t (*write)(hk_mem* request))
 {
     hk_setup_add_accessory(name, manufacturer, model, serial_number, revision, identify);
     hk_setup_add_srv(HK_SRV_SWITCH, primary, false);

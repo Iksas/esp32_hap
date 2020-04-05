@@ -11,7 +11,7 @@
 #include "../../utils/hk_logging_lwip.h"
 #include "../../utils/hk_math.h"
 #include "hk_subscription_store.h"
-#include "hk_session_security.h"
+#include "hk_connection_security.h"
 
 typedef struct
 {
@@ -36,7 +36,7 @@ esp_err_t hk_com_send_data(hk_session_t *connection)
     esp_err_t ret;
     if (connection->is_secure)
     {
-        ret = hk_session_security_encrypt_frames(
+        ret = hk_connection_security_encrypt_frames(
             connection->encryption_data,
             connection->keys,
             connection->response->data,
@@ -123,7 +123,7 @@ void hk_com_handle_receive(hk_session_t *connection, esp_err_t (*receiver)(hk_se
         {
             hk_mem *encrypted_data = hk_mem_create();
             hk_mem_append_buffer(encrypted_data, buffer, recv_size);
-            esp_err_t ret = hk_session_security_decrypt_frames(connection->encryption_data, connection->keys, encrypted_data, data);
+            esp_err_t ret = hk_connection_security_decrypt_frames(connection->encryption_data, connection->keys, encrypted_data, data);
             if (ret != ESP_OK)
             {
                 HK_LOGE("Could not pre process received data of socket %d.", connection->socket);

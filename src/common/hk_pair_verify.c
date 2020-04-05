@@ -27,6 +27,7 @@ esp_err_t hk_create_session_security(hk_pair_verify_keys_t *keys)
 
 esp_err_t hk_pair_verify_start(hk_pair_verify_keys_t *keys, hk_tlv_t *tlv, hk_mem *result)
 {
+    HK_LOGD("Now running pair verify start.");
     esp_err_t ret = ESP_OK;
     hk_ed25519_key_t *accessory_key = hk_ed25519_init_key();
     hk_curve25519_key_t *accessory_curve = hk_curve25519_init_key();
@@ -44,6 +45,8 @@ esp_err_t hk_pair_verify_start(hk_pair_verify_keys_t *keys, hk_tlv_t *tlv, hk_me
     hk_tlv_t *sub_tlv_data = NULL;
     hk_tlv_t *tlv_data = NULL;
 
+    hk_pair_verify_keys_reset(keys);
+    
     if (hk_store_keys_can_get())
     {
         hk_store_key_pub_get(accessory_public_key);
@@ -141,6 +144,7 @@ esp_err_t hk_pair_verify_start(hk_pair_verify_keys_t *keys, hk_tlv_t *tlv, hk_me
 
 esp_err_t hk_pair_verify_finish(hk_pair_verify_keys_t *keys, hk_tlv_t *tlv, hk_mem *result)
 {
+    HK_LOGD("Now running pair verify finish.");
     hk_ed25519_key_t *device_key = hk_ed25519_init_key();
     hk_mem *encrypted_data = hk_mem_create();
     hk_mem *decrypted_data = hk_mem_create();

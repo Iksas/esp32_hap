@@ -12,7 +12,7 @@ void *hk_setup_add_switch(
     bool primary,
     void (*identify)(),
     esp_err_t (*read)(hk_mem* response),
-    esp_err_t (*write)(hk_mem* request, hk_mem* response));
+    esp_err_t (*write)(hk_mem* request));
 
 void *hk_setup_add_motion_sensor(
     const char *name,

@@ -10,12 +10,12 @@
 hk_mem *hk_chr_timed_write_write_request;
 time_t time_of_death = -1;
 
-esp_err_t hk_chr_timed_write_response(const ble_uuid128_t *chr_uuid, hk_session_t *session)
+esp_err_t hk_chr_timed_write(hk_transaction_t *transaction, hk_chr_t *chr)
 {
     esp_err_t res = ESP_OK;
     uint8_t ttl = 0;
     hk_mem *ttl_mem = hk_mem_create();
-    hk_tlv_t *tlv_data = hk_tlv_deserialize(session->request);
+    hk_tlv_t *tlv_data = hk_tlv_deserialize(transaction->request);
     hk_chr_timed_write_write_request = hk_mem_create();
 
     if (hk_tlv_get_mem_by_type(tlv_data, 0x01, hk_chr_timed_write_write_request) != HK_RES_OK)
@@ -46,7 +46,7 @@ esp_err_t hk_chr_timed_write_response(const ble_uuid128_t *chr_uuid, hk_session_
     return res;
 }
 
-esp_err_t hk_chr_execute_write_response(const ble_uuid128_t *chr_uuid, hk_session_t *session)
+esp_err_t hk_chr_execute_write(hk_connection_t *connection, hk_transaction_t *transaction, hk_chr_t *chr)
 {
     esp_err_t res = ESP_OK;
     hk_mem *write_response = hk_mem_create();
@@ -66,7 +66,19 @@ esp_err_t hk_chr_execute_write_response(const ble_uuid128_t *chr_uuid, hk_sessio
 
     if (res == ESP_OK)
     {
-        res = session->write_callback(hk_chr_timed_write_write_request, write_response);
+        if (chr->write_callback != NULL)
+        {
+            res = chr->write_callback(hk_chr_timed_write_write_request);
+        }
+        else if (chr->write_with_response_callback)
+        {
+            res = chr->write_with_response_callback(connection, hk_chr_timed_write_write_request, write_response);
+        }
+        else
+        {
+            HK_LOGE("Write callback was not found.");
+            res = ESP_ERR_NOT_FOUND;
+        }
     }
 
     if (res == ESP_OK)
@@ -75,7 +87,7 @@ esp_err_t hk_chr_execute_write_response(const ble_uuid128_t *chr_uuid, hk_sessio
         {
             hk_tlv_t *tlv_data_response = NULL;
             tlv_data_response = hk_tlv_add_mem(tlv_data_response, 0x01, write_response);
-            hk_tlv_serialize(tlv_data_response, session->response);
+            hk_tlv_serialize(tlv_data_response, transaction->response);
         }
     }
 

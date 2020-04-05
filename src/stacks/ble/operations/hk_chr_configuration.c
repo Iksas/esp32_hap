@@ -5,7 +5,7 @@
 
 #include "../hk_formats_ble.h"
 
-esp_err_t hk_chr_configuration_response(const ble_uuid128_t *chr_uuid, hk_session_t *session)
+esp_err_t hk_chr_configuration(hk_transaction_t *transaction)
 {
     HK_LOGE("Not implemented.");
     return ESP_ERR_NOT_SUPPORTED;

@@ -12,20 +12,20 @@ enum hk_srv_signature_read_srv_properties
     HK_SRV_PROP_SUPPORTS_CONFIGURATION = 0x0004
 };
 
-esp_err_t hk_srv_signature_read_response(const ble_uuid128_t *chr_uuid, hk_session_t *session)
+esp_err_t hk_srv_signature_read(hk_transaction_t *transaction, hk_chr_t *chr)
 {
     uint16_t properties = 0;
-    if (session->srv_primary)
+    if (chr->srv_primary)
     {
         properties |= HK_SRV_PROP_PRIMARY;
     }
 
-    if (session->srv_hidden)
+    if (chr->srv_hidden)
     {
         properties |= HK_SRV_PROP_HIDDEN;
     }
 
-    if (session->srv_supports_configuration)
+    if (chr->srv_supports_configuration)
     {
         properties |= HK_SRV_PROP_SUPPORTS_CONFIGURATION;
     }
@@ -37,7 +37,7 @@ esp_err_t hk_srv_signature_read_response(const ble_uuid128_t *chr_uuid, hk_sessi
     tlv_data = hk_tlv_add_buffer(tlv_data, 0x10,
                                  NULL, 0);
 
-    hk_tlv_serialize(tlv_data, session->response);
+    hk_tlv_serialize(tlv_data, transaction->response);
 
     return ESP_OK;
 }
