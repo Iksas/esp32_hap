@@ -9,21 +9,32 @@
 
 void (*hk_identify_callback)();
 
-esp_err_t hk_read_protocol_information_version(hk_mem* response)
+esp_err_t hk_read_protocol_information_version(hk_mem *response)
 {
     HK_LOGE("hk_read_protocol_information_version");
     return ESP_ERR_NOT_SUPPORTED;
 }
 
+<<<<<<< Updated upstream
 esp_err_t hk_identify(hk_mem* response){
     if(hk_identify_callback != NULL){
+=======
+esp_err_t hk_identify(hk_mem *request)
+{
+    if (hk_identify_callback != NULL)
+    {
+>>>>>>> Stashed changes
         hk_identify_callback();
     }
-    
+
     return ESP_OK;
 }
 
+<<<<<<< Updated upstream
 esp_err_t hk_read_chr_signature(hk_mem* request)
+=======
+esp_err_t hk_read_chr_signature(hk_mem *response)
+>>>>>>> Stashed changes
 {
     HK_LOGE("hk_gatt_read_chr_signature");
     return ESP_ERR_NOT_SUPPORTED;
@@ -66,6 +77,7 @@ void hk_setup_add_accessory(const char *name, const char *manufacturer, const ch
     hk_gatt_add_chr_static_read(HK_CHR_FIRMWARE_REVISION, revision);
     hk_gatt_add_chr(HK_CHR_IDENTIFY, NULL, hk_identify, NULL, false, -1, -1); 
 
+
     hk_gatt_add_srv(HK_SRV_HAP_PROTOCOL_INFORMATION, false, false, true);
     hk_gatt_add_chr_static_read(HK_CHR_VERSION, "2.2.0");
     hk_gatt_add_chr(HK_CHR_SERVICE_SIGNATURE, hk_read_chr_signature, hk_write_chr_signature, NULL, false, -1, -1);
@@ -82,7 +94,11 @@ void hk_setup_add_srv(hk_srv_types_t srv_type, bool primary, bool hidden)
     hk_gatt_add_srv(srv_type, primary, hidden, false);
 }
 
+<<<<<<< Updated upstream
 void *hk_setup_add_chr(hk_chr_types_t type, esp_err_t (*read)(hk_mem* response), esp_err_t (*write)(hk_mem* request), bool can_notify)
+=======
+void *hk_setup_add_chr(hk_chr_types_t type, esp_err_t (*read)(hk_mem *response), esp_err_t (*write)(hk_mem *request, hk_mem *response), bool can_notify)
+>>>>>>> Stashed changes
 {
     return hk_gatt_add_chr(type, read, write, NULL, can_notify, -1, -1);
 }

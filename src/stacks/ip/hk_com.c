@@ -11,7 +11,7 @@
 #include "../../utils/hk_logging_lwip.h"
 #include "../../utils/hk_math.h"
 #include "hk_subscription_store.h"
-#include "hk_connection_security.h"
+#include "hk_session_security.h"
 
 typedef struct
 {

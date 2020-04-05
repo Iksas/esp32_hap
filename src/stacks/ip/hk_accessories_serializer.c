@@ -42,7 +42,7 @@ void hk_accessories_serializer_value(hk_chr_t *chr, cJSON *j_chr)
     if (chr->read != NULL)
     {
         hk_mem* response = hk_mem_create();
-        chr->read(response);
+        chr->read(response); //todo: error handling
         cJSON_AddItemToObject(j_chr, "value", hk_accessories_serializer_format_value(format, response->ptr));
         hk_mem_free(response);
     }

@@ -1,4 +1,4 @@
-#include "hk_connection_security.h"
+#include "hk_session_security.h"
 
 #include "../../crypto/hk_chacha20poly1305.h"
 #include "../../utils/hk_logging.h"

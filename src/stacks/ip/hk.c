@@ -7,6 +7,16 @@
 #include "hk_advertising.h"
 #include "hk_chrs.h"
 
+void (*hk_identify_callback)();
+
+esp_err_t hk_identify(hk_mem* request){
+    if(hk_identify_callback != NULL){
+        hk_identify_callback();
+    }
+    
+    return ESP_OK;
+}
+
 void hk_init(const char *name, const hk_categories_t category, const char *code)
 {
     hk_store_code_set(code);
@@ -24,6 +34,7 @@ void hk_setup_start()
 
 void hk_setup_add_accessory(const char *name, const char *manufacturer, const char *model, const char *serial_number, const char *revision, void (*identify)())
 {
+    hk_identify_callback = identify;
     hk_accessories_store_add_accessory();
     hk_accessories_store_add_srv(HK_SRV_ACCESSORY_INFORMATION, false, false);
 
@@ -32,7 +43,7 @@ void hk_setup_add_accessory(const char *name, const char *manufacturer, const ch
     hk_accessories_store_add_chr_static_read(HK_CHR_MODEL, (void *)model);
     hk_accessories_store_add_chr_static_read(HK_CHR_SERIAL_NUMBER, (void *)serial_number);
     hk_accessories_store_add_chr_static_read(HK_CHR_FIRMWARE_REVISION, (void *)revision);
-    hk_accessories_store_add_chr(HK_CHR_IDENTIFY, NULL, identify, false);
+    hk_accessories_store_add_chr(HK_CHR_IDENTIFY, NULL, hk_identify, false);
 }
 
 void hk_setup_add_srv(hk_srv_types_t srv_type, bool primary, bool hidden)
@@ -40,7 +51,7 @@ void hk_setup_add_srv(hk_srv_types_t srv_type, bool primary, bool hidden)
     hk_accessories_store_add_srv(srv_type, primary, hidden);
 }
 
-void *hk_setup_add_chr(hk_chr_types_t type, void (*read)(hk_mem* response), void (*write)(hk_mem* request), bool can_notify)
+void *hk_setup_add_chr(hk_chr_types_t type, esp_err_t (*read)(hk_mem* response), esp_err_t (*write)(hk_mem* request), bool can_notify)
 {
     return hk_accessories_store_add_chr(type, read, write, can_notify);
 }
