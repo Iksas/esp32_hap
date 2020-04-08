@@ -147,4 +147,5 @@ void hk_accessories_free()
 {
     // we do not free ressources, because this method is used in unit testing only
     hk_accessories = NULL;
+    HK_LOGW("Freeing accessories is not implemented.");
 }

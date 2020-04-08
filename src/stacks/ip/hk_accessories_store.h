@@ -44,3 +44,4 @@ void hk_accessories_store_end_config();
 hk_accessory_t *hk_accessories_store_get_accessories();
 hk_chr_t *hk_accessories_store_get_chr(size_t aid, size_t iid);
 hk_chr_t *hk_accessories_store_get_identify_chr();
+void hk_accessories_free();

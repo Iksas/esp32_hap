@@ -1,6 +1,3 @@
-- rename setup and init
-- size -> len
-
 - make unit test work for ip and ble
 - Document all header files
 - Document project start
