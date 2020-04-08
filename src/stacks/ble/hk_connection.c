@@ -30,7 +30,7 @@ hk_transaction_t *hk_connection_transaction_init(hk_connection_t *connection, co
 {
     HK_LOGV("Adding new transaction with id %s.", hk_uuids_to_str(chr_uuid));
 
-    hk_transaction_t *transaction = connection->transactions = hk_ll_new(connection->transactions);
+    hk_transaction_t *transaction = connection->transactions = hk_ll_init(connection->transactions);
 
     transaction->id = -1;
     transaction->opcode = -1;
@@ -75,7 +75,7 @@ hk_connection_t *hk_connection_init(uint16_t connection_handle)
 {
     HK_LOGV("Adding new connection with handle %d.", connection_handle);
 
-    hk_connection_t *connection = hk_connection_connections = hk_ll_new(hk_connection_connections);
+    hk_connection_t *connection = hk_connection_connections = hk_ll_init(hk_connection_connections);
 
     connection->connection_handle = connection_handle;
     connection->is_secure = false;

@@ -14,7 +14,7 @@ hk_tlv_t *hk_tlv_add_buffer(hk_tlv_t *tlv_list, char type, char *data, size_t si
         size_t size_to_add = size > 255 ? 255 : size;
         size -= size_to_add;
 
-        tlv_list = hk_ll_new(tlv_list);
+        tlv_list = hk_ll_init(tlv_list);
         tlv_list->type = type;
         tlv_list->length = size_to_add;
         tlv_list->value = malloc(size_to_add);
@@ -111,7 +111,7 @@ hk_tlv_t *hk_tlv_deserialize_buffer(char *data, size_t size)
         char type = data[i++];
         char length = data[i++];
 
-        tlv_list = hk_ll_new(tlv_list);
+        tlv_list = hk_ll_init(tlv_list);
         tlv_list->type = type;
         tlv_list->length = length;
         tlv_list->value = malloc(tlv_list->length);

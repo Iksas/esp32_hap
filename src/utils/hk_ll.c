@@ -5,7 +5,7 @@
 #define hk_ll_data_to_next_ptr(data_ptr) (((void **)data_ptr) - 1)
 #define hk_ll_next_ptr_to_data(ptr) (((void **)ptr) + 1)
 
-void *_hk_ll_new(void *next, size_t size)
+void *_hk_ll_init(void *next, size_t size)
 {
     void **ptr = (void **)malloc(sizeof(void *) + size);
     *ptr = next;

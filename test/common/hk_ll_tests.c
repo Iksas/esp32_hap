@@ -14,9 +14,9 @@ TEST_CASE("create and free", "[ll]")
     
     hk_ll_test_t *list = NULL;
 
-    list = hk_ll_new(list);
-    list = hk_ll_new(list);
-    list = hk_ll_new(list);
+    list = hk_ll_init(list);
+    list = hk_ll_init(list);
+    list = hk_ll_init(list);
 
     TEST_ASSERT_EQUAL_INT(3, hk_ll_count(list));
 
@@ -29,13 +29,13 @@ TEST_CASE("iterate", "[ll]")
     
     hk_ll_test_t *list = NULL;
 
-    list = hk_ll_new(list);
+    list = hk_ll_init(list);
     list->data = 0;
 
-    list = hk_ll_new(list);
+    list = hk_ll_init(list);
     list->data = 1;
 
-    list = hk_ll_new(list);
+    list = hk_ll_init(list);
     list->data = 2;
 
     int count = 2;
@@ -55,13 +55,13 @@ TEST_CASE("reverse", "[ll]")
     
     hk_ll_test_t *list = NULL;
 
-    list = hk_ll_new(list);
+    list = hk_ll_init(list);
     list->data = 0;
 
-    list = hk_ll_new(list);
+    list = hk_ll_init(list);
     list->data = 1;
 
-    list = hk_ll_new(list);
+    list = hk_ll_init(list);
     list->data = 2;
 
     list = hk_ll_reverse(list);
@@ -83,14 +83,14 @@ TEST_CASE("remove first", "[ll]")
     
     hk_ll_test_t *list = NULL;
 
-    list = hk_ll_new(list);
+    list = hk_ll_init(list);
     list->data = 0;
 
-    list = hk_ll_new(list);
+    list = hk_ll_init(list);
     list->data = 1;
     hk_ll_test_t *item1 = list;
 
-    list = hk_ll_new(list);
+    list = hk_ll_init(list);
     list->data = 2;
     hk_ll_test_t *item2 = list;
 
@@ -108,15 +108,15 @@ TEST_CASE("remove middle", "[ll]")
     
     hk_ll_test_t *list = NULL;
 
-    list = hk_ll_new(list);
+    list = hk_ll_init(list);
     list->data = 0;
     hk_ll_test_t *item0 = list;
 
-    list = hk_ll_new(list);
+    list = hk_ll_init(list);
     list->data = 1;
     hk_ll_test_t *item1 = list;
 
-    list = hk_ll_new(list);
+    list = hk_ll_init(list);
     list->data = 2;
     hk_ll_test_t *item2 = list;
 
@@ -140,15 +140,15 @@ TEST_CASE("remove last", "[ll]")
     
     hk_ll_test_t *list = NULL;
 
-    list = hk_ll_new(list);
+    list = hk_ll_init(list);
     list->data = 0;
     hk_ll_test_t *item0 = list;
 
-    list = hk_ll_new(list);
+    list = hk_ll_init(list);
     list->data = 1;
     hk_ll_test_t *item1 = list;
 
-    list = hk_ll_new(list);
+    list = hk_ll_init(list);
     list->data = 2;
     hk_ll_test_t *item2 = list;
 
@@ -170,13 +170,13 @@ TEST_CASE("remove last", "[ll]")
 TEST_CASE("remove odd in iteration", "[ll]")
 {
     hk_ll_test_t *list = NULL;
-    list = hk_ll_new(list);
-    list = hk_ll_new(list);
-    list = hk_ll_new(list);
-    list = hk_ll_new(list);
-    list = hk_ll_new(list);
-    list = hk_ll_new(list);
-    list = hk_ll_new(list);
+    list = hk_ll_init(list);
+    list = hk_ll_init(list);
+    list = hk_ll_init(list);
+    list = hk_ll_init(list);
+    list = hk_ll_init(list);
+    list = hk_ll_init(list);
+    list = hk_ll_init(list);
 
     hk_ll_test_t *expected_list_after_delete = list;
     int count = 0;
@@ -209,13 +209,13 @@ TEST_CASE("remove odd in iteration", "[ll]")
 TEST_CASE("remove even in iteration", "[ll]")
 {
     hk_ll_test_t *list = NULL;
-    list = hk_ll_new(list);
-    list = hk_ll_new(list);
-    list = hk_ll_new(list);
-    list = hk_ll_new(list);
-    list = hk_ll_new(list);
-    list = hk_ll_new(list);
-    list = hk_ll_new(list);
+    list = hk_ll_init(list);
+    list = hk_ll_init(list);
+    list = hk_ll_init(list);
+    list = hk_ll_init(list);
+    list = hk_ll_init(list);
+    list = hk_ll_init(list);
+    list = hk_ll_init(list);
 
     hk_ll_test_t *expected_list_after_delete = hk_ll_next(list);
     int count = 0;

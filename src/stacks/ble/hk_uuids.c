@@ -23,7 +23,7 @@ ble_uuid128_t *hk_uuids_get(uint8_t id)
     {
         const uint8_t buffer[16] = {0x91, 0x52, 0x76, 0xbb, 0x26, 0x00, 0x00, 0x80, 0x00, 0x10, 0x00, 0x00,
                                     id, 0x00, 0x00, 0x00};
-        hk_uuids_uuids = hk_ll_new(hk_uuids_uuids);
+        hk_uuids_uuids = hk_ll_init(hk_uuids_uuids);
         ble_uuid_init_from_buf((ble_uuid_any_t *)hk_uuids_uuids, (const void *)buffer, 16);
         result_uuid = hk_uuids_uuids;
         // HK_LOGD("Service uuid not found for %d, generated new one at: %x", id, (uint)result_uuid);

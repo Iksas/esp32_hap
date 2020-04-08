@@ -1,6 +1,4 @@
 - rename setup and init
--- ll_new ->ll_init
--- hk_mem_init -> hk_mem_init
 - size -> len
 
 - make unit test work for ip and ble

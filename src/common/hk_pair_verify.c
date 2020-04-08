@@ -35,7 +35,7 @@ esp_err_t hk_pair_verify_create_session(hk_pair_verify_keys_t *keys)
 
     if (!ret)
     {
-        hk_pair_verify_sessions = hk_ll_new(hk_pair_verify_sessions);
+        hk_pair_verify_sessions = hk_ll_init(hk_pair_verify_sessions);
         hk_pair_verify_sessions->id = hk_mem_init();
         hk_pair_verify_sessions->shared_secret = hk_mem_init();
         hk_mem_append(hk_pair_verify_sessions->id, session_id);
