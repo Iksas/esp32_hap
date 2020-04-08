@@ -14,9 +14,9 @@ esp_err_t hk_chr_timed_write(hk_transaction_t *transaction, hk_chr_t *chr)
 {
     esp_err_t res = ESP_OK;
     uint8_t ttl = 0;
-    hk_mem *ttl_mem = hk_mem_create();
+    hk_mem *ttl_mem = hk_mem_init();
     hk_tlv_t *tlv_data = hk_tlv_deserialize(transaction->request);
-    hk_chr_timed_write_write_request = hk_mem_create();
+    hk_chr_timed_write_write_request = hk_mem_init();
 
     if (hk_tlv_get_mem_by_type(tlv_data, 0x01, hk_chr_timed_write_write_request) != HK_RES_OK)
     {
@@ -49,7 +49,7 @@ esp_err_t hk_chr_timed_write(hk_transaction_t *transaction, hk_chr_t *chr)
 esp_err_t hk_chr_execute_write(hk_connection_t *connection, hk_transaction_t *transaction, hk_chr_t *chr)
 {
     esp_err_t res = ESP_OK;
-    hk_mem *write_response = hk_mem_create();
+    hk_mem *write_response = hk_mem_init();
     time_t now;
     time(&now);
 

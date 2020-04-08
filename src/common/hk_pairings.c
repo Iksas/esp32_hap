@@ -14,7 +14,7 @@ esp_err_t hk_pairings_remove(hk_tlv_t *tlv_data, hk_mem *result)
     hk_tlv_t *tlv_return = NULL;
     tlv_return = hk_tlv_add_uint8(tlv_return, HK_PAIR_TLV_STATE, HK_PAIR_TLV_STATE_M2); //state M2 is always returned
 
-    hk_mem *device_id = hk_mem_create();
+    hk_mem *device_id = hk_mem_init();
     esp_err_t ret = hk_tlv_get_mem_by_type(tlv_data, HK_PAIR_TLV_IDENTIFIER, device_id);
     if (!ret)
     {

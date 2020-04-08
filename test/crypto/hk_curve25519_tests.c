@@ -28,7 +28,7 @@
 // {
     
 //     hk_curve25519_key_t *key = hk_curve25519_init_key();
-//     hk_mem *public_key = hk_mem_create();
+//     hk_mem *public_key = hk_mem_init();
 
 //     TEST_ASSERT_FALSE(hk_curve25519_generate_key(key));
 //     TEST_ASSERT_FALSE(hk_curve25519_export_public_key(key, public_key));
@@ -43,7 +43,7 @@
     
 //     hk_curve25519_key_t *key1 = hk_curve25519_init_key();
 //     hk_curve25519_key_t *key2 = hk_curve25519_init_key();
-//     hk_mem *shared_secret = hk_mem_create();
+//     hk_mem *shared_secret = hk_mem_init();
 
 //     TEST_ASSERT_FALSE(hk_curve25519_generate_key(key1));
 //     TEST_ASSERT_FALSE(hk_curve25519_generate_key(key2));

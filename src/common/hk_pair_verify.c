@@ -25,7 +25,7 @@ esp_err_t hk_pair_verify_create_session(hk_pair_verify_keys_t *keys)
 {
     esp_err_t ret = ESP_OK;
 
-    hk_mem *session_id = hk_mem_create();
+    hk_mem *session_id = hk_mem_init();
     ret = hk_hkdf_with_given_size(keys->shared_secret, session_id, 8, HK_HKDF_PAIR_VERIFY_RESUME_SALT, HK_HKDF_PAIR_VERIFY_RESUME_INFO);
 
     if (!ret && hk_pair_verify_sessions != NULL && hk_ll_count(hk_pair_verify_sessions) >= 8)
@@ -36,8 +36,8 @@ esp_err_t hk_pair_verify_create_session(hk_pair_verify_keys_t *keys)
     if (!ret)
     {
         hk_pair_verify_sessions = hk_ll_new(hk_pair_verify_sessions);
-        hk_pair_verify_sessions->id = hk_mem_create();
-        hk_pair_verify_sessions->shared_secret = hk_mem_create();
+        hk_pair_verify_sessions->id = hk_mem_init();
+        hk_pair_verify_sessions->shared_secret = hk_mem_init();
         hk_mem_append(hk_pair_verify_sessions->id, session_id);
         hk_mem_append(hk_pair_verify_sessions->shared_secret, keys->shared_secret);
         HK_LOGW("Initial session created");
@@ -71,20 +71,20 @@ esp_err_t hk_pair_verify_start(hk_pair_verify_keys_t *keys, hk_tlv_t *request_tl
     hk_ed25519_key_t *accessory_key = hk_ed25519_init_key();
     hk_curve25519_key_t *accessory_curve = hk_curve25519_init_key();
     hk_curve25519_key_t *device_curve = hk_curve25519_init_key();
-    hk_mem *accessory_info = hk_mem_create();
-    hk_mem *accessory_id = hk_mem_create();
-    hk_mem *accessory_signature = hk_mem_create();
-    hk_mem *accessory_public_key = hk_mem_create();
-    hk_mem *accessory_private_key = hk_mem_create();
-    hk_mem *sub_result = hk_mem_create();
-    hk_mem *encrypted = hk_mem_create();
+    hk_mem *accessory_info = hk_mem_init();
+    hk_mem *accessory_id = hk_mem_init();
+    hk_mem *accessory_signature = hk_mem_init();
+    hk_mem *accessory_public_key = hk_mem_init();
+    hk_mem *accessory_private_key = hk_mem_init();
+    hk_mem *sub_result = hk_mem_init();
+    hk_mem *encrypted = hk_mem_init();
     hk_tlv_t *sub_tlv_data = NULL;
     hk_tlv_t *tlv_data = NULL;
 
     hk_pair_verify_keys_reset(keys);
-    keys->session_key = hk_mem_create();
-    keys->accessory_curve_public_key = hk_mem_create();
-    keys->device_curve_public_key = hk_mem_create();
+    keys->session_key = hk_mem_init();
+    keys->accessory_curve_public_key = hk_mem_init();
+    keys->device_curve_public_key = hk_mem_init();
 
     if (hk_store_keys_can_get())
     {
@@ -191,12 +191,12 @@ esp_err_t hk_pair_verify_finish(hk_pair_verify_keys_t *keys, hk_tlv_t *request_t
 {
     HK_LOGD("Now running pair verify finish.");
     hk_ed25519_key_t *device_key = hk_ed25519_init_key();
-    hk_mem *encrypted_data = hk_mem_create();
-    hk_mem *decrypted_data = hk_mem_create();
-    hk_mem *device_signature = hk_mem_create();
-    hk_mem *device_public_key = hk_mem_create();
-    hk_mem *device_info = hk_mem_create();
-    hk_mem *device_id = hk_mem_create();
+    hk_mem *encrypted_data = hk_mem_init();
+    hk_mem *decrypted_data = hk_mem_init();
+    hk_mem *device_signature = hk_mem_init();
+    hk_mem *device_public_key = hk_mem_init();
+    hk_mem *device_info = hk_mem_init();
+    hk_mem *device_id = hk_mem_init();
     hk_tlv_t *tlv_data_decrypted = NULL;
     hk_tlv_t *tlv_data = NULL;
 
@@ -270,13 +270,13 @@ esp_err_t hk_pair_verify_finish(hk_pair_verify_keys_t *keys, hk_tlv_t *request_t
 
 esp_err_t hk_pair_verify_resume(hk_pair_verify_keys_t *keys, hk_tlv_t *request_tlvs, hk_mem *result)
 {
-    hk_mem *session_id = hk_mem_create();
-    hk_mem *encryption_key = hk_mem_create();
-    hk_mem *encrypted_data = hk_mem_create();
-    hk_mem *decrypted_data = hk_mem_create();
+    hk_mem *session_id = hk_mem_init();
+    hk_mem *encryption_key = hk_mem_init();
+    hk_mem *encrypted_data = hk_mem_init();
+    hk_mem *decrypted_data = hk_mem_init();
     hk_mem_append_string(decrypted_data, "01234567890123456789012345678901");
-    hk_mem *device_curve_public_key = hk_mem_create();
-    hk_mem *salt = hk_mem_create();
+    hk_mem *device_curve_public_key = hk_mem_init();
+    hk_mem *salt = hk_mem_init();
     hk_tlv_t *response_tlvs = NULL;
     esp_err_t ret = ESP_OK;
 

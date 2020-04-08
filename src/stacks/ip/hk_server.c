@@ -25,7 +25,7 @@ void hk_server_handle(hk_session_t *session)
 
     if (hk_mem_equal_str(session->request->url, "/pair-setup") && HK_SESSION_HTML_METHOD_POST == session->request->method)
     {
-        hk_mem *device_id = hk_mem_create();
+        hk_mem *device_id = hk_mem_init();
         session->response->result = hk_pair_setup(session->request->content, session->response->content, device_id);
         if (device_id->size > 0)
         {
@@ -84,7 +84,7 @@ void hk_server_handle(hk_session_t *session)
 esp_err_t hk_server_receiver(hk_session_t *session, hk_mem *data)
 {
     hk_session_clean(session);
-    hk_mem *response = hk_mem_create();
+    hk_mem *response = hk_mem_init();
 
     // html parses the content of request data and calls the configured handler
     esp_err_t ret = hk_html_parser_parse(data, session);

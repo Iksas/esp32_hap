@@ -10,7 +10,7 @@ esp_err_t hk_chr_read(hk_transaction_t *transaction, hk_chr_t *chr)
 {
     esp_err_t res = ESP_OK;
     hk_tlv_t *tlv_data = NULL;
-    hk_mem *read_response = hk_mem_create();
+    hk_mem *read_response = hk_mem_init();
 
     if (chr->static_data != NULL)
     {

@@ -18,11 +18,11 @@ esp_err_t hk_protocol_configuration(hk_pair_verify_keys_t *keys, hk_transaction_
     if (hk_tlv_get_tlv_by_type(tlv_data, 0x01) != NULL)
     {
         // get public key and keys->shared_secret
-        hk_mem *accessory_public_key = hk_mem_create();
+        hk_mem *accessory_public_key = hk_mem_init();
         hk_store_key_pub_get(accessory_public_key);
 
         // generate broadcast_key
-        hk_mem *broadcast_key = hk_mem_create();
+        hk_mem *broadcast_key = hk_mem_init();
         hk_hkdf_with_external_salt(keys->shared_secret, broadcast_key, accessory_public_key, HK_HKDF_BROADCAST_ENCRYPTION_KEY_INFO);
 
         // get global state number and current configuration

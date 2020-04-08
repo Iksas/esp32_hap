@@ -127,7 +127,7 @@ esp_err_t hk_chacha20poly1305_decrypt_buffer(hk_mem *key, const char *nonce, cha
 
 esp_err_t hk_chacha20poly1305_verify_auth_tag(hk_mem *key, const char *nonce, hk_mem *auth_tag)
 {
-    hk_mem *calculated_auth_tag = hk_mem_create();
+    hk_mem *calculated_auth_tag = hk_mem_init();
     esp_err_t ret = hk_chacha20poly1305_caluclate_auth_tag_without_message(key, nonce, calculated_auth_tag);
 
     if (ret != ESP_OK)

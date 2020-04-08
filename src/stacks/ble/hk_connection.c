@@ -36,10 +36,10 @@ hk_transaction_t *hk_connection_transaction_init(hk_connection_t *connection, co
     transaction->opcode = -1;
     transaction->chr_uuid = chr_uuid;
     
-    transaction->request = hk_mem_create();
+    transaction->request = hk_mem_init();
     transaction->expected_request_length = 0;
 
-    transaction->response = hk_mem_create();
+    transaction->response = hk_mem_init();
     transaction->response_sent = 0;
     transaction->response_status = 0;
 
@@ -81,7 +81,7 @@ hk_connection_t *hk_connection_init(uint16_t connection_handle)
     connection->is_secure = false;
     connection->received_frame_count = 0;
     connection->sent_frame_count = 0;
-    connection->device_id = hk_mem_create();
+    connection->device_id = hk_mem_init();
     connection->security_keys = hk_pair_verify_keys_init();
     connection->transactions = NULL;
 

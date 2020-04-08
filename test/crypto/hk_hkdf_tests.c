@@ -15,10 +15,10 @@ const char key_out_bytes[] = {
 TEST_CASE("hkdf", "[crypto] [hkdf]")
 {
     // prepare
-    hk_mem *key_in = hk_mem_create();
+    hk_mem *key_in = hk_mem_init();
     hk_mem_append_buffer(key_in, (void *)key_in_bytes, 32);
-    hk_mem *key_out = hk_mem_create();
-    hk_mem *key_out_expected = hk_mem_create();
+    hk_mem *key_out = hk_mem_init();
+    hk_mem *key_out_expected = hk_mem_init();
     hk_mem_append_buffer(key_out_expected, (void *)key_out_bytes, 32);
 
     // run

@@ -14,15 +14,15 @@ void hk_session_init(hk_session_t *session, int socket)
     session->is_secure = false;
 
     session->request = (hk_session_request_t *)malloc(sizeof(hk_session_request_t));
-    session->request->url = hk_mem_create();
-    session->request->query = hk_mem_create();
-    session->request->content = hk_mem_create();
+    session->request->url = hk_mem_init();
+    session->request->query = hk_mem_init();
+    session->request->content = hk_mem_init();
     session->request->method = HK_SESSION_HTML_METHOD_NOT_SET;
 
     session->response = (hk_session_response_t *)malloc(sizeof(hk_session_response_t));
     session->response->data_to_send = xQueueCreate(10, sizeof(hk_mem *));
-    session->response->data = hk_mem_create();
-    session->response->content = hk_mem_create();
+    session->response->data = hk_mem_init();
+    session->response->content = hk_mem_init();
     session->response->result = HK_RES_OK;
     session->response->type = HK_SESSION_RESPONSE_MESSAGE;
     session->response->content_type = HK_SESSION_CONTENT_TLV;

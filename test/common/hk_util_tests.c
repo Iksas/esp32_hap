@@ -6,8 +6,8 @@
 
 TEST_CASE("get accessory id", "[util]")
 {
-    hk_mem* mac1 = hk_mem_create();
-    hk_mem* mac2 = hk_mem_create();
+    hk_mem* mac1 = hk_mem_init();
+    hk_mem* mac2 = hk_mem_init();
     size_t ret = hk_util_get_accessory_id_serialized(mac1);
 
     TEST_ASSERT_FALSE(ret);

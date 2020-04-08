@@ -29,8 +29,8 @@
 // {
     
 //     hk_ed25519_key_t *key = hk_ed25519_init_key();
-//     hk_mem* signature = hk_mem_create();
-//     hk_mem* message = hk_mem_create();
+//     hk_mem* signature = hk_mem_init();
+//     hk_mem* message = hk_mem_init();
 //     hk_mem_append_string(message, "my message");
 
 //     TEST_ASSERT_FALSE(hk_ed25519_generate_key(key));
@@ -48,9 +48,9 @@
     
 //     hk_ed25519_key_t *key = hk_ed25519_init_key();
 //     hk_ed25519_key_t *key_imported = hk_ed25519_init_key();
-//     hk_mem* signature = hk_mem_create();
-//     hk_mem* message = hk_mem_create();
-//     hk_mem* public_key = hk_mem_create();
+//     hk_mem* signature = hk_mem_init();
+//     hk_mem* message = hk_mem_init();
+//     hk_mem* public_key = hk_mem_init();
 //     hk_mem_append_string(message, "my message");
 
 //     TEST_ASSERT_FALSE(hk_ed25519_generate_key(key));
@@ -74,10 +74,10 @@
 //     hk_ed25519_key_t *key = hk_ed25519_init_key();
 //     hk_ed25519_key_t *key_imported = hk_ed25519_init_key();
 //     hk_ed25519_key_t *key_imported_public = hk_ed25519_init_key();
-//     hk_mem* public_key = hk_mem_create();
-//     hk_mem* private_key = hk_mem_create();
-//     hk_mem* signature = hk_mem_create();
-//     hk_mem* message = hk_mem_create();
+//     hk_mem* public_key = hk_mem_init();
+//     hk_mem* private_key = hk_mem_init();
+//     hk_mem* signature = hk_mem_init();
+//     hk_mem* message = hk_mem_init();
 //     hk_mem_append_string(message, "my message");
 
 //     TEST_ASSERT_FALSE(hk_ed25519_generate_key(key));

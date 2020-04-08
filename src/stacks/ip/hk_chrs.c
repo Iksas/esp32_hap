@@ -29,7 +29,7 @@ char *hk_chrs_get_next_id_pair(char *ids, int *result)
 
 void hk_chrs_get(hk_session_t *session)
 {
-    hk_mem *ids = hk_mem_create();
+    hk_mem *ids = hk_mem_init();
     session->response->content_type = HK_SESSION_CONTENT_JSON;
     esp_err_t res = hk_html_parser_get_query_value(session->request->query, "id", ids);
 
@@ -149,7 +149,7 @@ void hk_chrs_write(hk_session_t *session, cJSON *j_chr)
         cJSON *j_value = cJSON_GetObjectItem(j_chr, "value");
         hk_format_t format = hk_chrs_properties_get_type(chr->type);
         bool bool_value = false;
-        hk_mem *write_request = hk_mem_create();
+        hk_mem *write_request = hk_mem_init();
 
         switch (format)
         {

@@ -6,7 +6,7 @@
 #include "../../src/include/hk_mem.h"
 
 hk_tlv_t* append_string(hk_tlv_t *tlv, const char* str, char type){
-    hk_mem *mem = hk_mem_create();
+    hk_mem *mem = hk_mem_init();
     hk_mem_append_buffer(mem, (char*)str, strlen(str));
 
     tlv = hk_tlv_add(tlv, type, mem);
@@ -19,8 +19,8 @@ TEST_CASE("full run", "[tlv]")
     
     hk_tlv_t *input_tlv = NULL;
     hk_tlv_t *output_tlv = NULL;
-    hk_mem *data = hk_mem_create();
-    hk_mem *item = hk_mem_create();
+    hk_mem *data = hk_mem_init();
+    hk_mem *item = hk_mem_init();
 
     input_tlv = append_string(input_tlv, "bla1", 1);
     input_tlv = append_string(input_tlv, "bla2", 2);
@@ -48,7 +48,7 @@ TEST_CASE("simple add", "[tlv]")
     hk_tlv_t *tlv = NULL;
 
     const char* str = "bla";
-    hk_mem *mem = hk_mem_create();
+    hk_mem *mem = hk_mem_init();
     hk_mem_append_buffer(mem, (char*)str, strlen(str));
 
     tlv = hk_tlv_add(tlv, 1, mem);

@@ -22,7 +22,7 @@
 //     hk_accessories_store_add_chr(HK_CHR_IDENTIFY, NULL, hk_accessories_serializer_tests_dummy, NULL);
 //     hk_accessories_store_end_config();
 
-//     hk_mem *out = hk_mem_create();
+//     hk_mem *out = hk_mem_init();
 //     hk_accessories_serializer_accessories(out);
 //     hk_mem_log_as_string("Accessories", out);
 //     TEST_ASSERT_GREATER_THAN_INT(0, out->size);

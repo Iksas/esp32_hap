@@ -18,8 +18,8 @@
 //     //
 
 //     const char *str = "my_value";
-//     hk_mem *input = hk_mem_create();
-//     hk_mem *result = hk_mem_create();
+//     hk_mem *input = hk_mem_init();
+//     hk_mem *result = hk_mem_init();
 
 //     hk_mem_append_string(input, str);
 
@@ -73,8 +73,8 @@
 //         0xb4
 //     };
 
-//     hk_mem *input = hk_mem_create();
-//     hk_mem *result = hk_mem_create();
+//     hk_mem *input = hk_mem_init();
+//     hk_mem *result = hk_mem_init();
 
 //     hk_mem_append_buffer(input, buffer, 32);
 
@@ -115,12 +115,12 @@
 //     //
 
 //     const char *priv_str = "my_priv_value";
-//     hk_mem *priv_in = hk_mem_create();
-//     hk_mem *priv_out = hk_mem_create();
+//     hk_mem *priv_in = hk_mem_init();
+//     hk_mem *priv_out = hk_mem_init();
 //     hk_mem_append_buffer(priv_in, (char *)priv_str, strlen(priv_str));
 //     const char *pub_str = "my_pub_value";
-//     hk_mem *pub_in = hk_mem_create();
-//     hk_mem *pub_out = hk_mem_create();
+//     hk_mem *pub_in = hk_mem_init();
+//     hk_mem *pub_out = hk_mem_init();
 //     hk_mem_append_buffer(pub_in, (char *)pub_str, strlen(pub_str));
 
 

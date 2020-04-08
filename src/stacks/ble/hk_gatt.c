@@ -62,7 +62,7 @@ static int_fast8_t hk_gatt_decrypt(struct ble_gatt_access_ctxt *ctxt, const ble_
     if (connection->is_secure && !hk_uuids_cmp(chr_uuid, chr_uuid_pair_verify))
     {
         HK_LOGV("Decrypting request for %s", hk_uuids_to_str(chr_uuid));
-        hk_mem *received_before_encryption = hk_mem_create();
+        hk_mem *received_before_encryption = hk_mem_init();
         hk_mem_append_buffer(received_before_encryption, buffer, out_len);
         hk_connection_security_decrypt(connection, received_before_encryption, request); //todo: catch error
         hk_mem_free(received_before_encryption);
@@ -82,7 +82,7 @@ static int hk_gatt_encrypt(struct ble_gatt_access_ctxt *ctxt, const ble_uuid128_
     if (connection->is_secure && !hk_uuids_cmp(chr_uuid, chr_uuid_pair_verify))
     {
         HK_LOGV("Encrypting response");
-        hk_mem *encrypted_response = hk_mem_create();
+        hk_mem *encrypted_response = hk_mem_init();
         hk_connection_security_encrypt(connection, response, encrypted_response); //todo: catch error
         rc = os_mbuf_append(ctxt->om, encrypted_response->ptr, encrypted_response->size);
         hk_mem_free(encrypted_response);
@@ -103,7 +103,7 @@ static int hk_gatt_write_ble_chr(uint16_t connection_handle, struct ble_gatt_acc
     hk_connection_t *connection = hk_connection_get_by_handle(connection_handle);
     hk_chr_t *chr = (hk_chr_t *)arg;
 
-    hk_mem *request = hk_mem_create();
+    hk_mem *request = hk_mem_init();
     rc = hk_gatt_decrypt(ctxt, chr_uuid, connection, request);
     HK_LOGD("New request for %s", hk_uuids_to_str(chr_uuid));
     hk_mem_log("Received ble write request", request);
@@ -217,7 +217,7 @@ static int hk_gatt_read_ble_chr(uint16_t connection_handle, struct ble_gatt_acce
     {
         HK_LOGV("Received new request to read ble characteristic %s", hk_uuids_to_str(chr_uuid));
         hk_connection_t *connection = hk_connection_get_by_handle(connection_handle);
-        hk_mem *response = hk_mem_create();
+        hk_mem *response = hk_mem_init();
         hk_transaction_t *transaction = hk_connection_transaction_get_by_uuid(connection, chr_uuid);
         if (transaction == NULL)
         {

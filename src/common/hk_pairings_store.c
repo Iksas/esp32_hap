@@ -13,7 +13,7 @@
 
 cJSON *hk_pairings_store_get()
 {
-    hk_mem *pairings = hk_mem_create();
+    hk_mem *pairings = hk_mem_init();
     hk_store_pairings_get(pairings);
     cJSON *j_root = cJSON_Parse(pairings->ptr);
 
@@ -30,7 +30,7 @@ cJSON *hk_pairings_store_get()
 void hk_pairings_store_set(cJSON *j_root)
 {
     char *serialized = cJSON_PrintUnformatted(j_root);
-    hk_mem *pairings = hk_mem_create();
+    hk_mem *pairings = hk_mem_init();
     hk_mem_append_string(pairings, (const char *)serialized);
     hk_store_pairings_set(pairings);
 

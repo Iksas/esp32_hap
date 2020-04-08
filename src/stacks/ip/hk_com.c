@@ -45,7 +45,7 @@ esp_err_t hk_com_send_data(hk_session_t *connection)
     }
     else
     {
-        hk_mem *frame_data = hk_mem_create(); // is disposed by server, after it was sent
+        hk_mem *frame_data = hk_mem_init(); // is disposed by server, after it was sent
         hk_mem_append(frame_data, connection->response->data);
         ret = hk_com_queue_frame(frame_data, (void *)connection);
     }
@@ -117,11 +117,11 @@ void hk_com_handle_receive(hk_session_t *connection, esp_err_t (*receiver)(hk_se
     else
     {
         HK_LOGV("%d - Received %d bytes", connection->socket, recv_size);
-        hk_mem *data = hk_mem_create();
+        hk_mem *data = hk_mem_init();
 
         if (connection->is_secure)
         {
-            hk_mem *encrypted_data = hk_mem_create();
+            hk_mem *encrypted_data = hk_mem_init();
             hk_mem_append_buffer(encrypted_data, buffer, recv_size);
             esp_err_t ret = hk_connection_security_decrypt_frames(connection->encryption_data, connection->keys, encrypted_data, data);
             if (ret != ESP_OK)

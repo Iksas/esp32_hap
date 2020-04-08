@@ -3,7 +3,7 @@
 
 #include <string.h>
 
-hk_mem *hk_mem_create()
+hk_mem *hk_mem_init()
 {
     hk_mem *mem = malloc(sizeof(hk_mem));
     mem->size = 0;

@@ -25,8 +25,8 @@ void hk_pairing_setup_srp_start(hk_mem *result)
     HK_LOGD("pairing setup 1/3 (start).");
 
     esp_err_t ret = ESP_OK;
-    hk_pair_setup_public_key = hk_mem_create();
-    hk_mem *salt = hk_mem_create();
+    hk_pair_setup_public_key = hk_mem_init();
+    hk_mem *salt = hk_mem_init();
     hk_tlv_t *tlv_data = NULL;
 
     // init
@@ -64,9 +64,9 @@ void hk_pairing_setup_srp_verify(hk_tlv_t *tlv, hk_mem *result)
 
     esp_err_t ret = ESP_OK;
     size_t authError = 0;
-    hk_mem *ios_pk = hk_mem_create();
-    hk_mem *ios_proof = hk_mem_create();
-    hk_mem *accessory_proof = hk_mem_create();
+    hk_mem *ios_pk = hk_mem_init();
+    hk_mem *ios_proof = hk_mem_init();
+    hk_mem *accessory_proof = hk_mem_init();
     hk_tlv_t *tlv_data = NULL;
 
     ret = hk_tlv_get_mem_by_type(tlv, HK_PAIR_TLV_PUBLICKEY, ios_pk);
@@ -113,12 +113,12 @@ void hk_pairing_setup_srp_verify(hk_tlv_t *tlv, hk_mem *result)
 esp_err_t hk_pairing_setup_exchange_response_verification(hk_tlv_t *tlv, hk_mem *shared_secret, hk_mem *srp_private_key, hk_mem *device_id)
 {
     esp_err_t ret = ESP_OK;
-    hk_mem *encrypted_data = hk_mem_create();
-    hk_mem *decrypted_data = hk_mem_create();
-    hk_mem *device_ltpk = hk_mem_create();
-    hk_mem *device_signature = hk_mem_create();
-    hk_mem *device_info = hk_mem_create();
-    hk_mem *device_x = hk_mem_create();
+    hk_mem *encrypted_data = hk_mem_init();
+    hk_mem *decrypted_data = hk_mem_init();
+    hk_mem *device_ltpk = hk_mem_init();
+    hk_mem *device_signature = hk_mem_init();
+    hk_mem *device_info = hk_mem_init();
+    hk_mem *device_x = hk_mem_init();
     hk_tlv_t *tlv_data_decrypted = NULL;
     hk_ed25519_key_t *device_key = hk_ed25519_init_key();
 
@@ -180,13 +180,13 @@ esp_err_t hk_pairing_setup_exchange_response_generation(hk_mem *result, hk_mem *
 {
     esp_err_t ret = ESP_OK;
     hk_ed25519_key_t *accessory_key = hk_ed25519_init_key();
-    hk_mem *accessory_public_key = hk_mem_create();
-    hk_mem *accessory_private_key = hk_mem_create();
-    hk_mem *accessory_info = hk_mem_create();
-    hk_mem *accessory_signature = hk_mem_create();
-    hk_mem *accessory_id = hk_mem_create();
-    hk_mem *sub_result = hk_mem_create();
-    hk_mem *encrypted = hk_mem_create();
+    hk_mem *accessory_public_key = hk_mem_init();
+    hk_mem *accessory_private_key = hk_mem_init();
+    hk_mem *accessory_info = hk_mem_init();
+    hk_mem *accessory_signature = hk_mem_init();
+    hk_mem *accessory_id = hk_mem_init();
+    hk_mem *sub_result = hk_mem_init();
+    hk_mem *encrypted = hk_mem_init();
     hk_tlv_t *tlv_data = NULL;
     hk_tlv_t *sub_tlv_data = NULL;
 
@@ -257,8 +257,8 @@ void hk_pairing_setup_exchange_response(hk_tlv_t *tlv, hk_mem *result, hk_mem *d
 {
     HK_LOGD("pairing setup 3/3 (exchange response).");
 
-    hk_mem *shared_secret = hk_mem_create();
-    hk_mem *srp_private_key = hk_mem_create();
+    hk_mem *shared_secret = hk_mem_init();
+    hk_mem *srp_private_key = hk_mem_init();
 
     esp_err_t ret = hk_srp_export_private_key(hk_pair_setup_srp_key, srp_private_key);
 

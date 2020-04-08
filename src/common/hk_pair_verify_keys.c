@@ -3,9 +3,9 @@
 hk_pair_verify_keys_t *hk_pair_verify_keys_init()
 {
     hk_pair_verify_keys_t *keys = (hk_pair_verify_keys_t *)malloc(sizeof(hk_pair_verify_keys_t));
-    keys->response_key = hk_mem_create();
-    keys->request_key = hk_mem_create();
-    keys->shared_secret = hk_mem_create();
+    keys->response_key = hk_mem_init();
+    keys->request_key = hk_mem_init();
+    keys->shared_secret = hk_mem_init();
 
     return keys;
 }

@@ -17,12 +17,12 @@ const char auth_tag_bytes[] = {
 TEST_CASE("encrypt->decrypt", "[crypto] [chacha]")
 {
     // prepare
-    hk_mem *message = hk_mem_create();
+    hk_mem *message = hk_mem_init();
     hk_mem_append_string(message, "my message");
-    hk_mem *key = hk_mem_create();
+    hk_mem *key = hk_mem_init();
     hk_mem_append_string(key, "2adc628560e0b4440640c242a5808bcb144db13fa904b07597e73e482d5cb12e");
-    hk_mem *encrypted = hk_mem_create();
-    hk_mem *decrypted = hk_mem_create();
+    hk_mem *encrypted = hk_mem_init();
+    hk_mem *decrypted = hk_mem_init();
 
     // run
     TEST_ASSERT_EQUAL(hk_chacha20poly1305_encrypt(key, HK_CHACHA_VERIFY_MSG2, message, encrypted), ESP_OK);
@@ -41,9 +41,9 @@ TEST_CASE("encrypt->decrypt", "[crypto] [chacha]")
 TEST_CASE("encrypt->verify", "[crypto] [chacha]")
 {
     // prepare
-    hk_mem *key = hk_mem_create();
+    hk_mem *key = hk_mem_init();
     hk_mem_append_buffer(key, (void *)key_bytes, 32);
-    hk_mem *auth_tag = hk_mem_create();
+    hk_mem *auth_tag = hk_mem_init();
     hk_mem_append_buffer(auth_tag, (void *)auth_tag_bytes, 16);
 
     // run
@@ -57,10 +57,10 @@ TEST_CASE("encrypt->verify", "[crypto] [chacha]")
 TEST_CASE("calculate auth tag", "[crypto] [chacha]")
 {
     // prepare
-    hk_mem *key = hk_mem_create();
+    hk_mem *key = hk_mem_init();
     hk_mem_append_buffer(key, (void *)key_bytes, 32);
-    hk_mem *auth_tag = hk_mem_create();
-    hk_mem *auth_tag_expected = hk_mem_create();
+    hk_mem *auth_tag = hk_mem_init();
+    hk_mem *auth_tag_expected = hk_mem_init();
     hk_mem_append_buffer(auth_tag_expected, (void *)auth_tag_bytes, 16);
 
     // run
