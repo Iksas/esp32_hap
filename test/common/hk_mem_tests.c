@@ -1,5 +1,5 @@
 #include "unity.h"
-#include "../../include/hk_mem.h"
+#include "../../src/include/hk_mem.h"
 
 #include <string.h>
 #include <esp_heap_caps.h>

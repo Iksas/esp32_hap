@@ -1,11 +1,9 @@
-#include "unity.h"
-
-#include "../../utils/hk_tlv.h"
-#include "../../include/hk_mem.h"
-
 
 #include <string.h>
-#include <esp_heap_caps.h>
+#include "unity.h"
+
+#include "../../src/utils/hk_tlv.h"
+#include "../../src/include/hk_mem.h"
 
 hk_tlv_t* append_string(hk_tlv_t *tlv, const char* str, char type){
     hk_mem *mem = hk_mem_create();
@@ -16,7 +14,7 @@ hk_tlv_t* append_string(hk_tlv_t *tlv, const char* str, char type){
     return tlv;
 }
 
-TEST_CASE("Tlv: full run", "[tlv]")
+TEST_CASE("full run", "[tlv]")
 {
     
     hk_tlv_t *input_tlv = NULL;
@@ -44,7 +42,7 @@ TEST_CASE("Tlv: full run", "[tlv]")
     
 }
 
-TEST_CASE("Tlv: simple add", "[tlv]")
+TEST_CASE("simple add", "[tlv]")
 {
     
     hk_tlv_t *tlv = NULL;

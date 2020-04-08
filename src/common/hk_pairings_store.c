@@ -38,7 +38,7 @@ void hk_pairings_store_set(cJSON *j_root)
     hk_mem_free(pairings);
 }
 
-cJSON *hk_pairings_store_get_j_parings_array(cJSON *j_root)
+cJSON *hk_pairings_store_get_j_pairings_array(cJSON *j_root)
 {
     cJSON *j_pairings = NULL;
     if (!cJSON_HasObjectItem(j_root, HK_PAIRINGS_STORE_PAIRINGS))
@@ -62,7 +62,7 @@ cJSON *hk_pairings_store_get_j_parings_array(cJSON *j_root)
 void hk_pairings_store_add(hk_mem *device_id, hk_mem *device_ltpk, bool is_admin)
 {
     cJSON *j_root = hk_pairings_store_get();
-    cJSON *j_pairings = hk_pairings_store_get_j_parings_array(j_root);
+    cJSON *j_pairings = hk_pairings_store_get_j_pairings_array(j_root);
 
     cJSON *j_pairing = cJSON_CreateObject();
 
@@ -87,7 +87,7 @@ void hk_pairings_store_add(hk_mem *device_id, hk_mem *device_ltpk, bool is_admin
 esp_err_t hk_pairings_store_ltpk_get(hk_mem *device_id, hk_mem *device_ltpk)
 {
     cJSON *j_root = hk_pairings_store_get();
-    cJSON *j_pairings = hk_pairings_store_get_j_parings_array(j_root);
+    cJSON *j_pairings = hk_pairings_store_get_j_pairings_array(j_root);
 
     esp_err_t ret = HK_RES_UNKNOWN;
 
@@ -132,7 +132,7 @@ esp_err_t hk_pairings_store_ltpk_get(hk_mem *device_id, hk_mem *device_ltpk)
 void hk_pairings_store_remove(hk_mem *device_id)
 {
     cJSON *j_root = hk_pairings_store_get();
-    cJSON *j_pairings = hk_pairings_store_get_j_parings_array(j_root);
+    cJSON *j_pairings = hk_pairings_store_get_j_pairings_array(j_root);
     cJSON *j_pairing = j_pairings->child;
 
     while (j_pairing)
@@ -166,7 +166,7 @@ void hk_pairings_store_remove(hk_mem *device_id)
 bool hk_pairings_store_is_admin(hk_mem *device_id)
 {
     cJSON *j_root = hk_pairings_store_get();
-    cJSON *j_pairings = hk_pairings_store_get_j_parings_array(j_root);
+    cJSON *j_pairings = hk_pairings_store_get_j_pairings_array(j_root);
 
     bool is_admin = false;
 
@@ -206,7 +206,7 @@ bool hk_pairings_store_is_admin(hk_mem *device_id)
 bool hk_pairings_store_has_admin_pairing()
 {
     cJSON *j_root = hk_pairings_store_get();
-    cJSON *j_pairings = hk_pairings_store_get_j_parings_array(j_root);
+    cJSON *j_pairings = hk_pairings_store_get_j_pairings_array(j_root);
     cJSON *j_pairing = j_pairings->child;
 
     bool admin_found = false;
@@ -232,7 +232,7 @@ bool hk_pairings_store_has_admin_pairing()
 bool hk_pairings_store_has_pairing()
 {
     cJSON *j_root = hk_pairings_store_get();
-    cJSON *j_pairings = hk_pairings_store_get_j_parings_array(j_root);
+    cJSON *j_pairings = hk_pairings_store_get_j_pairings_array(j_root);
     cJSON *j_pairing = j_pairings->child;
 
     bool found = false;
@@ -267,7 +267,7 @@ esp_err_t hk_pairings_store_list()
 void hk_pairings_log_devices()
 {
     cJSON *j_root = hk_pairings_store_get();
-    cJSON *j_pairings = hk_pairings_store_get_j_parings_array(j_root);
+    cJSON *j_pairings = hk_pairings_store_get_j_pairings_array(j_root);
     cJSON *j_pairing = j_pairings->child;
 
     HK_LOGD("We are coupled with the following devices:");

@@ -10,11 +10,11 @@ To use the component on macos/linux, do the following:
     git submodule add https://github.com/slompf18/esp32-homekit.git components/esp32-homekit
 
 ## Unit testing
-1. Setup unit test app: https://docs.espressif.com/projects/esp-idf/en/latest/api-guides/unit-tests.html
-2. In make menuconfig enable the following points under Component config->Heap memory debugging
-- Enable heap tracing (2)
-- Enable heap task tracking
-2. Compile and start unit test app: make flash monitor TEST_COMPONENTS='esp32-homekit'
+1. cd into the test_runner directory
+2. idf.py menuconfig
+3. choose the stack of hap
+4. enable bluetooth (nimble only)
+5. disable task watchdog
 
 ## Debugging
 ### Set log level

@@ -42,7 +42,7 @@ size_t hk_curve25519_generate_key(hk_curve25519_key_t *key)
     return ret;
 }
 
-size_t hk_curve25519_generate_key_from_public_key(hk_curve25519_key_t *key, hk_mem *public_key)
+size_t hk_curve25519_generate_key_from_public_key(hk_mem *public_key, hk_curve25519_key_t *key)
 {
     int ret = wc_curve25519_import_public_ex((byte *)public_key->ptr, public_key->size, (curve25519_key *)key->internal, EC25519_LITTLE_ENDIAN);
     if (ret)

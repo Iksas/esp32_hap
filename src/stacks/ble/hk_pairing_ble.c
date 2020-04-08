@@ -36,7 +36,7 @@ esp_err_t hk_pairing_ble_write_pair_verify(hk_connection_t *connection, hk_mem *
     connection->is_secure = is_encrypted;
     if (is_encrypted)
     {
-        HK_LOGD("Connection now is secured.");
+        HK_LOGD("Connection now is secure.");
     }
 
     return ESP_OK;
@@ -44,8 +44,8 @@ esp_err_t hk_pairing_ble_write_pair_verify(hk_connection_t *connection, hk_mem *
 
 esp_err_t hk_pairing_ble_read_pairing_features(hk_mem *response)
 {
-    const uint8_t hk_paring_ble_features = 0; //zero because non mfi certified
-    hk_mem_append_buffer(response, (void *)&hk_paring_ble_features, sizeof(uint8_t));
+    const uint8_t hk_pairing_ble_features = 0; //zero because non mfi certified
+    hk_mem_append_buffer(response, (void *)&hk_pairing_ble_features, sizeof(uint8_t));
     return ESP_OK;
 }
 

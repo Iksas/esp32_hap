@@ -61,7 +61,7 @@ static int_fast8_t hk_gatt_decrypt(struct ble_gatt_access_ctxt *ctxt, const ble_
     const ble_uuid128_t *chr_uuid_pair_verify = hk_uuids_get((uint8_t)HK_CHR_PAIR_VERIFY);
     if (connection->is_secure && !hk_uuids_cmp(chr_uuid, chr_uuid_pair_verify))
     {
-        HK_LOGD("Decrypting request");
+        HK_LOGV("Decrypting request for %s", hk_uuids_to_str(chr_uuid));
         hk_mem *received_before_encryption = hk_mem_create();
         hk_mem_append_buffer(received_before_encryption, buffer, out_len);
         hk_connection_security_decrypt(connection, received_before_encryption, request); //todo: catch error
@@ -81,7 +81,7 @@ static int hk_gatt_encrypt(struct ble_gatt_access_ctxt *ctxt, const ble_uuid128_
     const ble_uuid128_t *chr_uuid_pair_verify = hk_uuids_get((uint8_t)HK_CHR_PAIR_VERIFY);
     if (connection->is_secure && !hk_uuids_cmp(chr_uuid, chr_uuid_pair_verify))
     {
-        HK_LOGD("Encrypting response");
+        HK_LOGV("Encrypting response");
         hk_mem *encrypted_response = hk_mem_create();
         hk_connection_security_encrypt(connection, response, encrypted_response); //todo: catch error
         rc = os_mbuf_append(ctxt->om, encrypted_response->ptr, encrypted_response->size);
@@ -105,6 +105,7 @@ static int hk_gatt_write_ble_chr(uint16_t connection_handle, struct ble_gatt_acc
 
     hk_mem *request = hk_mem_create();
     rc = hk_gatt_decrypt(ctxt, chr_uuid, connection, request);
+    HK_LOGD("New request for %s", hk_uuids_to_str(chr_uuid));
     hk_mem_log("Received ble write request", request);
 
     hk_transaction_t *transaction;
@@ -134,35 +135,35 @@ static int hk_gatt_write_ble_chr(uint16_t connection_handle, struct ble_gatt_acc
         switch (transaction->opcode)
         {
         case 1:
-            HK_LOGD("Request complete, executing signature read for %s", hk_uuids_to_str(chr_uuid));
+            HK_LOGV("Signature read for %s", hk_uuids_to_str(chr_uuid));
             res = hk_chr_signature_read(chr_uuid, transaction, chr);
             break;
         case 2:
-            HK_LOGD("Request complete, executing characteristic write for %s", hk_uuids_to_str(chr_uuid));
+            HK_LOGD("Characteristic write for %s", hk_uuids_to_str(chr_uuid));
             res = hk_chr_write(connection, transaction, chr);
             break;
         case 3:
-            HK_LOGD("Request complete, executing characteristic read for %s", hk_uuids_to_str(chr_uuid));
+            HK_LOGD("Characteristic read for %s", hk_uuids_to_str(chr_uuid));
             res = hk_chr_read(transaction, chr);
             break;
         case 4:
-            HK_LOGD("Request complete, executing characteristic timed write for %s", hk_uuids_to_str(chr_uuid));
+            HK_LOGD("Characteristic timed write for %s", hk_uuids_to_str(chr_uuid));
             res = hk_chr_timed_write(transaction, chr);
             break;
         case 5:
-            HK_LOGD("Request complete, executing characteristic execute write for %s", hk_uuids_to_str(chr_uuid));
+            HK_LOGD("Characteristic execute write for %s", hk_uuids_to_str(chr_uuid));
             res = hk_chr_execute_write(connection, transaction, chr);
             break;
         case 6:
-            HK_LOGD("Request complete, executing signature read for %s", hk_uuids_to_str(chr_uuid));
+            //HK_LOGD("Signature read for %s", hk_uuids_to_str(chr_uuid));
             res = hk_srv_signature_read(transaction, chr);
             break;
         case 7:
-            HK_LOGD("Request complete, executing characteristic configuration for %s", hk_uuids_to_str(chr_uuid));
+            HK_LOGD("Characteristic configuration for %s", hk_uuids_to_str(chr_uuid));
             res = hk_chr_configuration(transaction);
             break;
         case 8:
-            HK_LOGD("Request complete, executing protocol configuration for %s", hk_uuids_to_str(chr_uuid));
+            HK_LOGD("Protocol configuration for %s", hk_uuids_to_str(chr_uuid));
             res = hk_protocol_configuration(connection->security_keys, transaction, chr);
             break;
         default:
@@ -214,7 +215,7 @@ static int hk_gatt_read_ble_chr(uint16_t connection_handle, struct ble_gatt_acce
     }
     else
     {
-        HK_LOGD("Received new request to read ble characteristic %s", hk_uuids_to_str(chr_uuid));
+        HK_LOGV("Received new request to read ble characteristic %s", hk_uuids_to_str(chr_uuid));
         hk_connection_t *connection = hk_connection_get_by_handle(connection_handle);
         hk_mem *response = hk_mem_create();
         hk_transaction_t *transaction = hk_connection_transaction_get_by_uuid(connection, chr_uuid);
@@ -250,7 +251,7 @@ static int hk_gatt_read_ble_chr(uint16_t connection_handle, struct ble_gatt_acce
             transaction->response_sent += response_size;
         }
 
-        hk_log_print_bytewise("Sending ble read response", response->ptr, response->size, false);
+        //hk_log_print_bytewise("Sending ble read response", response->ptr, response->size, false);
         rc = hk_gatt_encrypt(ctxt, chr_uuid, connection, response);
 
         if (transaction->response_sent == transaction->response->size)
@@ -259,7 +260,7 @@ static int hk_gatt_read_ble_chr(uint16_t connection_handle, struct ble_gatt_acce
         }
 
         hk_mem_free(response);
-        HK_LOGV("Done, status is %d, %d.", transaction->response_status, rc);
+        HK_LOGV("Sent response.");
     }
 
     return rc == 0 ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES;

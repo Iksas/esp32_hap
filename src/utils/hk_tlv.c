@@ -6,26 +6,6 @@
 #include <string.h>
 #include <stdio.h>
 
-hk_tlv_t *hk_tlv_add_state(hk_tlv_t *tlv_list, enum hk_tlv_types type)
-{
-    hk_mem *t = hk_mem_create();
-    hk_mem_append_buffer(t, (char *)&type, 1);
-    tlv_list = hk_tlv_add(tlv_list, HK_TLV_State, t);
-    hk_mem_free(t);
-
-    return tlv_list;
-}
-
-hk_tlv_t *hk_tlv_add_error(hk_tlv_t *tlv_list, enum hk_tlv_errors error)
-{
-    hk_mem *e = hk_mem_create();
-    hk_mem_append_buffer(e, (char *)&error, 1);
-    tlv_list = hk_tlv_add(tlv_list, HK_TLV_Error, e);
-    hk_mem_free(e);
-
-    return tlv_list;
-}
-
 hk_tlv_t *hk_tlv_add_buffer(hk_tlv_t *tlv_list, char type, char *data, size_t size)
 {
     size_t size_added = 0;
@@ -174,8 +154,8 @@ void hk_tlv_log(const char *title, hk_tlv_t *tlv_list, bool with_value, bool for
     printf("-------------- %s --------------\n", title);
     hk_ll_foreach(tlv_list, tlv)
     {
-        printf("type: %d", tlv->type);
-        printf(", length: %d, value:", tlv->length);
+        printf("type: %x", tlv->type);
+        printf(", length: %d, value: ", tlv->length);
 
         if (with_value)
         {

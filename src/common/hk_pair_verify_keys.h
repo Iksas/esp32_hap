@@ -2,9 +2,9 @@
 
 #include "../include/hk_mem.h"
 
-typedef struct hk_pair_verify_keys
+typedef struct
 {
-    // these pointers are created by session (ip) or transaction (ble)
+    // these pointers are created by session
     hk_mem *response_key;
     hk_mem *request_key;
     hk_mem *shared_secret;

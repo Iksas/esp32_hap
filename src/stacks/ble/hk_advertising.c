@@ -63,7 +63,7 @@ static int hk_advertising_gap_event(struct ble_gap_event *event, void *arg)
         hk_advertising_start_advertising(hk_advertising_own_addr_type);
         break;
     case BLE_GAP_EVENT_CONN_UPDATE:
-        HK_LOGD("connection updated; status=%d ", event->conn_update.status);
+        HK_LOGV("connection updated; status=%d ", event->conn_update.status);
         rc = 0;
         break;
     case BLE_GAP_EVENT_ADV_COMPLETE:
@@ -76,7 +76,7 @@ static int hk_advertising_gap_event(struct ble_gap_event *event, void *arg)
         rc = 0;
         break;
     case BLE_GAP_EVENT_SUBSCRIBE:
-        HK_LOGD("subscribe event; conn_handle=%d attr_handle=%d "
+        HK_LOGV("subscribe event; conn_handle=%d attr_handle=%d "
                 "reason=%d prevn=%d curn=%d previ=%d curi=%d\n",
                 event->subscribe.conn_handle,
                 event->subscribe.attr_handle,
@@ -88,7 +88,7 @@ static int hk_advertising_gap_event(struct ble_gap_event *event, void *arg)
         rc = 0;
         break;
     case BLE_GAP_EVENT_MTU:
-        HK_LOGD("mtu update event; conn_handle=%d cid=%d mtu=%d",
+        HK_LOGV("mtu update event; conn_handle=%d cid=%d mtu=%d",
                 event->mtu.conn_handle,
                 event->mtu.channel_id,
                 event->mtu.value);
@@ -114,7 +114,7 @@ void hk_advertising_set_address(uint8_t own_addr_type)
 
 void hk_advertising_start_advertising()
 {
-    HK_LOGD("Starting advertising.");
+    HK_LOGV("Starting advertising.");
     int res;
 
     uint8_t device_id[6] = {0, 0, 0, 0, 0, 0};

@@ -28,7 +28,7 @@ hk_transaction_t *hk_connection_transaction_get_by_uuid(hk_connection_t *connect
 
 hk_transaction_t *hk_connection_transaction_init(hk_connection_t *connection, const ble_uuid128_t *chr_uuid)
 {
-    HK_LOGD("Adding new transaction with id %s.", hk_uuids_to_str(chr_uuid));
+    HK_LOGV("Adding new transaction with id %s.", hk_uuids_to_str(chr_uuid));
 
     hk_transaction_t *transaction = connection->transactions = hk_ll_new(connection->transactions);
 
@@ -48,7 +48,7 @@ hk_transaction_t *hk_connection_transaction_init(hk_connection_t *connection, co
 
 void hk_connection_transaction_free(hk_connection_t *connection, hk_transaction_t *transaction)
 {
-    HK_LOGD("Removing transaction %s from %d transactions.", hk_uuids_to_str(transaction->chr_uuid), hk_ll_count(connection->transactions));
+    HK_LOGV("Removing transaction %s from %d transactions.", hk_uuids_to_str(transaction->chr_uuid), hk_ll_count(connection->transactions));
 
     transaction->id = -1;
     hk_mem_free(transaction->request);
@@ -73,7 +73,7 @@ hk_connection_t *hk_connection_get_by_handle(uint16_t connection_handle)
 
 hk_connection_t *hk_connection_init(uint16_t connection_handle)
 {
-    HK_LOGD("Adding new connection with handle %d.", connection_handle);
+    HK_LOGV("Adding new connection with handle %d.", connection_handle);
 
     hk_connection_t *connection = hk_connection_connections = hk_ll_new(hk_connection_connections);
 

@@ -1,10 +1,10 @@
 #include "unity.h"
 
-#include "../../utils/hk_util.h"
-#include "../../include/hk_mem.h"
+#include "../../src/utils/hk_util.h"
+#include "../../src/include/hk_mem.h"
 
 
-TEST_CASE("Util: get accessory id", "[util]")
+TEST_CASE("get accessory id", "[util]")
 {
     hk_mem* mac1 = hk_mem_create();
     hk_mem* mac2 = hk_mem_create();

@@ -4,6 +4,7 @@
 #include "../utils/hk_tlv.h"
 #include "../utils/hk_store.h"
 #include "hk_pairings_store.h"
+#include "hk_pair_tlvs.h"
 #include "../stacks/hk_advertising.h"
 
 esp_err_t hk_pairings_remove(hk_tlv_t *tlv_data, hk_mem *result)
@@ -11,10 +12,10 @@ esp_err_t hk_pairings_remove(hk_tlv_t *tlv_data, hk_mem *result)
     HK_LOGI("Remove pairing.");
 
     hk_tlv_t *tlv_return = NULL;
-    tlv_return = hk_tlv_add_state(tlv_return, 2); //state M2 is always returned
+    tlv_return = hk_tlv_add_uint8(tlv_return, HK_PAIR_TLV_STATE, HK_PAIR_TLV_STATE_M2); //state M2 is always returned
 
     hk_mem *device_id = hk_mem_create();
-    esp_err_t ret = hk_tlv_get_mem_by_type(tlv_data, HK_TLV_Identifier, device_id);
+    esp_err_t ret = hk_tlv_get_mem_by_type(tlv_data, HK_PAIR_TLV_IDENTIFIER, device_id);
     if (!ret)
     {
         if (hk_pairings_store_is_admin(device_id))
@@ -29,12 +30,12 @@ esp_err_t hk_pairings_remove(hk_tlv_t *tlv_data, hk_mem *result)
         }
         else
         {
-            tlv_return = hk_tlv_add_error(tlv_return, HK_TLV_ERROR_Authentication);
+            tlv_return = hk_tlv_add_uint8(tlv_return, HK_PAIR_TLV_ERROR, HK_PAIR_TLV_ERROR_AUTHENTICATION);
         }
     }
     else
     {
-        tlv_return = hk_tlv_add_error(tlv_return, HK_TLV_ERROR_Unknown);
+        tlv_return = hk_tlv_add_uint8(tlv_return, HK_PAIR_TLV_ERROR, HK_PAIR_TLV_ERROR_UNKNOWN);
     }
 
     hk_tlv_serialize(tlv_return, result);
@@ -50,7 +51,7 @@ int hk_pairings(hk_mem *request, hk_mem *data, bool *kill_session)
     HK_LOGD("Pairings");
     int res = HK_RES_OK;
     hk_tlv_t *tlv_data = hk_tlv_deserialize(request);
-    hk_tlv_t *type_tlv = hk_tlv_get_tlv_by_type(tlv_data, HK_TLV_State);
+    hk_tlv_t *type_tlv = hk_tlv_get_tlv_by_type(tlv_data, HK_PAIR_TLV_STATE);
 
     if (type_tlv == NULL)
     {
@@ -66,7 +67,7 @@ int hk_pairings(hk_mem *request, hk_mem *data, bool *kill_session)
     hk_tlv_t *method_tlv = NULL;
     if (res == HK_RES_OK)
     {
-        method_tlv = hk_tlv_get_tlv_by_type(tlv_data, HK_TLV_Method);
+        method_tlv = hk_tlv_get_tlv_by_type(tlv_data, HK_PAIR_TLV_METHOD);
         if (method_tlv == NULL)
         {
             HK_LOGE("Could not find tlv with type method.");
@@ -92,7 +93,6 @@ int hk_pairings(hk_mem *request, hk_mem *data, bool *kill_session)
             res = HK_RES_MALFORMED_REQUEST;
         }
     }
-
 
     if (res == HK_RES_OK && *method_tlv->value == 4)
     {

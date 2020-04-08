@@ -9,12 +9,11 @@
 esp_err_t hk_chr_signature_read(const ble_uuid128_t *chr_uuid, hk_transaction_t *transaction, hk_chr_t *chr)
 {
     hk_tlv_t *tlv_data = NULL;
-    tlv_data = hk_tlv_add_buffer(tlv_data, 0x04, (char *)chr_uuid->value, 16);
-    tlv_data = hk_tlv_add_uint16(tlv_data, 0x07, chr->srv_id);
-    tlv_data = hk_tlv_add_buffer(tlv_data, 0x06, (char *)chr->srv_uuid->value, 16);
-    tlv_data = hk_tlv_add_uint16(tlv_data, 0x0a,
-                                 hk_chrs_properties_get_prop(chr->chr_type));
-    tlv_data = hk_tlv_add_buffer(tlv_data, 0x0c, hk_formats_ble_get(chr->chr_type), 7);
+    tlv_data = hk_tlv_add_buffer(tlv_data, 0x04, (char *)chr_uuid->value, 16);      // chr type
+    tlv_data = hk_tlv_add_uint16(tlv_data, 0x07, chr->srv_id);                      // srv id
+    tlv_data = hk_tlv_add_buffer(tlv_data, 0x06, (char *)chr->srv_uuid->value, 16); //srv type
+    tlv_data = hk_tlv_add_uint16(tlv_data, 0x0a, hk_chrs_properties_get_prop(chr->chr_type)); // chr properties
+    tlv_data = hk_tlv_add_buffer(tlv_data, 0x0c, hk_formats_ble_get(chr->chr_type), 7); // chr gatt format
 
     hk_format_t chr_format = hk_chrs_properties_get_type(chr->chr_type);
 
@@ -77,7 +76,7 @@ esp_err_t hk_chr_signature_read(const ble_uuid128_t *chr_uuid, hk_transaction_t 
         HK_LOGE("Found unknown characteristic format: %d", chr_format);
         break;
     }
-
+    //todo: step value is missing
     hk_tlv_serialize(tlv_data, transaction->response);
     return ESP_OK;
 }

@@ -14,6 +14,7 @@
 #include "../stacks/hk_advertising.h"
 
 #include "hk_pairings_store.h"
+#include "hk_pair_tlvs.h"
 
 hk_mem *hk_pair_setup_public_key;
 hk_srp_key_t *hk_pair_setup_srp_key;
@@ -21,7 +22,7 @@ hk_srp_key_t *hk_pair_setup_srp_key;
 void hk_pairing_setup_srp_start(hk_mem *result)
 {
     HK_LOGI("Starting pairing");
-    HK_LOGD("Paring setup 1/3 (start).");
+    HK_LOGD("pairing setup 1/3 (start).");
 
     esp_err_t ret = ESP_OK;
     hk_pair_setup_public_key = hk_mem_create();
@@ -38,15 +39,15 @@ void hk_pairing_setup_srp_start(hk_mem *result)
     if (!ret)
         ret = hk_srp_export_salt(hk_pair_setup_srp_key, salt);
 
-    tlv_data = hk_tlv_add_state(tlv_data, 2);
+    tlv_data = hk_tlv_add_uint8(tlv_data, HK_PAIR_TLV_STATE, HK_PAIR_TLV_STATE_M2);
     if (!ret)
     {
-        tlv_data = hk_tlv_add(tlv_data, HK_TLV_PublicKey, hk_pair_setup_public_key);
-        tlv_data = hk_tlv_add(tlv_data, HK_TLV_Salt, salt);
+        tlv_data = hk_tlv_add(tlv_data, HK_PAIR_TLV_PUBLICKEY, hk_pair_setup_public_key);
+        tlv_data = hk_tlv_add(tlv_data, HK_PAIR_TLV_SALT, salt);
     }
     else
     {
-        tlv_data = hk_tlv_add_error(tlv_data, HK_TLV_ERROR_Unknown);
+        tlv_data = hk_tlv_add_uint8(tlv_data, HK_PAIR_TLV_ERROR, HK_PAIR_TLV_ERROR_UNKNOWN);
     }
 
     hk_tlv_serialize(tlv_data, result);
@@ -54,12 +55,12 @@ void hk_pairing_setup_srp_start(hk_mem *result)
     hk_tlv_free(tlv_data);
     hk_mem_free(salt);
 
-    HK_LOGD("Paring setup 1/3 done.");
+    HK_LOGD("pairing setup 1/3 done.");
 }
 
 void hk_pairing_setup_srp_verify(hk_tlv_t *tlv, hk_mem *result)
 {
-    HK_LOGD("Paring setup 2/3 (verifying).");
+    HK_LOGD("pairing setup 2/3 (verifying).");
 
     esp_err_t ret = ESP_OK;
     size_t authError = 0;
@@ -68,10 +69,10 @@ void hk_pairing_setup_srp_verify(hk_tlv_t *tlv, hk_mem *result)
     hk_mem *accessory_proof = hk_mem_create();
     hk_tlv_t *tlv_data = NULL;
 
-    ret = hk_tlv_get_mem_by_type(tlv, HK_TLV_PublicKey, ios_pk);
+    ret = hk_tlv_get_mem_by_type(tlv, HK_PAIR_TLV_PUBLICKEY, ios_pk);
 
     if (!ret)
-        ret = hk_tlv_get_mem_by_type(tlv, HK_TLV_Proof, ios_proof);
+        ret = hk_tlv_get_mem_by_type(tlv, HK_PAIR_TLV_PROOF, ios_proof);
 
     if (!ret)
         ret = hk_srp_compute_key(hk_pair_setup_srp_key, hk_pair_setup_public_key, ios_pk);
@@ -88,14 +89,14 @@ void hk_pairing_setup_srp_verify(hk_tlv_t *tlv, hk_mem *result)
     if (!ret)
         ret = hk_srp_export_proof(hk_pair_setup_srp_key, accessory_proof);
 
-    tlv_data = hk_tlv_add_state(tlv_data, 4);
+    tlv_data = hk_tlv_add_uint8(tlv_data, HK_PAIR_TLV_STATE, HK_PAIR_TLV_STATE_M4);
     if (!ret)
     {
-        tlv_data = hk_tlv_add(tlv_data, HK_TLV_Proof, accessory_proof);
+        tlv_data = hk_tlv_add(tlv_data, HK_PAIR_TLV_PROOF, accessory_proof);
     }
     else
     {
-        tlv_data = hk_tlv_add_error(tlv_data, authError ? HK_TLV_ERROR_Authentication : HK_TLV_ERROR_Unknown);
+        tlv_data = hk_tlv_add_uint8(tlv_data, HK_PAIR_TLV_ERROR, authError ? HK_PAIR_TLV_ERROR_AUTHENTICATION : HK_PAIR_TLV_ERROR_UNKNOWN);
     }
 
     hk_tlv_serialize(tlv_data, result);
@@ -106,7 +107,7 @@ void hk_pairing_setup_srp_verify(hk_tlv_t *tlv, hk_mem *result)
     hk_mem_free(ios_proof);
     hk_mem_free(accessory_proof);
 
-    HK_LOGD("Paring setup 2/3 done.");
+    HK_LOGD("pairing setup 2/3 done.");
 }
 
 esp_err_t hk_pairing_setup_exchange_response_verification(hk_tlv_t *tlv, hk_mem *shared_secret, hk_mem *srp_private_key, hk_mem *device_id)
@@ -121,7 +122,7 @@ esp_err_t hk_pairing_setup_exchange_response_verification(hk_tlv_t *tlv, hk_mem 
     hk_tlv_t *tlv_data_decrypted = NULL;
     hk_ed25519_key_t *device_key = hk_ed25519_init_key();
 
-    ret = hk_tlv_get_mem_by_type(tlv, HK_TLV_EncryptedData, encrypted_data);
+    ret = hk_tlv_get_mem_by_type(tlv, HK_PAIR_TLV_ENCRYPTEDDATA, encrypted_data);
 
     if (!ret)
         ret = hk_hkdf(HK_HKDF_PAIR_SETUP_ENCRYPT, srp_private_key, shared_secret);
@@ -133,15 +134,15 @@ esp_err_t hk_pairing_setup_exchange_response_verification(hk_tlv_t *tlv, hk_mem 
         tlv_data_decrypted = hk_tlv_deserialize(decrypted_data);
 
     if (!ret)
-        ret = hk_tlv_get_mem_by_type(tlv_data_decrypted, HK_TLV_Identifier, device_id);
+        ret = hk_tlv_get_mem_by_type(tlv_data_decrypted, HK_PAIR_TLV_IDENTIFIER, device_id);
 
     if (!ret)
     {
-        ret = hk_tlv_get_mem_by_type(tlv_data_decrypted, HK_TLV_PublicKey, device_ltpk);
+        ret = hk_tlv_get_mem_by_type(tlv_data_decrypted, HK_PAIR_TLV_PUBLICKEY, device_ltpk);
     }
 
     if (!ret)
-        ret = hk_tlv_get_mem_by_type(tlv_data_decrypted, HK_TLV_Signature, device_signature);
+        ret = hk_tlv_get_mem_by_type(tlv_data_decrypted, HK_PAIR_TLV_SIGNATURE, device_signature);
 
     if (!ret)
         ret = hk_ed25519_generate_key_from_public_key(device_key, device_ltpk);
@@ -219,22 +220,22 @@ esp_err_t hk_pairing_setup_exchange_response_generation(hk_mem *result, hk_mem *
 
     if (!ret)
     {
-        sub_tlv_data = hk_tlv_add(sub_tlv_data, HK_TLV_Identifier, accessory_id);
-        sub_tlv_data = hk_tlv_add(sub_tlv_data, HK_TLV_PublicKey, accessory_public_key);
-        sub_tlv_data = hk_tlv_add(sub_tlv_data, HK_TLV_Signature, accessory_signature);
+        sub_tlv_data = hk_tlv_add(sub_tlv_data, HK_PAIR_TLV_IDENTIFIER, accessory_id);
+        sub_tlv_data = hk_tlv_add(sub_tlv_data, HK_PAIR_TLV_PUBLICKEY, accessory_public_key);
+        sub_tlv_data = hk_tlv_add(sub_tlv_data, HK_PAIR_TLV_SIGNATURE, accessory_signature);
 
         hk_tlv_serialize(sub_tlv_data, sub_result);
         hk_chacha20poly1305_encrypt(shared_secret, HK_CHACHA_SETUP_MSG6, sub_result, encrypted);
     }
 
-    tlv_data = hk_tlv_add_state(tlv_data, 6);
+    tlv_data = hk_tlv_add_uint8(tlv_data, HK_PAIR_TLV_STATE, HK_PAIR_TLV_STATE_M6);
     if (!ret)
     {
-        tlv_data = hk_tlv_add(tlv_data, HK_TLV_EncryptedData, encrypted);
+        tlv_data = hk_tlv_add(tlv_data, HK_PAIR_TLV_ENCRYPTEDDATA, encrypted);
     }
     else
     {
-        tlv_data = hk_tlv_add_error(tlv_data, HK_TLV_ERROR_Authentication);
+        tlv_data = hk_tlv_add_uint8(tlv_data, HK_PAIR_TLV_ERROR, HK_PAIR_TLV_ERROR_AUTHENTICATION);
     }
 
     hk_tlv_serialize(tlv_data, result);
@@ -254,7 +255,7 @@ esp_err_t hk_pairing_setup_exchange_response_generation(hk_mem *result, hk_mem *
 
 void hk_pairing_setup_exchange_response(hk_tlv_t *tlv, hk_mem *result, hk_mem *device_id)
 {
-    HK_LOGD("Paring setup 3/3 (exchange response).");
+    HK_LOGD("pairing setup 3/3 (exchange response).");
 
     hk_mem *shared_secret = hk_mem_create();
     hk_mem *srp_private_key = hk_mem_create();
@@ -276,13 +277,13 @@ void hk_pairing_setup_exchange_response(hk_tlv_t *tlv, hk_mem *result, hk_mem *d
     hk_mem_free(shared_secret);
     hk_mem_free(srp_private_key);
 
-    HK_LOGD("Paring setup 3/3 done.");
+    HK_LOGD("pairing setup 3/3 done.");
 }
 
-int hk_pair_setup(hk_mem *request, hk_mem *response, hk_mem* device_id)
+int hk_pair_setup(hk_mem *request, hk_mem *response, hk_mem *device_id)
 {
     hk_tlv_t *tlv_data = hk_tlv_deserialize(request);
-    hk_tlv_t *type_tlv = hk_tlv_get_tlv_by_type(tlv_data, HK_TLV_State);
+    hk_tlv_t *type_tlv = hk_tlv_get_tlv_by_type(tlv_data, HK_PAIR_TLV_STATE);
     int res = HK_RES_OK;
 
     if (type_tlv == NULL)
@@ -294,13 +295,13 @@ int hk_pair_setup(hk_mem *request, hk_mem *response, hk_mem* device_id)
     {
         switch (*type_tlv->value)
         {
-        case 1:
+        case HK_PAIR_TLV_STATE_M1:
             hk_pairing_setup_srp_start(response);
             break;
-        case 3:
+        case HK_PAIR_TLV_STATE_M3:
             hk_pairing_setup_srp_verify(tlv_data, response);
             break;
-        case 5:
+        case HK_PAIR_TLV_STATE_M5:
             hk_pairing_setup_exchange_response(tlv_data, response, device_id);
             break;
         default:

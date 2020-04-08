@@ -1,11 +1,11 @@
 #include "unity.h"
 
-#include "../../include/hk_mem.h"
-#include "../../utils/hk_store.h"
-#include "../../utils/hk_logging.h"
+#include "../../src/include/hk_mem.h"
+#include "../../src/utils/hk_store.h"
+#include "../../src/utils/hk_logging.h"
 
 
-#include "../hk_pairings_store.h"
+#include "../../src/common/hk_pairings_store.h"
 
 TEST_CASE("Pairings store: add to empty", "[pairings_store]")
 {

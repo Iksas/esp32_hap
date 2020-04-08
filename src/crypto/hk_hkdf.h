@@ -7,6 +7,10 @@ enum hk_hkdf_types {
     HK_HKDF_PAIR_SETUP_CONTROLLER,
     HK_HKDF_PAIR_SETUP_ACCESSORY,
     HK_HKDF_PAIR_VERIFY_ENCRYPT,
+    HK_HKDF_PAIR_VERIFY_RESUME,
+    HK_HKDF_PAIR_RESUME_REQUEST,
+    HK_HKDF_PAIR_RESUME_RESPONSE,
+    HK_HKDF_PAIR_RESUME_SHARED_SECRET,
     HK_HKDF_CONTROL_READ,
     HK_HKDF_CONTROL_WRITE,
     HK_HKDF_BROADCAST_ENCRYPTION_KEY,
@@ -14,4 +18,5 @@ enum hk_hkdf_types {
 };
 
 size_t hk_hkdf(enum hk_hkdf_types type, hk_mem *key_in, hk_mem* key_out);
+size_t hk_hkdf_with_given_size(enum hk_hkdf_types type, hk_mem *key_in, hk_mem* key_out, size_t size);
 size_t hk_hkdf_with_external_salt(enum hk_hkdf_types type, hk_mem *salt, hk_mem *key_in, hk_mem* key_out);

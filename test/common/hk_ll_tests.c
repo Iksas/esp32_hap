@@ -1,7 +1,7 @@
 #include "unity.h"
 
-#include "../../utils/hk_ll.h"
-#include "../../utils/hk_logging.h"
+#include "../../src/utils/hk_ll.h"
+#include "../../src/utils/hk_logging.h"
 
 typedef struct
 {
@@ -9,7 +9,7 @@ typedef struct
     int *data_ptr;
 } hk_ll_test_t;
 
-TEST_CASE("Ll: create and free", "[ll]")
+TEST_CASE("create and free", "[ll]")
 {
     
     hk_ll_test_t *list = NULL;
@@ -24,7 +24,7 @@ TEST_CASE("Ll: create and free", "[ll]")
     
 }
 
-TEST_CASE("Ll: iterate", "[ll]")
+TEST_CASE("iterate", "[ll]")
 {
     
     hk_ll_test_t *list = NULL;
@@ -50,7 +50,7 @@ TEST_CASE("Ll: iterate", "[ll]")
     
 }
 
-TEST_CASE("Ll: reverse", "[ll]")
+TEST_CASE("reverse", "[ll]")
 {
     
     hk_ll_test_t *list = NULL;
@@ -78,7 +78,7 @@ TEST_CASE("Ll: reverse", "[ll]")
     
 }
 
-TEST_CASE("Ll: remove first", "[ll]")
+TEST_CASE("remove first", "[ll]")
 {
     
     hk_ll_test_t *list = NULL;
@@ -103,7 +103,7 @@ TEST_CASE("Ll: remove first", "[ll]")
     
 }
 
-TEST_CASE("Ll: remove middle", "[ll]")
+TEST_CASE("remove middle", "[ll]")
 {
     
     hk_ll_test_t *list = NULL;
@@ -135,7 +135,7 @@ TEST_CASE("Ll: remove middle", "[ll]")
     
 }
 
-TEST_CASE("Ll: remove last", "[ll]")
+TEST_CASE("remove last", "[ll]")
 {
     
     hk_ll_test_t *list = NULL;
@@ -167,7 +167,7 @@ TEST_CASE("Ll: remove last", "[ll]")
     
 }
 
-TEST_CASE("Ll: remove odd in iteration", "[ll]")
+TEST_CASE("remove odd in iteration", "[ll]")
 {
     hk_ll_test_t *list = NULL;
     list = hk_ll_new(list);
@@ -206,7 +206,7 @@ TEST_CASE("Ll: remove odd in iteration", "[ll]")
     
 }
 
-TEST_CASE("Ll: remove even in iteration", "[ll]")
+TEST_CASE("remove even in iteration", "[ll]")
 {
     hk_ll_test_t *list = NULL;
     list = hk_ll_new(list);
