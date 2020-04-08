@@ -287,7 +287,7 @@ esp_err_t hk_pair_verify_resume(hk_pair_verify_keys_t *keys, hk_tlv_t *request_t
     hk_pair_verify_session_t *session = NULL;
     hk_ll_foreach(hk_pair_verify_sessions, s)
     {
-        if (hk_mem_cmp(s->id, session_id))
+        if (hk_mem_equal(s->id, session_id))
         {
             session = s;
             //todo: break;

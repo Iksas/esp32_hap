@@ -19,7 +19,7 @@ void hk_mem_set(hk_mem *mem, size_t size);
 void hk_mem_free(hk_mem *mem);
 
 char *hk_mem_get_str(hk_mem *mem);
-bool hk_mem_cmp(hk_mem *mem1, hk_mem *mem2);
-bool hk_mem_cmp_str(hk_mem *mem, const char* str);
+bool hk_mem_equal(hk_mem *mem1, hk_mem *mem2);
+bool hk_mem_equal_str(hk_mem *mem, const char* str);
 void hk_mem_log_as_string(const char *title, hk_mem *mem);
 void hk_mem_log(const char *title, hk_mem *mem);

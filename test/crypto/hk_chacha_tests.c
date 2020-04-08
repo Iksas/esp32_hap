@@ -29,7 +29,7 @@ TEST_CASE("encrypt->decrypt", "[crypto] [chacha]")
     TEST_ASSERT_EQUAL(hk_chacha20poly1305_decrypt(key, HK_CHACHA_VERIFY_MSG2, encrypted, decrypted), ESP_OK);
 
     // assert
-    TEST_ASSERT_TRUE(hk_mem_cmp(decrypted, message));
+    TEST_ASSERT_TRUE(hk_mem_equal(decrypted, message));
 
     // clean
     hk_mem_free(key);
@@ -67,7 +67,7 @@ TEST_CASE("calculate auth tag", "[crypto] [chacha]")
     TEST_ASSERT_EQUAL(hk_chacha20poly1305_caluclate_auth_tag_without_message(key, HK_CHACHA_RESUME_MSG1, auth_tag), ESP_OK);
 
     // assert
-    TEST_ASSERT_TRUE(hk_mem_cmp(auth_tag, auth_tag_expected));
+    TEST_ASSERT_TRUE(hk_mem_equal(auth_tag, auth_tag_expected));
 
     // clean
     hk_mem_free(key);

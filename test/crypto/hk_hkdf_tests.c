@@ -26,7 +26,7 @@ TEST_CASE("hkdf", "[crypto] [hkdf]")
 
     // assert
     TEST_ASSERT_EQUAL(ret, ESP_OK);
-    TEST_ASSERT_TRUE(hk_mem_cmp(key_out_expected, key_out));
+    TEST_ASSERT_TRUE(hk_mem_equal(key_out_expected, key_out));
 
     // clean
     hk_mem_free(key_in);

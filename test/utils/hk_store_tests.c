@@ -25,7 +25,7 @@
 
 //     hk_store_blob_set("my_key", input);
 //     hk_store_blob_get("my_key", result);
-//     TEST_ASSERT_TRUE(hk_mem_cmp_str(result, "my_value"));
+//     TEST_ASSERT_TRUE(hk_mem_equal_str(result, "my_value"));
 
 //     hk_mem_free(input);
 //     hk_mem_free(result);
@@ -133,8 +133,8 @@
 //     hk_store_key_priv_get(priv_out);
 //     hk_store_key_pub_get(pub_out);
 
-//     TEST_ASSERT_TRUE(hk_mem_cmp_str(pub_out, pub_str));
-//     TEST_ASSERT_TRUE(hk_mem_cmp_str(priv_out,priv_str));
+//     TEST_ASSERT_TRUE(hk_mem_equal_str(pub_out, pub_str));
+//     TEST_ASSERT_TRUE(hk_mem_equal_str(priv_out,priv_str));
 
 //     hk_mem_free(priv_in);
 //     hk_mem_free(priv_out);

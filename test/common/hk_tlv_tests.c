@@ -33,7 +33,7 @@ TEST_CASE("full run", "[tlv]")
 
     hk_tlv_get_mem_by_type(output_tlv, 4, item);
 
-    TEST_ASSERT_TRUE(hk_mem_cmp_str(item, "bla4"));
+    TEST_ASSERT_TRUE(hk_mem_equal_str(item, "bla4"));
 
     hk_mem_free(data);
     hk_mem_free(item);

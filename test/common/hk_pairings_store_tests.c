@@ -30,7 +30,6 @@ TEST_CASE("Pairings store: add to empty", "[pairings_store]")
 TEST_CASE("Pairings store: get ltpk", "[pairings_store]")
 {
     TEST_ASSERT_FALSE(hk_store_init());
-    //
 
     hk_pairings_store_remove_all();
     hk_mem *device_id = hk_mem_create();
@@ -43,7 +42,7 @@ TEST_CASE("Pairings store: get ltpk", "[pairings_store]")
     esp_err_t ret = hk_pairings_store_ltpk_get(device_id, device_ltpk_result);
 
     TEST_ASSERT_FALSE(ret);
-    TEST_ASSERT_TRUE(hk_mem_cmp(device_ltpk, device_ltpk_result));
+    TEST_ASSERT_TRUE(hk_mem_equal(device_ltpk, device_ltpk_result));
 
     hk_mem_free(device_id);
     hk_mem_free(device_ltpk);
@@ -66,14 +65,10 @@ TEST_CASE("Pairings store: remove pairing", "[pairings_store]")
     hk_mem *device_ltpk_result = hk_mem_create();
 
     hk_pairings_store_add(device_id, device_ltpk, true);
-    esp_err_t ret = hk_pairings_store_ltpk_get(device_id, device_ltpk_result);
 
-    TEST_ASSERT_FALSE(ret);
-
+    TEST_ASSERT_EQUAL(hk_pairings_store_device_exists(device_id), ESP_OK);
     hk_pairings_store_remove(device_id);
-    ret = hk_pairings_store_ltpk_get(device_id, device_ltpk_result);
-
-    TEST_ASSERT_TRUE(ret);
+    TEST_ASSERT_EQUAL(hk_pairings_store_device_exists(device_id), ESP_ERR_NOT_FOUND);
 
     hk_mem_free(device_id);
     hk_mem_free(device_ltpk);

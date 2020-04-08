@@ -23,7 +23,7 @@ void hk_server_handle(hk_session_t *session)
 {
     HK_LOGD("%d - Handling %s, %d", session->socket, session->request->url->ptr, session->request->method);
 
-    if (hk_mem_cmp_str(session->request->url, "/pair-setup") && HK_SESSION_HTML_METHOD_POST == session->request->method)
+    if (hk_mem_equal_str(session->request->url, "/pair-setup") && HK_SESSION_HTML_METHOD_POST == session->request->method)
     {
         hk_mem *device_id = hk_mem_create();
         session->response->result = hk_pair_setup(session->request->content, session->response->content, device_id);
@@ -34,7 +34,7 @@ void hk_server_handle(hk_session_t *session)
         hk_session_send(session);
         hk_mem_free(device_id);
     }
-    else if (hk_mem_cmp_str(session->request->url, "/pair-verify") && HK_SESSION_HTML_METHOD_POST == session->request->method)
+    else if (hk_mem_equal_str(session->request->url, "/pair-verify") && HK_SESSION_HTML_METHOD_POST == session->request->method)
     {
         bool session_is_secure = false;
         session->response->result = hk_pair_verify(session->request->content, session->keys, 
@@ -48,7 +48,7 @@ void hk_server_handle(hk_session_t *session)
             HK_LOGD("%d - Pairing verified, now communicating encrypted.", session->socket);
         }
     }
-    else if (hk_mem_cmp_str(session->request->url, "/accessories") && HK_SESSION_HTML_METHOD_GET == session->request->method)
+    else if (hk_mem_equal_str(session->request->url, "/accessories") && HK_SESSION_HTML_METHOD_GET == session->request->method)
     {
         hk_accessories_serializer_accessories(session->response->content);
         hk_log_print_as_string("accs", session->response->content->ptr, session->response->content->size);
@@ -56,20 +56,20 @@ void hk_server_handle(hk_session_t *session)
         HK_LOGD("%d - Returning accessories.", session->socket);
         hk_session_send(session);
     }
-    else if (hk_mem_cmp_str(session->request->url, "/characteristics") && HK_SESSION_HTML_METHOD_GET == session->request->method)
+    else if (hk_mem_equal_str(session->request->url, "/characteristics") && HK_SESSION_HTML_METHOD_GET == session->request->method)
     {
         hk_chrs_get(session);
     }
-    else if (hk_mem_cmp_str(session->request->url, "/characteristics") && HK_SESSION_HTML_METHOD_PUT == session->request->method)
+    else if (hk_mem_equal_str(session->request->url, "/characteristics") && HK_SESSION_HTML_METHOD_PUT == session->request->method)
     {
         hk_chrs_put(session);
     }
-    else if (hk_mem_cmp_str(session->request->url, "/pairings") && HK_SESSION_HTML_METHOD_POST == session->request->method)
+    else if (hk_mem_equal_str(session->request->url, "/pairings") && HK_SESSION_HTML_METHOD_POST == session->request->method)
     {
         session->response->result = hk_pairings(session->request->content, session->response->data, &session->kill);
         hk_session_send(session);
     }
-    else if (hk_mem_cmp_str(session->request->url, "/identify") && HK_SESSION_HTML_METHOD_POST == session->request->method)
+    else if (hk_mem_equal_str(session->request->url, "/identify") && HK_SESSION_HTML_METHOD_POST == session->request->method)
     {
         hk_chrs_identify(session);
     }

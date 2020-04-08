@@ -7,6 +7,7 @@
 
 void hk_pairings_store_add(hk_mem* device_id, hk_mem* device_ltpk, bool is_admin);
 void hk_pairings_store_remove(hk_mem *device_id);
+esp_err_t hk_pairings_store_device_exists(hk_mem *device_id);
 bool hk_pairings_store_is_admin(hk_mem *device_id);
 bool hk_pairings_store_has_admin_pairing();
 bool hk_pairings_store_has_pairing();

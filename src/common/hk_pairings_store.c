@@ -84,6 +84,42 @@ void hk_pairings_store_add(hk_mem *device_id, hk_mem *device_ltpk, bool is_admin
     cJSON_Delete(j_root);
 }
 
+esp_err_t hk_pairings_store_device_exists(hk_mem *device_id)
+{
+    cJSON *j_root = hk_pairings_store_get();
+    cJSON *j_pairings = hk_pairings_store_get_j_pairings_array(j_root);
+
+    esp_err_t ret = ESP_ERR_NOT_FOUND;;
+
+    cJSON *j_pairing = j_pairings->child;
+    while (j_pairing)
+    {
+        if (cJSON_HasObjectItem(j_pairing, HK_PAIRINGS_STORE_DEVICE_ID))
+        {
+            cJSON *j_device_id = cJSON_GetObjectItem(j_pairing, HK_PAIRINGS_STORE_DEVICE_ID);
+
+            if (memcmp(j_device_id->valuestring, device_id->ptr, device_id->size) == 0)
+            {
+                ret = ESP_OK;
+                j_pairing = NULL;
+            }
+        }
+        else
+        {
+            HK_LOGW("Found pairing without device id?");
+        }
+
+        if (j_pairing != NULL)
+        {
+            j_pairing = j_pairing->next;
+        }
+    }
+
+    cJSON_Delete(j_root);
+
+    return ret;
+}
+
 esp_err_t hk_pairings_store_ltpk_get(hk_mem *device_id, hk_mem *device_ltpk)
 {
     cJSON *j_root = hk_pairings_store_get();

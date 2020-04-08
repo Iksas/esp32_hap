@@ -12,7 +12,7 @@ esp_err_t static hk_hkdf_internal(
     char *key_in, size_t key_in_length,
     char *key_out, size_t key_out_length,
     char *salt, size_t salt_length,
-    char *info, size_t info_length)
+    const char *info, size_t info_length)
 {
     HK_LOGV("Deriving an encrption key with salt/info: %s %s", salt, info);
     int ret = wc_HKDF(
@@ -45,7 +45,7 @@ size_t hk_hkdf_with_given_size(hk_mem *key_in, hk_mem *key_out, size_t size, con
     return hk_hkdf_internal(
         key_in->ptr, key_in->size,
         key_out->ptr, key_out->size,
-        salt, strlen(salt),
+        (char*)salt, strlen(salt),
         info, strlen(info));
 }
 

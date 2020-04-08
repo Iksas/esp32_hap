@@ -135,7 +135,7 @@ esp_err_t hk_chacha20poly1305_verify_auth_tag(hk_mem *key, const char *nonce, hk
         return ret;
     }
 
-    if (!hk_mem_cmp(auth_tag, calculated_auth_tag))
+    if (!hk_mem_equal(auth_tag, calculated_auth_tag))
     {
         return ESP_ERR_INVALID_MAC;
     }
