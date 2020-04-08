@@ -25,8 +25,8 @@ TEST_CASE("encrypt->decrypt", "[crypto] [chacha]")
     hk_mem *decrypted = hk_mem_create();
 
     // run
-    TEST_ASSERT_FALSE(hk_chacha20poly1305_encrypt(key, HK_CHACHA_VERIFY_MSG2, message, encrypted));
-    TEST_ASSERT_FALSE(hk_chacha20poly1305_decrypt(key, HK_CHACHA_VERIFY_MSG2, encrypted, decrypted));
+    TEST_ASSERT_EQUAL(hk_chacha20poly1305_encrypt(key, HK_CHACHA_VERIFY_MSG2, message, encrypted), ESP_OK);
+    TEST_ASSERT_EQUAL(hk_chacha20poly1305_decrypt(key, HK_CHACHA_VERIFY_MSG2, encrypted, decrypted), ESP_OK);
 
     // assert
     TEST_ASSERT_TRUE(hk_mem_cmp(decrypted, message));
@@ -47,7 +47,7 @@ TEST_CASE("encrypt->verify", "[crypto] [chacha]")
     hk_mem_append_buffer(auth_tag, (void *)auth_tag_bytes, 16);
 
     // run
-    TEST_ASSERT_TRUE(hk_chacha20poly1305_verify_auth_tag(key, HK_CHACHA_RESUME_MSG1, auth_tag) == ESP_OK);
+    TEST_ASSERT_EQUAL(hk_chacha20poly1305_verify_auth_tag(key, HK_CHACHA_RESUME_MSG1, auth_tag), ESP_OK);
 
     // clean
     hk_mem_free(key);
@@ -64,9 +64,7 @@ TEST_CASE("calculate auth tag", "[crypto] [chacha]")
     hk_mem_append_buffer(auth_tag_expected, (void *)auth_tag_bytes, 16);
 
     // run
-    TEST_ASSERT_TRUE(hk_chacha20poly1305_caluclate_auth_tag_without_message(key, HK_CHACHA_RESUME_MSG1, auth_tag) == ESP_OK);
-    hk_mem_log("expected   auth tag", auth_tag_expected);
-    hk_mem_log("calculated auth tag", auth_tag);
+    TEST_ASSERT_EQUAL(hk_chacha20poly1305_caluclate_auth_tag_without_message(key, HK_CHACHA_RESUME_MSG1, auth_tag), ESP_OK);
 
     // assert
     TEST_ASSERT_TRUE(hk_mem_cmp(auth_tag, auth_tag_expected));

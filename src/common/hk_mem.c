@@ -89,5 +89,5 @@ void hk_mem_log_as_string(const char *title, hk_mem *mem)
 
 void hk_mem_log(const char *title, hk_mem *mem)
 {
-    hk_log_print_bytewise(title, mem->ptr, mem->size, false);
+    hk_log_print_bytewise(title, mem->ptr, mem->size, true);
 }

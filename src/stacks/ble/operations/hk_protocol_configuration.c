@@ -23,7 +23,7 @@ esp_err_t hk_protocol_configuration(hk_pair_verify_keys_t *keys, hk_transaction_
 
         // generate broadcast_key
         hk_mem *broadcast_key = hk_mem_create();
-        hk_hkdf_with_external_salt(HK_HKDF_BROADCAST_ENCRYPTION_KEY, accessory_public_key, keys->shared_secret, broadcast_key);
+        hk_hkdf_with_external_salt(keys->shared_secret, broadcast_key, accessory_public_key, HK_HKDF_BROADCAST_ENCRYPTION_KEY_INFO);
 
         // get global state number and current configuration
         uint16_t global_state = hk_global_state_get();

@@ -26,7 +26,7 @@ esp_err_t hk_pair_verify_create_session(hk_pair_verify_keys_t *keys)
     esp_err_t ret = ESP_OK;
 
     hk_mem *session_id = hk_mem_create();
-    ret = hk_hkdf_with_given_size(HK_HKDF_PAIR_VERIFY_RESUME, keys->shared_secret, session_id, 8);
+    ret = hk_hkdf_with_given_size(keys->shared_secret, session_id, 8, HK_HKDF_PAIR_VERIFY_RESUME_SALT, HK_HKDF_PAIR_VERIFY_RESUME_INFO);
 
     if (!ret && hk_pair_verify_sessions != NULL && hk_ll_count(hk_pair_verify_sessions) >= 8)
     {
@@ -54,11 +54,11 @@ esp_err_t hk_create_session_security(hk_pair_verify_keys_t *keys)
 {
     esp_err_t ret = ESP_OK;
 
-    ret = hk_hkdf(HK_HKDF_CONTROL_READ, keys->shared_secret, keys->response_key);
+    ret = hk_hkdf(keys->shared_secret, keys->response_key, HK_HKDF_CONTROL_READ_SALT, HK_HKDF_CONTROL_READ_INFO);
 
     if (!ret)
     {
-        ret = hk_hkdf(HK_HKDF_CONTROL_WRITE, keys->shared_secret, keys->request_key);
+        ret = hk_hkdf(keys->shared_secret, keys->request_key, HK_HKDF_CONTROL_WRITE_SALT, HK_HKDF_CONTROL_WRITE_INFO);
     }
 
     return ret;
@@ -145,7 +145,7 @@ esp_err_t hk_pair_verify_start(hk_pair_verify_keys_t *keys, hk_tlv_t *request_tl
 
     if (!ret)
     {
-        ret = hk_hkdf(HK_HKDF_PAIR_VERIFY_ENCRYPT, keys->shared_secret, keys->session_key);
+        ret = hk_hkdf(keys->shared_secret, keys->session_key, HK_HKDF_PAIR_VERIFY_ENCRYPT_SALT, HK_HKDF_PAIR_VERIFY_ENCRYPT_INFO);
     }
 
     if (!ret)
@@ -321,7 +321,7 @@ esp_err_t hk_pair_verify_resume(hk_pair_verify_keys_t *keys, hk_tlv_t *request_t
         HK_LOGD("Deriving encryption key as device did.");
         hk_mem_append(salt, device_curve_public_key);
         hk_mem_append(salt, session_id);
-        hk_hkdf_with_external_salt(HK_HKDF_PAIR_RESUME_REQUEST, salt, session->shared_secret, encryption_key);
+        hk_hkdf_with_external_salt(session->shared_secret, encryption_key, salt, HK_HKDF_PAIR_RESUME_REQUEST_INFO);
     }
 
     if (!ret)
@@ -350,7 +350,7 @@ esp_err_t hk_pair_verify_resume(hk_pair_verify_keys_t *keys, hk_tlv_t *request_t
         hk_mem_append(salt, device_curve_public_key);
         hk_mem_append(salt, session->id);
         hk_mem_log("salt for response key", salt);
-        hk_hkdf_with_external_salt(HK_HKDF_PAIR_RESUME_RESPONSE, salt, session->shared_secret, encryption_key);
+        hk_hkdf_with_external_salt(session->shared_secret, encryption_key, salt, HK_HKDF_PAIR_RESUME_RESPONSE_INFO);
         hk_mem_log("response key", encryption_key);
     }
 
@@ -366,7 +366,7 @@ esp_err_t hk_pair_verify_resume(hk_pair_verify_keys_t *keys, hk_tlv_t *request_t
     {
         HK_LOGD("Calculate new shared secret.");
         hk_pair_verify_keys_reset(keys);
-        hk_hkdf_with_external_salt(HK_HKDF_PAIR_RESUME_SHARED_SECRET, salt, session->shared_secret, keys->shared_secret);
+        hk_hkdf_with_external_salt(session->shared_secret, keys->shared_secret, salt, HK_HKDF_PAIR_RESUME_SHARED_SECRET_INFO);
         hk_mem_set(session->shared_secret, 0);
         hk_mem_append(session->shared_secret, keys->shared_secret);
         hk_create_session_security(keys);

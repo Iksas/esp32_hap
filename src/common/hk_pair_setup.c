@@ -125,7 +125,7 @@ esp_err_t hk_pairing_setup_exchange_response_verification(hk_tlv_t *tlv, hk_mem 
     ret = hk_tlv_get_mem_by_type(tlv, HK_PAIR_TLV_ENCRYPTEDDATA, encrypted_data);
 
     if (!ret)
-        ret = hk_hkdf(HK_HKDF_PAIR_SETUP_ENCRYPT, srp_private_key, shared_secret);
+        ret = hk_hkdf(srp_private_key, shared_secret, HK_HKDF_PAIR_SETUP_ENCRYPT_SALT, HK_HKDF_PAIR_SETUP_ENCRYPT_INFO);
 
     if (!ret)
         ret = hk_chacha20poly1305_decrypt(shared_secret, HK_CHACHA_SETUP_MSG5, encrypted_data, decrypted_data);
@@ -148,7 +148,7 @@ esp_err_t hk_pairing_setup_exchange_response_verification(hk_tlv_t *tlv, hk_mem 
         ret = hk_ed25519_generate_key_from_public_key(device_key, device_ltpk);
 
     if (!ret)
-        ret = hk_hkdf(HK_HKDF_PAIR_SETUP_CONTROLLER, srp_private_key, device_x);
+        ret = hk_hkdf(srp_private_key, device_x, HK_HKDF_PAIR_SETUP_CONTROLLER_SALT, HK_HKDF_PAIR_SETUP_CONTROLLER_INFO);
 
     if (!ret)
     {
@@ -208,7 +208,7 @@ esp_err_t hk_pairing_setup_exchange_response_generation(hk_mem *result, hk_mem *
     }
 
     if (!ret)
-        ret = hk_hkdf(HK_HKDF_PAIR_SETUP_ACCESSORY, srp_private_key, accessory_info);
+        ret = hk_hkdf(srp_private_key, accessory_info, HK_HKDF_PAIR_SETUP_ACCESSORY_SALT, HK_HKDF_PAIR_SETUP_ACCESSORY_INFO);
 
     if (!ret)
     {
