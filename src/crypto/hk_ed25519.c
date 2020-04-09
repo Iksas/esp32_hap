@@ -6,7 +6,7 @@
 #include <wolfssl/wolfcrypt/settings.h>
 #include <wolfssl/wolfcrypt/ed25519.h>
 
-hk_ed25519_key_t *hk_ed25519_init_key()
+hk_ed25519_key_t *hk_ed25519_init()
 {
     hk_ed25519_key_t *key = malloc(sizeof(hk_ed25519_key_t));
     key->internal = malloc(sizeof(ed25519_key));
@@ -125,7 +125,7 @@ esp_err_t hk_ed25519_sign(hk_ed25519_key_t *key, hk_mem *message, hk_mem *signat
     return ret;
 }
 
-esp_err_t hk_ed25519_verify(hk_ed25519_key_t *key, hk_mem *message, hk_mem *signature)
+esp_err_t hk_ed25519_verify(hk_ed25519_key_t *key, hk_mem *signature, hk_mem *message)
 {
     int verified;
 
@@ -146,7 +146,7 @@ esp_err_t hk_ed25519_verify(hk_ed25519_key_t *key, hk_mem *message, hk_mem *sign
     return ret || !verified;
 }
 
-void hk_ed25519_free_key(hk_ed25519_key_t *key)
+void hk_ed25519_free(hk_ed25519_key_t *key)
 {
     if (key->internal != NULL)
     {

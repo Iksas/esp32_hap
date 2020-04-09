@@ -5,7 +5,7 @@
 #include <stdbool.h>
 #include <esp_err.h>
 
-size_t hk_store_init();
+esp_err_t hk_store_init();
 
 void hk_store_free();
 
@@ -20,5 +20,7 @@ void hk_store_code_set(const char* code);
 
 void hk_store_pairings_get(hk_mem *pairings);
 void hk_store_pairings_set(hk_mem *pairings);
+void hk_store_pairings_remove();
+
 uint8_t hk_store_configuration_get();
 void hk_store_configuration_set(uint8_t configuration);

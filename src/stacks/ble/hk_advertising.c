@@ -20,7 +20,8 @@ static void hk_advertising_connect(uint16_t connection_handle)
     hk_connection_init(connection_handle);
 }
 
-static void hk_advertising_disconnect(uint16_t connection_handle){
+static void hk_advertising_disconnect(uint16_t connection_handle)
+{
     hk_connection_free(connection_handle);
 }
 
@@ -125,25 +126,27 @@ void hk_advertising_start_advertising()
     }
 
     uint16_t global_state = hk_global_state_get();
-
+    bool has_pairing = false;
+    hk_pairings_store_has_pairing(&has_pairing);
+    
     uint8_t manufacturer_data[17];
-    manufacturer_data[0] = 0x4c;                                          // company id
-    manufacturer_data[1] = 0x00;                                          // company id
-    manufacturer_data[2] = 0x06;                                          // type
-    manufacturer_data[3] = 0xcd;                                          // subtype and length
-    manufacturer_data[4] = hk_pairings_store_has_pairing() ? 0x00 : 0x01; // pairing status flat
-    manufacturer_data[5] = device_id[0];                                  // device id
-    manufacturer_data[6] = device_id[1];                                  // device id
-    manufacturer_data[7] = device_id[2];                                  // device id
-    manufacturer_data[8] = device_id[3];                                  // device id
-    manufacturer_data[9] = device_id[4];                                  // device id
-    manufacturer_data[10] = device_id[5];                                 // device id
-    manufacturer_data[11] = (char)hk_advertising_category;                // accessory category identifier
-    manufacturer_data[12] = 0x00;                                         // accessory category identifier
-    manufacturer_data[13] = global_state % 256;                           // global state number
-    manufacturer_data[14] = global_state / 256;                           // global state number
-    manufacturer_data[15] = hk_store_configuration_get();                 // configuration number
-    manufacturer_data[16] = 0x02;                                         // HAP BLE version
+    manufacturer_data[0] = 0x4c;                           // company id
+    manufacturer_data[1] = 0x00;                           // company id
+    manufacturer_data[2] = 0x06;                           // type
+    manufacturer_data[3] = 0xcd;                           // subtype and length
+    manufacturer_data[4] = has_pairing ? 0x00 : 0x01;      // pairing status flat
+    manufacturer_data[5] = device_id[0];                   // device id
+    manufacturer_data[6] = device_id[1];                   // device id
+    manufacturer_data[7] = device_id[2];                   // device id
+    manufacturer_data[8] = device_id[3];                   // device id
+    manufacturer_data[9] = device_id[4];                   // device id
+    manufacturer_data[10] = device_id[5];                  // device id
+    manufacturer_data[11] = (char)hk_advertising_category; // accessory category identifier
+    manufacturer_data[12] = 0x00;                          // accessory category identifier
+    manufacturer_data[13] = global_state % 256;            // global state number
+    manufacturer_data[14] = global_state / 256;            // global state number
+    manufacturer_data[15] = hk_store_configuration_get();  // configuration number
+    manufacturer_data[16] = 0x02;                          // HAP BLE version
 
     struct ble_hs_adv_fields fields;
     memset(&fields, 0, sizeof fields);

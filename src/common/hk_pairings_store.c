@@ -4,316 +4,256 @@
 #include "../utils/hk_res.h"
 #include "../utils/hk_logging.h"
 
-#include <cJSON.h>
-
 #define HK_PAIRINGS_STORE_PAIRINGS "pairings"
 #define HK_PAIRINGS_STORE_DEVICE_ID "device_id"
 #define HK_PAIRINGS_STORE_DEVICE_LTPK "device_ltpk"
 #define HK_PAIRINGS_STORE_IS_ADMIN "is_admin"
 
-cJSON *hk_pairings_store_get()
+typedef struct
 {
-    hk_mem *pairings = hk_mem_init();
-    hk_store_pairings_get(pairings);
-    cJSON *j_root = cJSON_Parse(pairings->ptr);
+    size_t id_length;
+    size_t key_length;
+    bool is_admin;
+    const char *id;
+    const char *key;
+    size_t length;
+} hk_pairing_store_pair;
 
-    hk_mem_free(pairings);
-
-    if (j_root == NULL)
-    {
-        HK_LOGE("Could not deserialize pairings.");
-    }
-
-    return j_root;
+static void hk_pairings_store_entry_add(hk_pairing_store_pair *entry, hk_mem *data)
+{
+    //append id size
+    hk_mem_append_buffer(data, &entry->id_length, sizeof(size_t));
+    //append key size
+    hk_mem_append_buffer(data, &entry->key_length, sizeof(size_t));
+    //append is admin value
+    hk_mem_append_buffer(data, &entry->is_admin, sizeof(bool));
+    //append id
+    hk_mem_append_buffer(data, (void *)entry->id, entry->id_length);
+    //append key
+    hk_mem_append_buffer(data, (void *)entry->key, entry->key_length);
 }
 
-void hk_pairings_store_set(cJSON *j_root)
+static void hk_pairings_store_entry_update(hk_pairing_store_pair *entry, char *data)
 {
-    char *serialized = cJSON_PrintUnformatted(j_root);
-    hk_mem *pairings = hk_mem_init();
-    hk_mem_append_string(pairings, (const char *)serialized);
-    hk_store_pairings_set(pairings);
-
-    free(serialized);
-    hk_mem_free(pairings);
+    entry->id_length = (size_t)data[0];
+    entry->key_length = (size_t)data[sizeof(size_t)];
+    entry->is_admin = (bool)data[sizeof(size_t) * 2];
+    entry->id = data + 2 * sizeof(size_t) + sizeof(bool);
+    entry->key = data + 2 * sizeof(size_t) + sizeof(bool) + entry->id_length;
+    entry->length = 2 * sizeof(size_t) + sizeof(bool) + entry->id_length + entry->key_length;
 }
 
-cJSON *hk_pairings_store_get_j_pairings_array(cJSON *j_root)
+static esp_err_t hk_pairings_store_entry_get(hk_pairing_store_pair *entry, hk_mem *data, hk_mem *device_id)
 {
-    cJSON *j_pairings = NULL;
-    if (!cJSON_HasObjectItem(j_root, HK_PAIRINGS_STORE_PAIRINGS))
+    esp_err_t ret = ESP_ERR_NOT_FOUND;
+    const char *device_id_str = hk_mem_get_str(device_id);
+
+    if (data->size > 0)
     {
-        j_pairings = cJSON_CreateArray();
-        cJSON_AddItemToObject(j_root, HK_PAIRINGS_STORE_PAIRINGS, j_pairings);
-    }
-    else
-    {
-        j_pairings = cJSON_GetObjectItem(j_root, HK_PAIRINGS_STORE_PAIRINGS);
-    }
-
-    if (j_pairings == NULL)
-    {
-        HK_LOGE("Could not get/create array of pairings.");
-    }
-
-    return j_pairings;
-}
-
-void hk_pairings_store_add(hk_mem *device_id, hk_mem *device_ltpk, bool is_admin)
-{
-    cJSON *j_root = hk_pairings_store_get();
-    cJSON *j_pairings = hk_pairings_store_get_j_pairings_array(j_root);
-
-    cJSON *j_pairing = cJSON_CreateObject();
-
-    char* str = hk_mem_get_str(device_id);
-    HK_LOGV("Adding pairing for device '%s'.", str);
-    cJSON_AddItemToObject(j_pairing, HK_PAIRINGS_STORE_DEVICE_ID, cJSON_CreateString(str));
-    free(str);
-
-    str = hk_mem_get_str(device_ltpk);
-    cJSON_AddItemToObject(j_pairing, HK_PAIRINGS_STORE_DEVICE_LTPK, cJSON_CreateString(str));
-    free(str);
-
-    cJSON_AddItemToObject(j_pairing, HK_PAIRINGS_STORE_IS_ADMIN, cJSON_CreateBool(is_admin));
-    
-    cJSON_AddItemToArray(j_pairings, j_pairing);
-
-    hk_pairings_store_set(j_root);
-
-    cJSON_Delete(j_root);
-}
-
-esp_err_t hk_pairings_store_device_exists(hk_mem *device_id)
-{
-    cJSON *j_root = hk_pairings_store_get();
-    cJSON *j_pairings = hk_pairings_store_get_j_pairings_array(j_root);
-
-    esp_err_t ret = ESP_ERR_NOT_FOUND;;
-
-    cJSON *j_pairing = j_pairings->child;
-    while (j_pairing)
-    {
-        if (cJSON_HasObjectItem(j_pairing, HK_PAIRINGS_STORE_DEVICE_ID))
+        for (size_t data_read = 0; data_read < data->size;)
         {
-            cJSON *j_device_id = cJSON_GetObjectItem(j_pairing, HK_PAIRINGS_STORE_DEVICE_ID);
-
-            if (memcmp(j_device_id->valuestring, device_id->ptr, device_id->size) == 0)
+            hk_pairings_store_entry_update(entry, data->ptr + data_read);
+            if (strcmp(device_id_str, strndup(entry->id, entry->id_length)) == 0)
             {
                 ret = ESP_OK;
-                j_pairing = NULL;
+                break;
             }
-        }
-        else
-        {
-            HK_LOGW("Found pairing without device id?");
-        }
 
-        if (j_pairing != NULL)
-        {
-            j_pairing = j_pairing->next;
+            data_read += entry->length;
         }
     }
+    
+    return ret;
+}
 
-    cJSON_Delete(j_root);
+esp_err_t hk_pairings_store_add(hk_mem *device_id, hk_mem *device_ltpk, bool is_admin)
+{
+    hk_mem *data = hk_mem_init();
+    hk_pairing_store_pair *entry = (hk_pairing_store_pair *)malloc(sizeof(hk_pairing_store_pair));
+
+    hk_store_pairings_get(data);
+    entry->id_length = device_id->size;
+    entry->key_length = device_ltpk->size;
+    entry->is_admin = is_admin;
+    entry->id = device_id->ptr;
+    entry->key = device_ltpk->ptr;
+    hk_pairings_store_entry_add(entry, data);
+    hk_store_pairings_set(data);
+    hk_mem_free(data);
+    free(entry);
+
+    return ESP_OK;
+}
+
+esp_err_t hk_pairings_store_device_exists(hk_mem *device_id, bool *exists)
+{
+    hk_mem *data = hk_mem_init();
+    hk_pairing_store_pair *entry = (hk_pairing_store_pair *)malloc(sizeof(hk_pairing_store_pair));
+
+    hk_store_pairings_get(data);
+    esp_err_t ret = hk_pairings_store_entry_get(entry, data, device_id);
+    if (!ret)
+    {
+        *exists = true;
+    }
+    else if (ret == ESP_ERR_NOT_FOUND)
+    {
+        *exists = false;
+        ret = ESP_OK;
+    }
+
+    hk_mem_free(data);
+    free(entry);
 
     return ret;
 }
 
 esp_err_t hk_pairings_store_ltpk_get(hk_mem *device_id, hk_mem *device_ltpk)
 {
-    cJSON *j_root = hk_pairings_store_get();
-    cJSON *j_pairings = hk_pairings_store_get_j_pairings_array(j_root);
+    hk_mem *data = hk_mem_init();
+    hk_pairing_store_pair *entry = (hk_pairing_store_pair *)malloc(sizeof(hk_pairing_store_pair));
 
-    esp_err_t ret = HK_RES_UNKNOWN;
-
-    cJSON *j_pairing = j_pairings->child;
-    while (j_pairing)
+    hk_store_pairings_get(data);
+    esp_err_t ret = hk_pairings_store_entry_get(entry, data, device_id);
+    if (!ret)
     {
-        if (cJSON_HasObjectItem(j_pairing, HK_PAIRINGS_STORE_DEVICE_ID))
-        {
-            cJSON *j_device_id = cJSON_GetObjectItem(j_pairing, HK_PAIRINGS_STORE_DEVICE_ID);
-
-            if (memcmp(j_device_id->valuestring, device_id->ptr, device_id->size) == 0)
-            {
-                cJSON *j_device_ltpk = cJSON_GetObjectItem(j_pairing, HK_PAIRINGS_STORE_DEVICE_LTPK);
-                hk_mem_append_string(device_ltpk, j_device_ltpk->valuestring);
-                ret = HK_RES_OK;
-                j_pairing = NULL;
-            }
-        }
-        else
-        {
-            HK_LOGW("Found pairing without device id?");
-        }
-
-        if (j_pairing != NULL)
-        {
-            j_pairing = j_pairing->next;
-        }
+        hk_mem_append_buffer(device_ltpk, (void *)entry->key, entry->key_length);
     }
 
-    cJSON_Delete(j_root);
-
-    if (ret != HK_RES_OK)
-    {
-        char* id_str =  hk_mem_get_str(device_id);
-        HK_LOGE("A long term public key was not found for device id %s", id_str);
-        free(id_str);
-    }
+    hk_mem_free(data);
+    free(entry);
 
     return ret;
 }
 
-void hk_pairings_store_remove(hk_mem *device_id)
+esp_err_t hk_pairings_store_remove(hk_mem *device_id)
 {
-    cJSON *j_root = hk_pairings_store_get();
-    cJSON *j_pairings = hk_pairings_store_get_j_pairings_array(j_root);
-    cJSON *j_pairing = j_pairings->child;
+    hk_mem *data = hk_mem_init();
+    hk_mem *new_data = hk_mem_init();
+    hk_pairing_store_pair *entry = (hk_pairing_store_pair *)malloc(sizeof(hk_pairing_store_pair));
+    esp_err_t ret = ESP_ERR_NOT_FOUND;
+    const char *device_id_str = hk_mem_get_str(device_id);
 
-    while (j_pairing)
+    hk_store_pairings_get(data);
+
+    if (data->size > 0)
     {
-        if (cJSON_HasObjectItem(j_pairing, HK_PAIRINGS_STORE_DEVICE_ID))
+        for (size_t data_read = 0; data_read < data->size;)
         {
-            cJSON *j_device_id = cJSON_GetObjectItem(j_pairing, HK_PAIRINGS_STORE_DEVICE_ID);
-            if (memcmp(j_device_id->valuestring, device_id->ptr, device_id->size) == 0)
+            hk_pairings_store_entry_update(entry, data->ptr + data_read);
+            if (strcmp(device_id_str, entry->id))
             {
-                HK_LOGD("Deleting pairing for device '%s'.", j_device_id->valuestring);
-                cJSON_DetachItemViaPointer(j_pairings, j_pairing);
-                cJSON_Delete(j_pairing);
-                j_pairing = NULL;
+                ret = ESP_OK;
             }
-        }
-        else
-        {
-            HK_LOGW("Found pairing without device id?");
-        }
-
-        if (j_pairing != NULL)
-        {
-            j_pairing = j_pairing->next;
-        }
-    }
-
-    hk_pairings_store_set(j_root);
-    cJSON_Delete(j_root);
-}
-
-bool hk_pairings_store_is_admin(hk_mem *device_id)
-{
-    cJSON *j_root = hk_pairings_store_get();
-    cJSON *j_pairings = hk_pairings_store_get_j_pairings_array(j_root);
-
-    bool is_admin = false;
-
-    cJSON *j_pairing = j_pairings->child;
-    while (j_pairing)
-    {
-        if (cJSON_HasObjectItem(j_pairing, HK_PAIRINGS_STORE_DEVICE_ID))
-        {
-            cJSON *j_device_id = cJSON_GetObjectItem(j_pairing, HK_PAIRINGS_STORE_DEVICE_ID);
-
-            if (memcmp(j_device_id->valuestring, device_id->ptr, device_id->size) == 0)
+            else
             {
-                cJSON *j_is_admin = cJSON_GetObjectItem(j_pairing, HK_PAIRINGS_STORE_IS_ADMIN);
-                if (cJSON_IsTrue(j_is_admin))
-                {
-                    is_admin = true;
-                    j_pairing = NULL;
-                }
+                hk_pairings_store_entry_add(entry, new_data);
             }
-        }
-        else
-        {
-            HK_LOGW("Found pairing without device id?");
-        }
-
-        if (j_pairing != NULL)
-        {
-            j_pairing = j_pairing->next;
+            data_read += entry->length;
         }
     }
 
-    cJSON_Delete(j_root);
+    hk_mem_free(data);
+    hk_mem_free(new_data);
+    free(entry);
 
-    return is_admin;
+    return ret;
 }
 
-bool hk_pairings_store_has_admin_pairing()
+esp_err_t hk_pairings_store_is_admin(hk_mem *device_id, bool *is_admin)
 {
-    cJSON *j_root = hk_pairings_store_get();
-    cJSON *j_pairings = hk_pairings_store_get_j_pairings_array(j_root);
-    cJSON *j_pairing = j_pairings->child;
+    hk_mem *data = hk_mem_init();
+    hk_pairing_store_pair *entry = (hk_pairing_store_pair *)malloc(sizeof(hk_pairing_store_pair));
 
-    bool admin_found = false;
-    while (j_pairing)
+    *is_admin = false;
+    hk_store_pairings_get(data);
+    esp_err_t ret = hk_pairings_store_entry_get(entry, data, device_id);
+    if (!ret)
     {
-        cJSON *j_is_admin = cJSON_GetObjectItem(j_pairing, HK_PAIRINGS_STORE_IS_ADMIN);
-        if (cJSON_IsTrue(j_is_admin))
-        {
-            admin_found = true;
-            j_pairing = NULL;
-        }
-        else
-        {
-            j_pairing = j_pairing->next;
-        }
+        *is_admin = entry->is_admin;
     }
 
-    cJSON_Delete(j_root);
+    hk_mem_free(data);
+    free(entry);
 
-    return admin_found;
+    return ret;
 }
 
-bool hk_pairings_store_has_pairing()
+esp_err_t hk_pairings_store_has_admin_pairing(bool *is_admin)
 {
-    cJSON *j_root = hk_pairings_store_get();
-    cJSON *j_pairings = hk_pairings_store_get_j_pairings_array(j_root);
-    cJSON *j_pairing = j_pairings->child;
+    hk_mem *data = hk_mem_init();
+    hk_pairing_store_pair *entry = (hk_pairing_store_pair *)malloc(sizeof(hk_pairing_store_pair));
+    esp_err_t ret = ESP_OK;
 
-    bool found = false;
-    while (j_pairing)
+    *is_admin = false;
+    hk_store_pairings_get(data);
+    if (data->size > 0)
     {
-        found = true;
-        break;
+        for (size_t data_read = 0; data_read < data->size;)
+        {
+            hk_pairings_store_entry_update(entry, data->ptr + data_read);
+            if (entry->is_admin)
+            {
+                *is_admin = true;
+                break;
+            }
+            data_read += entry->length;
+        }
     }
 
-    cJSON_Delete(j_root);
+    hk_mem_free(data);
+    free(entry);
 
-    return found;
+    return ret;
 }
 
-void hk_pairings_store_remove_all()
+esp_err_t hk_pairings_store_has_pairing(bool *is_admin)
 {
-    cJSON *j_root = cJSON_CreateObject();
-    cJSON *j_pairings = cJSON_CreateArray();
-    cJSON_AddItemToObject(j_root, HK_PAIRINGS_STORE_PAIRINGS, j_pairings);
+    hk_mem *data = hk_mem_init();
+    esp_err_t ret = ESP_OK;
 
-    hk_pairings_store_set(j_root);
-    cJSON_Delete(j_root);
+    hk_store_pairings_get(data);
+    *is_admin = data->size > 0;
+
+    hk_mem_free(data);
+
+    return ret;
+}
+
+esp_err_t hk_pairings_store_remove_all()
+{
+    hk_store_pairings_remove();
+
+    return ESP_OK;
 }
 
 esp_err_t hk_pairings_store_list()
 {
-    esp_err_t ret = ESP_OK;
+    esp_err_t ret = ESP_FAIL;
     HK_LOGW("List pairings not implemented.");
     return ret;
 }
 
-void hk_pairings_log_devices()
+esp_err_t hk_pairings_log_devices()
 {
-    cJSON *j_root = hk_pairings_store_get();
-    cJSON *j_pairings = hk_pairings_store_get_j_pairings_array(j_root);
-    cJSON *j_pairing = j_pairings->child;
+    hk_mem *data = hk_mem_init();
+    hk_pairing_store_pair *entry = (hk_pairing_store_pair *)malloc(sizeof(hk_pairing_store_pair));
+    esp_err_t ret = ESP_OK;
 
-    HK_LOGD("We are coupled with the following devices:");
-    while (j_pairing)
+    hk_store_pairings_get(data);
+    if (data->size > 0)
     {
-        cJSON *j_device_id = cJSON_GetObjectItem(j_pairing, HK_PAIRINGS_STORE_DEVICE_ID);
-        HK_LOGD("   %s", j_device_id->valuestring);
+        for (size_t data_read = 0; data_read < data->size;)
+        {
+            hk_pairings_store_entry_update(entry, data->ptr + data_read);
 
-        j_pairing = j_pairing->next;
+            HK_LOGD("   %s", entry->id);
+            data_read += entry->length;
+        }
     }
 
-    cJSON_Delete(j_root);
+    hk_mem_free(data);
+    free(entry);
+
+    return ret;
 }

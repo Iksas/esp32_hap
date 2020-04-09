@@ -14,28 +14,12 @@ nvs_handle hk_store_handle;
 const char *hk_store_name = "hk_store";
 const char *hk_store_code;
 
-void hk_store_bool_set(const char *key, bool value)
+static void hk_store_uint8_t_set(const char *key, uint8_t value)
 {
     ESP_ERROR_CHECK(nvs_set_u8(hk_store_handle, key, value));
 }
 
-esp_err_t hk_store_bool_get(const char *key, bool *value)
-{
-    esp_err_t ret = nvs_get_u8(hk_store_handle, key, (uint8_t *)value);
-    if (ret != ESP_ERR_NVS_NOT_FOUND)
-    {
-        ESP_ERROR_CHECK(ret);
-    }
-
-    return ret;
-}
-
-void hk_store_uint8_t_set(const char *key, uint8_t value)
-{
-    ESP_ERROR_CHECK(nvs_set_u8(hk_store_handle, key, value));
-}
-
-esp_err_t hk_store_uint8_t_get(const char *key, uint8_t *value)
+static esp_err_t hk_store_uint8_t_get(const char *key, uint8_t *value)
 {
     esp_err_t ret = nvs_get_u8(hk_store_handle, key, value);
     if (ret != ESP_ERR_NVS_NOT_FOUND)
@@ -46,7 +30,7 @@ esp_err_t hk_store_uint8_t_get(const char *key, uint8_t *value)
     return ret;
 }
 
-void hk_store_blob_get(const char *key, hk_mem *value)
+static void hk_store_blob_get(const char *key, hk_mem *value)
 {
     size_t required_size;
     ESP_ERROR_CHECK(nvs_get_blob(hk_store_handle, key, NULL, &required_size));
@@ -55,7 +39,7 @@ void hk_store_blob_get(const char *key, hk_mem *value)
     ESP_ERROR_CHECK(nvs_get_blob(hk_store_handle, key, value->ptr, &required_size));
 }
 
-void hk_store_blob_set(const char *key, hk_mem *value)
+static void hk_store_blob_set(const char *key, hk_mem *value)
 {
     ESP_ERROR_CHECK(nvs_set_blob(hk_store_handle, key, value->ptr, value->size));
 }
@@ -88,6 +72,20 @@ void hk_store_key_pub_set(hk_mem *value)
     hk_store_blob_set(HK_STORE_ACC_PUB_KEY, value);
 }
 
+void hk_store_pairings_remove()
+{
+    size_t used_entries = -1;
+    esp_err_t ret = nvs_get_used_entry_count(hk_store_handle, &used_entries);
+    if (ret == ESP_OK && used_entries > 1)
+    {
+        ESP_ERROR_CHECK(nvs_erase_key(hk_store_handle, HK_STORE_PAIRINGS));
+    }
+    else
+    {
+        ESP_ERROR_CHECK(ret);
+    }
+}
+
 void hk_store_pairings_get(hk_mem *pairings)
 {
     size_t required_size;
@@ -95,11 +93,6 @@ void hk_store_pairings_get(hk_mem *pairings)
     {
         hk_mem_set(pairings, required_size);
         ESP_ERROR_CHECK(nvs_get_blob(hk_store_handle, HK_STORE_PAIRINGS, pairings->ptr, &required_size));
-    }
-    else
-    {
-        hk_mem_append_string(pairings, "{}");
-        hk_mem_append_string_terminator(pairings);
     }
 }
 
@@ -121,7 +114,7 @@ void hk_store_code_set(const char *code)
 uint8_t hk_store_configuration_get()
 {
     uint8_t value;
-    hk_store_uint8_t_get(HK_STORE_CONFIGURATION , &value);
+    hk_store_uint8_t_get(HK_STORE_CONFIGURATION, &value);
     return value;
 }
 
@@ -130,7 +123,7 @@ void hk_store_configuration_set(uint8_t configuration)
     hk_store_uint8_t_set(HK_STORE_CONFIGURATION, configuration);
 }
 
-size_t hk_store_init()
+esp_err_t hk_store_init()
 {
     HK_LOGD("Initializing key value store.");
     esp_err_t err = nvs_flash_init();
@@ -155,12 +148,16 @@ size_t hk_store_init()
     else if (err)
     {
         HK_LOGEE(err);
-        return err;
     }
 
-    //HK_LOGW("Erasing store.");
-    //ESP_ERROR_CHECK(nvs_flash_erase());
-    ESP_ERROR_CHECK(nvs_open(hk_store_name, NVS_READWRITE, &hk_store_handle));
+    if (!err)
+    {
+        err = nvs_open(hk_store_name, NVS_READWRITE, &hk_store_handle);
+    }
+    else
+    {
+        HK_LOGEE(err);
+    }
 
     return err;
 }

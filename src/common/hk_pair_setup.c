@@ -120,7 +120,7 @@ esp_err_t hk_pairing_setup_exchange_response_verification(hk_tlv_t *tlv, hk_mem 
     hk_mem *device_info = hk_mem_init();
     hk_mem *device_x = hk_mem_init();
     hk_tlv_t *tlv_data_decrypted = NULL;
-    hk_ed25519_key_t *device_key = hk_ed25519_init_key();
+    hk_ed25519_key_t *device_key = hk_ed25519_init();
 
     ret = hk_tlv_get_mem_by_type(tlv, HK_PAIR_TLV_ENCRYPTEDDATA, encrypted_data);
 
@@ -155,7 +155,7 @@ esp_err_t hk_pairing_setup_exchange_response_verification(hk_tlv_t *tlv, hk_mem 
         hk_mem_append(device_info, device_x);
         hk_mem_append(device_info, device_id);
         hk_mem_append(device_info, device_ltpk);
-        ret = hk_ed25519_verify(device_key, device_info, device_signature);
+        ret = hk_ed25519_verify(device_key, device_signature, device_info);
     }
 
     if (!ret)
@@ -170,7 +170,7 @@ esp_err_t hk_pairing_setup_exchange_response_verification(hk_tlv_t *tlv, hk_mem 
     hk_mem_free(device_signature);
     hk_mem_free(device_info);
     hk_mem_free(device_x);
-    hk_ed25519_free_key(device_key);
+    hk_ed25519_free(device_key);
     hk_srp_free_key(hk_pair_setup_srp_key);
 
     return ret;
@@ -179,7 +179,7 @@ esp_err_t hk_pairing_setup_exchange_response_verification(hk_tlv_t *tlv, hk_mem 
 esp_err_t hk_pairing_setup_exchange_response_generation(hk_mem *result, hk_mem *shared_secret, hk_mem *srp_private_key)
 {
     esp_err_t ret = ESP_OK;
-    hk_ed25519_key_t *accessory_key = hk_ed25519_init_key();
+    hk_ed25519_key_t *accessory_key = hk_ed25519_init();
     hk_mem *accessory_public_key = hk_mem_init();
     hk_mem *accessory_private_key = hk_mem_init();
     hk_mem *accessory_info = hk_mem_init();
@@ -248,7 +248,7 @@ esp_err_t hk_pairing_setup_exchange_response_generation(hk_mem *result, hk_mem *
     hk_mem_free(accessory_signature);
     hk_mem_free(sub_result);
     hk_mem_free(encrypted);
-    hk_ed25519_free_key(accessory_key);
+    hk_ed25519_free(accessory_key);
 
     return ret;
 }

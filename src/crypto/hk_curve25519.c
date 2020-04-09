@@ -6,7 +6,7 @@
 #include <wolfssl/wolfcrypt/settings.h>
 #include <wolfssl/wolfcrypt/curve25519.h>
 
-hk_curve25519_key_t *hk_curve25519_init_key()
+hk_curve25519_key_t *hk_curve25519_init()
 {
     hk_curve25519_key_t *key = malloc(sizeof(hk_curve25519_key_t));
     key->internal = malloc(sizeof(curve25519_key));
@@ -81,7 +81,7 @@ size_t hk_curve25519_export_public_key(hk_curve25519_key_t *key, hk_mem *public_
     return ret;
 }
 
-void hk_curve25519_free_key(hk_curve25519_key_t *key)
+void hk_curve25519_free(hk_curve25519_key_t *key)
 {
     if (key->internal != NULL)
     {

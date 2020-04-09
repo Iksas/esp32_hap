@@ -18,10 +18,14 @@ esp_err_t hk_pairings_remove(hk_tlv_t *tlv_data, hk_mem *result)
     esp_err_t ret = hk_tlv_get_mem_by_type(tlv_data, HK_PAIR_TLV_IDENTIFIER, device_id);
     if (!ret)
     {
-        if (hk_pairings_store_is_admin(device_id))
+        bool is_admin;
+        hk_pairings_store_is_admin(device_id, &is_admin);
+        if (is_admin)
         {
             hk_pairings_store_remove(device_id);
-            if (!hk_pairings_store_has_admin_pairing())
+            bool has_admin_pairing = false;
+            hk_pairings_store_has_admin_pairing(&has_admin_pairing);
+            if (!has_admin_pairing)
             {
                 HK_LOGD("Removing all pairings, because no further admin pairing.");
                 hk_pairings_store_remove_all();

@@ -62,9 +62,19 @@ void hk_mem_set(hk_mem *mem, size_t size)
 
 void hk_mem_free(hk_mem *mem)
 {
-    free(mem->ptr);
-    mem->ptr = NULL;
-    free(mem);
+    if (mem != NULL)
+    {
+        if (mem->ptr != NULL)
+        {
+            free(mem->ptr);
+            mem->ptr = NULL;
+        }
+        free(mem);
+    }
+    else
+    {
+        HK_LOGW("Memory was freed before or was never initialized.");
+    }
 }
 
 char *hk_mem_get_str(hk_mem *mem)
