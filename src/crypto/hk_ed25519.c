@@ -1,6 +1,6 @@
 #include "hk_ed25519.h"
 #include "../utils/hk_res.h"
-#include "hk_crypto_logging.h"
+#include "hk_crypto_util.h"
 
 #define WOLFSSL_USER_SETTINGS
 #include <wolfssl/wolfcrypt/settings.h>

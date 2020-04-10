@@ -1,5 +1,5 @@
 #include "hk_chacha20poly1305.h"
-#include "hk_crypto_logging.h"
+#include "hk_crypto_util.h"
 #include "../utils/hk_logging.h"
 #include "../include/hk_mem.h"
 

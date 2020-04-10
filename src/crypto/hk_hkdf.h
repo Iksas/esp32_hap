@@ -1,7 +1,8 @@
 #pragma once
 
-#include "../include/hk_mem.h"
+#include <esp_err.h>
 
+#include "../include/hk_mem.h"
 
 #define HK_HKDF_PAIR_SETUP_ENCRYPT_SALT "Pair-Setup-Encrypt-Salt"
 #define HK_HKDF_PAIR_SETUP_ENCRYPT_INFO "Pair-Setup-Encrypt-Info"
@@ -23,6 +24,6 @@
 #define HK_HKDF_CONTROL_WRITE_INFO "Control-Write-Encryption-Key"
 #define HK_HKDF_BROADCAST_ENCRYPTION_KEY_INFO "Broadcast-Encryption-Key"
 
-size_t hk_hkdf(hk_mem *key_in, hk_mem* key_out, const char* salt, const char* info);
-size_t hk_hkdf_with_given_size(hk_mem *key_in, hk_mem* key_out, size_t size, const char* salt, const char* info);
-size_t hk_hkdf_with_external_salt(hk_mem *key_in, hk_mem *key_out, hk_mem *salt, const char* info);
+esp_err_t hk_hkdf(hk_mem *key_in, hk_mem* key_out, const char* salt, const char* info);
+esp_err_t hk_hkdf_with_given_size(hk_mem *key_in, hk_mem* key_out, size_t size, const char* salt, const char* info);
+esp_err_t hk_hkdf_with_external_salt(hk_mem *key_in, hk_mem *key_out, hk_mem *salt, const char* info);

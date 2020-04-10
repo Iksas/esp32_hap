@@ -1,5 +1,5 @@
 #include "hk_srp.h"
-#include "hk_crypto_logging.h"
+#include "hk_crypto_util.h"
 #include "../utils/hk_logging.h"
 
 #define WOLFSSL_USER_SETTINGS

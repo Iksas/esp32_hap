@@ -1,5 +1,5 @@
 #include "hk_hkdf.h"
-#include "hk_crypto_logging.h"
+#include "hk_crypto_util.h"
 #include "../utils/hk_logging.h"
 
 #define WOLFSSL_USER_SETTINGS
@@ -15,30 +15,24 @@ esp_err_t static hk_hkdf_internal(
     const char *info, size_t info_length)
 {
     HK_LOGV("Deriving an encrption key with salt/info: %s %s", salt, info);
-    int ret = wc_HKDF(
+
+    int ret = 0;
+    HK_CRYPTO_RUN_AND_CHECK(ret, wc_HKDF,
         SHA512,
         (byte *)key_in, key_in_length,
         (byte *)salt, salt_length,
         (byte *)info, info_length,
         (byte *)key_out, key_out_length);
 
-    if (ret != 0)
-    {
-        HK_CRYPOT_ERR("Error deriving key", ret);
-        return ESP_FAIL;
-    }
-    else
-    {
-        return ESP_OK;
-    }
+    return ret ? ESP_FAIL : ESP_OK;
 }
 
-size_t hk_hkdf(hk_mem *key_in, hk_mem *key_out, const char* salt, const char* info)
+esp_err_t hk_hkdf(hk_mem *key_in, hk_mem *key_out, const char* salt, const char* info)
 {
     return hk_hkdf_with_given_size(key_in, key_out, 32, salt, info);
 }
 
-size_t hk_hkdf_with_given_size(hk_mem *key_in, hk_mem *key_out, size_t size, const char* salt, const char* info)
+esp_err_t hk_hkdf_with_given_size(hk_mem *key_in, hk_mem *key_out, size_t size, const char* salt, const char* info)
 {
     hk_mem_set(key_out, size);
 
@@ -49,7 +43,7 @@ size_t hk_hkdf_with_given_size(hk_mem *key_in, hk_mem *key_out, size_t size, con
         info, strlen(info));
 }
 
-size_t hk_hkdf_with_external_salt(hk_mem *key_in, hk_mem *key_out, hk_mem *salt, const char* info)
+esp_err_t hk_hkdf_with_external_salt(hk_mem *key_in, hk_mem *key_out, hk_mem *salt, const char* info)
 {
     hk_mem_set(key_out, 32);
     
