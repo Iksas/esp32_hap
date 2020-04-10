@@ -68,9 +68,9 @@ esp_err_t hk_pair_verify_start(hk_pair_verify_keys_t *keys, hk_tlv_t *request_tl
 {
     HK_LOGD("Now running pair verify start.");
     esp_err_t ret = ESP_OK;
-    hk_ed25519_key_t *accessory_key = hk_ed25519_init();
-    hk_curve25519_key_t *accessory_curve = hk_curve25519_init();
-    hk_curve25519_key_t *device_curve = hk_curve25519_init();
+    hk_ed25519_key_t *accessory_long_term_key = hk_ed25519_init();
+    hk_curve25519_key_t *accessory_session_key = hk_curve25519_init();
+    hk_curve25519_key_t *device_session_key = hk_curve25519_init();
     hk_mem *accessory_info = hk_mem_init();
     hk_mem *accessory_id = hk_mem_init();
     hk_mem *accessory_signature = hk_mem_init();
@@ -78,13 +78,13 @@ esp_err_t hk_pair_verify_start(hk_pair_verify_keys_t *keys, hk_tlv_t *request_tl
     hk_mem *accessory_private_key = hk_mem_init();
     hk_mem *sub_result = hk_mem_init();
     hk_mem *encrypted = hk_mem_init();
-    hk_tlv_t *sub_tlv_data = NULL;
+    hk_tlv_t *response_sub_tlvs = NULL;
     hk_tlv_t *response_tlvs = NULL;
 
     hk_pair_verify_keys_reset(keys);
     keys->session_key = hk_mem_init();
-    keys->accessory_curve_public_key = hk_mem_init();
-    keys->device_curve_public_key = hk_mem_init();
+    keys->accessory_session_key_public = hk_mem_init();
+    keys->device_session_key_public = hk_mem_init();
 
     if (hk_store_keys_can_get())
     {
@@ -103,73 +103,39 @@ esp_err_t hk_pair_verify_start(hk_pair_verify_keys_t *keys, hk_tlv_t *request_tl
         ret = HK_RES_UNKNOWN;
     }
 
-    if (!ret)
-    {
-        ret = hk_tlv_get_mem_by_type(request_tlvs, HK_PAIR_TLV_PUBLICKEY, keys->device_curve_public_key);
-    }
-    
-    if (!ret)
-    {
-        ret = hk_curve25519_generate_key_from_public_key(keys->device_curve_public_key, device_curve);
-    }
-
-    if (!ret)
-    {
-        ret = hk_curve25519_generate_key(accessory_curve);
-    }
-
-    if (!ret)
-    {
-        ret = hk_curve25519_shared_secret(accessory_curve, device_curve, keys->shared_secret);
-    }
-
-    if (!ret)
-    {
-        ret = hk_curve25519_export_public_key(accessory_curve, keys->accessory_curve_public_key);
-    }
-
-    if (!ret)
-    {
-        ret = hk_ed25519_generate_key_from_keys(accessory_key, accessory_private_key, accessory_public_key);
-    }
+    RUN_AND_CHECK(ret, hk_tlv_get_mem_by_type, request_tlvs, HK_PAIR_TLV_PUBLICKEY, keys->device_session_key_public);
+    RUN_AND_CHECK(ret, hk_curve25519_update_from_public_key, keys->device_session_key_public, device_session_key);
+    RUN_AND_CHECK(ret, hk_curve25519_update_from_random, accessory_session_key);
+    RUN_AND_CHECK(ret, hk_curve25519_calculate_shared_secret, accessory_session_key, device_session_key, keys->shared_secret);
+    RUN_AND_CHECK(ret, hk_curve25519_export_public_key, accessory_session_key, keys->accessory_session_key_public);
+    RUN_AND_CHECK(ret, hk_ed25519_update_from_random_keys, accessory_long_term_key, accessory_private_key, accessory_public_key);
 
     if (!ret)
     {
         hk_util_get_accessory_id_serialized(accessory_id);
-        hk_mem_append(accessory_info, keys->accessory_curve_public_key);
+        hk_mem_append(accessory_info, keys->accessory_session_key_public);
         hk_mem_append(accessory_info, accessory_id);
-        hk_mem_append(accessory_info, keys->device_curve_public_key);
-
-        ret = hk_ed25519_sign(accessory_key, accessory_info, accessory_signature);
+        hk_mem_append(accessory_info, keys->device_session_key_public);
     }
+
+    RUN_AND_CHECK(ret, hk_ed25519_sign, accessory_long_term_key, accessory_info, accessory_signature);
 
     if (!ret)
     {
-        sub_tlv_data = hk_tlv_add(sub_tlv_data, HK_PAIR_TLV_IDENTIFIER, accessory_id);
-        sub_tlv_data = hk_tlv_add(sub_tlv_data, HK_PAIR_TLV_SIGNATURE, accessory_signature);
+        response_sub_tlvs = hk_tlv_add(response_sub_tlvs, HK_PAIR_TLV_IDENTIFIER, accessory_id);
+        response_sub_tlvs = hk_tlv_add(response_sub_tlvs, HK_PAIR_TLV_SIGNATURE, accessory_signature);
 
-        hk_tlv_serialize(sub_tlv_data, sub_result);
+        hk_tlv_serialize(response_sub_tlvs, sub_result);
     }
 
-    if (!ret)
-    {
-        ret = hk_hkdf(keys->shared_secret, keys->session_key, HK_HKDF_PAIR_VERIFY_ENCRYPT_SALT, HK_HKDF_PAIR_VERIFY_ENCRYPT_INFO);
-    }
-
-    if (!ret)
-    {
-        ret = hk_chacha20poly1305_encrypt(keys->session_key, HK_CHACHA_VERIFY_MSG2, sub_result, encrypted);
-    }
-
-    if (!ret)
-    {
-        ret = hk_create_session_security(keys);
-    }
+    RUN_AND_CHECK(ret, hk_hkdf, keys->shared_secret, keys->session_key, HK_HKDF_PAIR_VERIFY_ENCRYPT_SALT, HK_HKDF_PAIR_VERIFY_ENCRYPT_INFO);
+    RUN_AND_CHECK(ret, hk_chacha20poly1305_encrypt, keys->session_key, HK_CHACHA_VERIFY_MSG2, sub_result, encrypted);
+    RUN_AND_CHECK(ret, hk_create_session_security, keys);
 
     response_tlvs = hk_tlv_add_uint8(response_tlvs, HK_PAIR_TLV_STATE, HK_PAIR_TLV_STATE_M2);
     if (!ret)
     {
-        response_tlvs = hk_tlv_add(response_tlvs, HK_PAIR_TLV_PUBLICKEY, keys->accessory_curve_public_key); // there is an error in the specification, dont use the srp proof
+        response_tlvs = hk_tlv_add(response_tlvs, HK_PAIR_TLV_PUBLICKEY, keys->accessory_session_key_public); // there is an error in the specification, dont use the srp proof
         response_tlvs = hk_tlv_add(response_tlvs, HK_PAIR_TLV_ENCRYPTEDDATA, encrypted);
     }
     else
@@ -179,7 +145,7 @@ esp_err_t hk_pair_verify_start(hk_pair_verify_keys_t *keys, hk_tlv_t *request_tl
 
     *response_tlvs_ptr = response_tlvs;
 
-    hk_tlv_free(sub_tlv_data);
+    hk_tlv_free(response_sub_tlvs);
     hk_mem_free(accessory_info);
     hk_mem_free(accessory_id);
     hk_mem_free(accessory_signature);
@@ -187,9 +153,9 @@ esp_err_t hk_pair_verify_start(hk_pair_verify_keys_t *keys, hk_tlv_t *request_tl
     hk_mem_free(accessory_private_key);
     hk_mem_free(sub_result);
     hk_mem_free(encrypted);
-    hk_ed25519_free(accessory_key);
-    hk_curve25519_free(accessory_curve);
-    hk_curve25519_free(device_curve);
+    hk_ed25519_free(accessory_long_term_key);
+    hk_curve25519_free(accessory_session_key);
+    hk_curve25519_free(device_session_key);
 
     return ret;
 }
@@ -197,52 +163,39 @@ esp_err_t hk_pair_verify_start(hk_pair_verify_keys_t *keys, hk_tlv_t *request_tl
 esp_err_t hk_pair_verify_finish(hk_pair_verify_keys_t *keys, hk_tlv_t *request_tlvs, hk_tlv_t **response_tlvs_ptr)
 {
     HK_LOGD("Now running pair verify finish.");
-    hk_ed25519_key_t *device_key = hk_ed25519_init();
+    hk_ed25519_key_t *device_long_term_key = hk_ed25519_init();
+    hk_mem *device_long_term_key_public = hk_mem_init();
+    hk_mem *device_info = hk_mem_init();
+    hk_mem *device_id = hk_mem_init();
+
     hk_mem *encrypted_data = hk_mem_init();
     hk_mem *decrypted_data = hk_mem_init();
     hk_mem *device_signature = hk_mem_init();
-    hk_mem *device_public_key = hk_mem_init();
-    hk_mem *device_info = hk_mem_init();
-    hk_mem *device_id = hk_mem_init();
     hk_tlv_t *request_tlvs_decrypted = NULL;
     hk_tlv_t *response_tlvs = NULL;
 
     esp_err_t ret = hk_tlv_get_mem_by_type(request_tlvs, HK_PAIR_TLV_ENCRYPTEDDATA, encrypted_data);
 
+    RUN_AND_CHECK(ret, hk_chacha20poly1305_decrypt, keys->session_key, HK_CHACHA_VERIFY_MSG3, encrypted_data, decrypted_data);
+
     if (!ret)
     {
-        HK_LOGV("Decrypting pairing request.");
-        hk_chacha20poly1305_decrypt(keys->session_key, HK_CHACHA_VERIFY_MSG3, encrypted_data, decrypted_data);
         request_tlvs_decrypted = hk_tlv_deserialize(decrypted_data);
-        ret = hk_tlv_get_mem_by_type(request_tlvs_decrypted, HK_PAIR_TLV_IDENTIFIER, device_id);
     }
+
+    RUN_AND_CHECK(ret, hk_tlv_get_mem_by_type, request_tlvs_decrypted, HK_PAIR_TLV_IDENTIFIER, device_id);
+    RUN_AND_CHECK(ret, hk_tlv_get_mem_by_type, request_tlvs_decrypted, HK_PAIR_TLV_SIGNATURE, device_signature);
+    RUN_AND_CHECK(ret, hk_pairings_store_ltpk_get, device_id, device_long_term_key_public);
+    RUN_AND_CHECK(ret, hk_ed25519_update_from_random_from_public_key, device_long_term_key, device_long_term_key_public);
 
     if (!ret)
     {
-        HK_LOGV("Getting device signature.");
-        ret = hk_tlv_get_mem_by_type(request_tlvs_decrypted, HK_PAIR_TLV_SIGNATURE, device_signature);
-    }
-
-    if (!ret)
-    {
-        HK_LOGV("Getting long term public key.");
-        ret = hk_pairings_store_ltpk_get(device_id, device_public_key);
-    }
-
-    if (!ret)
-    {
-        HK_LOGV("Generating key.");
-        ret = hk_ed25519_generate_key_from_public_key(device_key, device_public_key);
-    }
-
-    if (!ret)
-    {
-        HK_LOGV("Verifying key.");
-        hk_mem_append(device_info, keys->device_curve_public_key);
+        hk_mem_append(device_info, keys->device_session_key_public);
         hk_mem_append(device_info, device_id);
-        hk_mem_append(device_info, keys->accessory_curve_public_key);
-        ret = hk_ed25519_verify(device_key, device_signature, device_info);
+        hk_mem_append(device_info, keys->accessory_session_key_public);
     }
+
+    RUN_AND_CHECK(ret, hk_ed25519_verify, device_long_term_key, device_signature, device_info);
 
     response_tlvs = hk_tlv_add_uint8(response_tlvs, HK_PAIR_TLV_STATE, HK_PAIR_TLV_STATE_M4);
     if (ret)
@@ -256,18 +209,18 @@ esp_err_t hk_pair_verify_finish(hk_pair_verify_keys_t *keys, hk_tlv_t *request_t
 
     *response_tlvs_ptr = response_tlvs;
 
-    hk_ed25519_free(device_key);
+    hk_ed25519_free(device_long_term_key);
     hk_tlv_free(request_tlvs_decrypted);
     hk_mem_free(device_info);
     hk_mem_free(encrypted_data);
     hk_mem_free(decrypted_data);
     hk_mem_free(device_signature);
-    hk_mem_free(device_public_key);
+    hk_mem_free(device_long_term_key_public);
     hk_mem_free(device_id);
 
     hk_mem_free(keys->session_key);
-    hk_mem_free(keys->accessory_curve_public_key);
-    hk_mem_free(keys->device_curve_public_key);
+    hk_mem_free(keys->accessory_session_key_public);
+    hk_mem_free(keys->device_session_key_public);
 
     return ret;
 }
@@ -279,15 +232,14 @@ esp_err_t hk_pair_verify_resume(hk_pair_verify_keys_t *keys, hk_tlv_t *request_t
     hk_mem *encrypted_data = hk_mem_init();
     hk_mem *decrypted_data = hk_mem_init();
     hk_mem_append_string(decrypted_data, "01234567890123456789012345678901");
-    hk_mem *device_curve_public_key = hk_mem_init();
+    hk_mem *device_session_key_public = hk_mem_init();
     hk_mem *salt = hk_mem_init();
     hk_tlv_t *response_tlvs = NULL;
     esp_err_t ret = ESP_OK;
 
     ret = hk_tlv_get_mem_by_type(request_tlvs, HK_PAIR_TLV_SESSIONID, session_id);
 
-    HK_LOGW("received session_id");
-    hk_mem_log("session_id", session_id);
+    HK_LOGW("received session_id: %s", hk_mem_get_str(session_id));
     hk_pair_verify_session_t *session = NULL;
     hk_ll_foreach(hk_pair_verify_sessions, s)
     {
@@ -310,8 +262,8 @@ esp_err_t hk_pair_verify_resume(hk_pair_verify_keys_t *keys, hk_tlv_t *request_t
 
     if (!ret)
     {
-        ret = hk_tlv_get_mem_by_type(request_tlvs, HK_PAIR_TLV_PUBLICKEY, device_curve_public_key);
-        hk_mem_log("device_curve_public_key", device_curve_public_key);
+        ret = hk_tlv_get_mem_by_type(request_tlvs, HK_PAIR_TLV_PUBLICKEY, device_session_key_public);
+        hk_mem_log("device_session_key_public", device_session_key_public);
     }
 
     if (!ret)
@@ -323,7 +275,7 @@ esp_err_t hk_pair_verify_resume(hk_pair_verify_keys_t *keys, hk_tlv_t *request_t
     if (!ret)
     {
         HK_LOGD("Deriving encryption key as device did.");
-        hk_mem_append(salt, device_curve_public_key);
+        hk_mem_append(salt, device_session_key_public);
         hk_mem_append(salt, session_id);
         hk_hkdf_with_external_salt(session->shared_secret, encryption_key, salt, HK_HKDF_PAIR_RESUME_REQUEST_INFO);
     }
@@ -351,7 +303,7 @@ esp_err_t hk_pair_verify_resume(hk_pair_verify_keys_t *keys, hk_tlv_t *request_t
         HK_LOGD("Deriving new encryption key with new session id.");
         hk_mem_set(salt, 0);
         hk_mem_set(encryption_key, 0);
-        hk_mem_append(salt, device_curve_public_key);
+        hk_mem_append(salt, device_session_key_public);
         hk_mem_append(salt, session->id);
         hk_mem_log("salt for response key", salt);
         hk_hkdf_with_external_salt(session->shared_secret, encryption_key, salt, HK_HKDF_PAIR_RESUME_RESPONSE_INFO);
@@ -401,7 +353,7 @@ esp_err_t hk_pair_verify_resume(hk_pair_verify_keys_t *keys, hk_tlv_t *request_t
     hk_mem_free(encryption_key);
     hk_mem_free(encrypted_data);
     hk_mem_free(decrypted_data);
-    hk_mem_free(device_curve_public_key);
+    hk_mem_free(device_session_key_public);
     hk_mem_free(salt);
 
     return ret;

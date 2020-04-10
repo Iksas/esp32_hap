@@ -5,7 +5,7 @@
 #include "../../common/hk_pair_setup.h"
 #include "../../common/hk_pair_verify.h"
 #include "../../common/hk_pairings.h"
-#include "../../common/hk_errors.h"
+#include "../../utils/hk_errors.h"
 #include "hk_connection_security.h"
 
 #include "../../utils/hk_logging.h"

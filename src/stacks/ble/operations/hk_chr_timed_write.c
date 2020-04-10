@@ -3,7 +3,7 @@
 #include <time.h>
 #include "../../../utils/hk_logging.h"
 #include "../../../utils/hk_tlv.h"
-#include "../../../common/hk_errors.h"
+#include "../../../utils/hk_errors.h"
 
 #include "../hk_formats_ble.h"
 

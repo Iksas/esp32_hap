@@ -25,7 +25,7 @@ TEST_CASE("hkdf", "[crypto] [hkdf]")
     esp_err_t ret = hk_hkdf(key_in, key_out, HK_HKDF_PAIR_SETUP_ACCESSORY_SALT, HK_HKDF_PAIR_SETUP_ACCESSORY_INFO);
 
     // assert
-    TEST_ASSERT_EQUAL(ret, ESP_OK);
+    TEST_ASSERT_EQUAL(ESP_OK, ret);
     TEST_ASSERT_TRUE(hk_mem_equal(key_out_expected, key_out));
 
     // clean

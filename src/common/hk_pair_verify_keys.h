@@ -11,8 +11,8 @@ typedef struct
 
     //the following variables are used during verification process, they are allocated and freed during it
     hk_mem *session_key;
-    hk_mem *accessory_curve_public_key;
-    hk_mem *device_curve_public_key;
+    hk_mem *accessory_session_key_public;
+    hk_mem *device_session_key_public;
 } hk_pair_verify_keys_t;
 
 hk_pair_verify_keys_t *hk_pair_verify_keys_init();

@@ -1,6 +1,7 @@
 #include "hk_logging.h"
 
 #include <stdio.h>
+#include "hk_errors.h"
 
 void hk_log_print_bytewise(const char *title, char *data, size_t size, bool formatted)
 {
@@ -16,9 +17,12 @@ void hk_log_print_bytewise(const char *title, char *data, size_t size, bool form
         {
             printf("\n");
         }
-        if(formatted){
+        if (formatted)
+        {
             printf("0x%02x, ", data[i]);
-        }else{
+        }
+        else
+        {
             printf("%02x", data[i]);
         }
     }

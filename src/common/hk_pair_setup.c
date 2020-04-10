@@ -145,7 +145,7 @@ esp_err_t hk_pairing_setup_exchange_response_verification(hk_tlv_t *tlv, hk_mem 
         ret = hk_tlv_get_mem_by_type(tlv_data_decrypted, HK_PAIR_TLV_SIGNATURE, device_signature);
 
     if (!ret)
-        ret = hk_ed25519_generate_key_from_public_key(device_key, device_ltpk);
+        ret = hk_ed25519_update_from_random_from_public_key(device_key, device_ltpk);
 
     if (!ret)
         ret = hk_hkdf(srp_private_key, device_x, HK_HKDF_PAIR_SETUP_CONTROLLER_SALT, HK_HKDF_PAIR_SETUP_CONTROLLER_INFO);
@@ -192,7 +192,7 @@ esp_err_t hk_pairing_setup_exchange_response_generation(hk_mem *result, hk_mem *
 
     if (!ret)
     {
-        ret = hk_ed25519_generate_key(accessory_key);
+        ret = hk_ed25519_update_from_random(accessory_key);
     }
 
     if (!ret)

@@ -19,8 +19,8 @@ TEST_CASE("Add first", "[pair] [store]")
     bool device_exists = false;
 
     // test
-    TEST_ASSERT_EQUAL(hk_pairings_store_add(device_id, device_ltpk, true), ESP_OK);
-    TEST_ASSERT_EQUAL(hk_pairings_store_device_exists(device_id, &device_exists), ESP_OK);
+    TEST_ASSERT_EQUAL(ESP_OK, hk_pairings_store_add(device_id, device_ltpk, true));
+    TEST_ASSERT_EQUAL(ESP_OK, hk_pairings_store_device_exists(device_id, &device_exists));
     TEST_ASSERT_TRUE(device_exists);
 
     // cleanup
@@ -41,8 +41,8 @@ TEST_CASE("Get ltpk", "[pair] [store]")
     hk_mem *device_ltpk_result = hk_mem_init();
 
     // test
-    TEST_ASSERT_EQUAL(hk_pairings_store_add(device_id, device_ltpk, true), ESP_OK);
-    TEST_ASSERT_EQUAL(hk_pairings_store_ltpk_get(device_id, device_ltpk_result), ESP_OK);
+    TEST_ASSERT_EQUAL(ESP_OK, hk_pairings_store_add(device_id, device_ltpk, true));
+    TEST_ASSERT_EQUAL(ESP_OK, hk_pairings_store_ltpk_get(device_id, device_ltpk_result));
     TEST_ASSERT_TRUE(hk_mem_equal(device_ltpk, device_ltpk_result));
 
     // cleanup
@@ -65,9 +65,9 @@ TEST_CASE("Remove pairing", "[pair] [store]")
     bool device_exists = false;
 
     // test
-    TEST_ASSERT_EQUAL(hk_pairings_store_add(device_id, device_ltpk, true), ESP_OK);
-    TEST_ASSERT_EQUAL(hk_pairings_store_remove(device_id), ESP_OK);
-    TEST_ASSERT_EQUAL(hk_pairings_store_device_exists(device_id, &device_exists), ESP_OK);
+    TEST_ASSERT_EQUAL(ESP_OK, hk_pairings_store_add(device_id, device_ltpk, true));
+    TEST_ASSERT_EQUAL(ESP_OK, hk_pairings_store_remove(device_id));
+    TEST_ASSERT_EQUAL(ESP_OK, hk_pairings_store_device_exists(device_id, &device_exists));
     TEST_ASSERT_TRUE(device_exists);
 
     // cleanup
@@ -93,11 +93,11 @@ TEST_CASE("hk_pairings_store_has_admin_pairing", "[pair] [store]")
     bool has_admin = true;
 
     // test
-    TEST_ASSERT_EQUAL(hk_pairings_store_add(device_id1, device_ltpk1, false), ESP_OK);
-    TEST_ASSERT_EQUAL(hk_pairings_store_has_admin_pairing(&has_admin), ESP_OK);
+    TEST_ASSERT_EQUAL(ESP_OK, hk_pairings_store_add(device_id1, device_ltpk1, false));
+    TEST_ASSERT_EQUAL(ESP_OK, hk_pairings_store_has_admin_pairing(&has_admin));
     TEST_ASSERT_FALSE(has_admin);
-    TEST_ASSERT_EQUAL(hk_pairings_store_add(device_id2, device_ltpk2, true), ESP_OK);
-    TEST_ASSERT_EQUAL(hk_pairings_store_has_admin_pairing(&has_admin), ESP_OK);
+    TEST_ASSERT_EQUAL(ESP_OK, hk_pairings_store_add(device_id2, device_ltpk2, true));
+    TEST_ASSERT_EQUAL(ESP_OK, hk_pairings_store_has_admin_pairing(&has_admin));
     TEST_ASSERT_TRUE(has_admin);
 
     // cleanup
@@ -124,11 +124,11 @@ TEST_CASE("hk_pairings_store_is_admin", "[pair] [store]")
     bool is_admin = true;
 
     // test
-    TEST_ASSERT_EQUAL(hk_pairings_store_add(device_id1, device_ltpk1, false), ESP_OK);
-    TEST_ASSERT_EQUAL(hk_pairings_store_is_admin(device_id1, &is_admin), ESP_OK);
+    TEST_ASSERT_EQUAL(ESP_OK, hk_pairings_store_add(device_id1, device_ltpk1, false));
+    TEST_ASSERT_EQUAL(ESP_OK, hk_pairings_store_is_admin(device_id1, &is_admin));
     TEST_ASSERT_FALSE(is_admin);
-    TEST_ASSERT_EQUAL(hk_pairings_store_add(device_id2, device_ltpk2, true), ESP_OK);
-    TEST_ASSERT_EQUAL(hk_pairings_store_is_admin(device_id2, &is_admin), ESP_OK);
+    TEST_ASSERT_EQUAL(ESP_OK, hk_pairings_store_add(device_id2, device_ltpk2, true));
+    TEST_ASSERT_EQUAL(ESP_OK, hk_pairings_store_is_admin(device_id2, &is_admin));
     TEST_ASSERT_TRUE(is_admin);
 
     // cleanup

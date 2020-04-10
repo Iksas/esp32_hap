@@ -5,7 +5,7 @@
 #include "../../../utils/hk_store.h"
 #include "../../../crypto/hk_hkdf.h"
 #include "../../../common/hk_global_state.h"
-#include "../../../common/hk_errors.h"
+#include "../../../utils/hk_errors.h"
 
 #include "../hk_formats_ble.h"
 #include "../hk_connection_security.h"

@@ -74,15 +74,11 @@ void hk_store_key_pub_set(hk_mem *value)
 
 void hk_store_pairings_remove()
 {
-    size_t used_entries = -1;
-    esp_err_t ret = nvs_get_used_entry_count(hk_store_handle, &used_entries);
-    if (ret == ESP_OK && used_entries > 1)
+    size_t required_size = -1;
+    esp_err_t ret = nvs_get_blob(hk_store_handle, HK_STORE_PAIRINGS, NULL, &required_size);
+    if (ret == ESP_OK && required_size > 0)
     {
         ESP_ERROR_CHECK(nvs_erase_key(hk_store_handle, HK_STORE_PAIRINGS));
-    }
-    else
-    {
-        ESP_ERROR_CHECK(ret);
     }
 }
 

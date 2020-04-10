@@ -9,7 +9,7 @@
 #include <stdbool.h>
 
 #include "host/ble_gatt.h"
-#include "../../common/hk_errors.h"
+#include "../../utils/hk_errors.h"
 #include "hk_connection.h"
 
 void hk_gatt_init();

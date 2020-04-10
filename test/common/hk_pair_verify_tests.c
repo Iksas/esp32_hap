@@ -13,6 +13,7 @@
 
 #include "hk_pair_verify_test_vectors.h"
 
+
 esp_err_t hk_pair_verify_start(hk_pair_verify_keys_t *keys, hk_tlv_t *request_tlvs, hk_tlv_t **response_tlvs_ptr);
 esp_err_t hk_pair_verify_finish(hk_pair_verify_keys_t *keys, hk_tlv_t *request_tlvs, hk_tlv_t **response_tlvs_ptr);
 void hk_pair_verify_device_m1(hk_tlv_t **response_tlvs_ptr, hk_curve25519_key_t *device_session_key);
@@ -27,11 +28,16 @@ TEST_CASE("verify once", "[pair] [verify]")
     hk_tlv_t *m3_tlvs = NULL;
     hk_tlv_t *m4_tlvs = NULL;
 
+    hk_tlv_t *m12_tlvs = NULL;
+    hk_tlv_t *m22_tlvs = NULL;
+    hk_tlv_t *m32_tlvs = NULL;
+    hk_tlv_t *m42_tlvs = NULL;
+
     hk_pair_verify_keys_t *keys = hk_pair_verify_keys_init();
 
     hk_curve25519_key_t *device_session_key = hk_curve25519_init();
     hk_ed25519_key_t *device_long_term_key = hk_ed25519_init();
-    hk_ed25519_generate_key(device_long_term_key);
+    hk_ed25519_update_from_random(device_long_term_key);
     hk_mem *device_long_term_key_public = hk_mem_init();
     hk_ed25519_export_public_key(device_long_term_key, device_long_term_key_public);
 
@@ -55,9 +61,16 @@ TEST_CASE("verify once", "[pair] [verify]")
     hk_pair_verify_device_m3(m2_tlvs, &m3_tlvs, device_session_key, device_long_term_key);
     esp_err_t ret2 = hk_pair_verify_finish(keys, m3_tlvs, &m4_tlvs);
 
+    hk_pair_verify_device_m1(&m12_tlvs, device_session_key);
+    esp_err_t ret12 = hk_pair_verify_start(keys, m12_tlvs, &m22_tlvs);
+    hk_pair_verify_device_m3(m22_tlvs, &m32_tlvs, device_session_key, device_long_term_key);
+    esp_err_t ret22 = hk_pair_verify_finish(keys, m32_tlvs, &m42_tlvs);
+
     // assert
-    TEST_ASSERT_EQUAL(ret1, ESP_OK);
-    TEST_ASSERT_EQUAL(ret2, ESP_OK);
+    TEST_ASSERT_EQUAL(ESP_OK, ret1);
+    TEST_ASSERT_EQUAL(ESP_OK, ret2);
+    TEST_ASSERT_EQUAL(ESP_OK, ret12);
+    TEST_ASSERT_EQUAL(ESP_OK, ret22);
 
     // cleanup
     hk_tlv_free(m1_tlvs);
@@ -80,8 +93,8 @@ void hk_pair_verify_device_m1(hk_tlv_t **response_tlvs_ptr, hk_curve25519_key_t 
     hk_tlv_t *response_tlvs = NULL;
     hk_mem *device_session_key_public = hk_mem_init();
 
-    hk_curve25519_generate_key(device_session_key);
-    hk_curve25519_export_public_key(device_session_key, device_session_key_public);
+    TEST_ASSERT_EQUAL(ESP_OK, hk_curve25519_update_from_random(device_session_key));
+    TEST_ASSERT_EQUAL(ESP_OK, hk_curve25519_export_public_key(device_session_key, device_session_key_public));
 
     response_tlvs = hk_tlv_add_uint8(response_tlvs, HK_PAIR_TLV_STATE, HK_PAIR_TLV_STATE_M2);
     response_tlvs = hk_tlv_add(response_tlvs, HK_PAIR_TLV_PUBLICKEY, device_session_key_public);
@@ -99,9 +112,10 @@ void hk_pair_verify_device_m3(hk_tlv_t *request_tlvs, hk_tlv_t **response_tlvs_p
     hk_curve25519_key_t *accessory_session_key = hk_curve25519_init();
     hk_ed25519_key_t *accessory_long_term_key = hk_ed25519_init();
     hk_mem *accessory_session_key_public = hk_mem_init();
-    // hk_mem *accessory_long_term_public_key = hk_mem_init();
-    // hk_mem_append_buffer(accessory_long_term_public_key, (void *)hk_pair_verify_test_accessory_ltpk_bytes,
-    //                      sizeof(hk_pair_verify_test_accessory_ltpk_bytes));
+    hk_mem *accessory_id = hk_mem_init();
+    hk_mem *accessory_long_term_public_key = hk_mem_init();
+    hk_mem_append_buffer(accessory_long_term_public_key, (void *)hk_pair_verify_test_accessory_ltpk_bytes,
+                         sizeof(hk_pair_verify_test_accessory_ltpk_bytes));
 
     hk_mem *device_session_key_public = hk_mem_init();
     hk_curve25519_export_public_key(device_session_key, device_session_key_public);
@@ -116,29 +130,29 @@ void hk_pair_verify_device_m3(hk_tlv_t *request_tlvs, hk_tlv_t **response_tlvs_p
     hk_mem *device_signature = hk_mem_init();
     hk_mem *sub_result = hk_mem_init();
 
-    hk_tlv_t *request_tlvs_decrypted = NULL;
-    hk_tlv_t *sub_tlvs = NULL;
+    hk_tlv_t *request_sub_tlvs = NULL;
+    hk_tlv_t *response_sub_tlvs = NULL;
 
-    hk_tlv_get_mem_by_type(request_tlvs, HK_PAIR_TLV_PUBLICKEY, accessory_session_key_public);
-    hk_tlv_get_mem_by_type(request_tlvs, HK_PAIR_TLV_ENCRYPTEDDATA, encrypted_data);
-    hk_curve25519_generate_key_from_public_key(accessory_session_key_public, accessory_session_key);
-    hk_curve25519_shared_secret(device_session_key, accessory_session_key, shared_secret);
-    hk_hkdf(shared_secret, session_encryption_key, HK_HKDF_PAIR_VERIFY_ENCRYPT_SALT, HK_HKDF_PAIR_VERIFY_ENCRYPT_INFO);
-    // hk_chacha20poly1305_decrypt(session_encryption_key, HK_CHACHA_VERIFY_MSG2, encrypted_data, decrypted_data);
-    // request_tlvs_decrypted = hk_tlv_deserialize(decrypted_data);
-    // hk_tlv_get_mem_by_type(request_tlvs_decrypted, HK_PAIR_TLV_IDENTIFIER, device_id);
-    //hk_ed25519_generate_key_from_public_key(accessory_long_term_key, accessory_long_term_public_key);
+    TEST_ASSERT_EQUAL(ESP_OK, hk_tlv_get_mem_by_type(request_tlvs, HK_PAIR_TLV_PUBLICKEY, accessory_session_key_public));
+    TEST_ASSERT_EQUAL(ESP_OK, hk_tlv_get_mem_by_type(request_tlvs, HK_PAIR_TLV_ENCRYPTEDDATA, encrypted_data));
+    TEST_ASSERT_EQUAL(ESP_OK, hk_curve25519_update_from_public_key(accessory_session_key_public, accessory_session_key));
+    TEST_ASSERT_EQUAL(ESP_OK, hk_curve25519_calculate_shared_secret(device_session_key, accessory_session_key, shared_secret));
+    TEST_ASSERT_EQUAL(ESP_OK, hk_hkdf(shared_secret, session_encryption_key, HK_HKDF_PAIR_VERIFY_ENCRYPT_SALT, HK_HKDF_PAIR_VERIFY_ENCRYPT_INFO));
+    TEST_ASSERT_EQUAL(ESP_OK, hk_chacha20poly1305_decrypt(session_encryption_key, HK_CHACHA_VERIFY_MSG2, encrypted_data, decrypted_data));
+    request_sub_tlvs = hk_tlv_deserialize(decrypted_data);
+    TEST_ASSERT_EQUAL(ESP_OK, hk_tlv_get_mem_by_type(request_sub_tlvs, HK_PAIR_TLV_IDENTIFIER, accessory_id));
+    TEST_ASSERT_EQUAL(ESP_OK, hk_ed25519_update_from_random_from_public_key(accessory_long_term_key, accessory_long_term_public_key));
     hk_mem_append(device_info, device_session_key_public);
     hk_mem_append(device_info, device_id);
     hk_mem_append(device_info, accessory_session_key_public);
 
-    hk_ed25519_sign(device_long_term_key, device_info, device_signature);
+    TEST_ASSERT_EQUAL(ESP_OK, hk_ed25519_sign(device_long_term_key, device_info, device_signature));
 
-    sub_tlvs = hk_tlv_add(sub_tlvs, HK_PAIR_TLV_IDENTIFIER, device_id);
-    sub_tlvs = hk_tlv_add(sub_tlvs, HK_PAIR_TLV_SIGNATURE, device_signature);
-    hk_tlv_serialize(sub_tlvs, sub_result);
+    response_sub_tlvs = hk_tlv_add(response_sub_tlvs, HK_PAIR_TLV_IDENTIFIER, device_id);
+    response_sub_tlvs = hk_tlv_add(response_sub_tlvs, HK_PAIR_TLV_SIGNATURE, device_signature);
+    hk_tlv_serialize(response_sub_tlvs, sub_result);
     hk_mem_set(encrypted_data, 0);
-    hk_chacha20poly1305_encrypt(session_encryption_key, HK_CHACHA_VERIFY_MSG3, sub_result, encrypted_data);
+    TEST_ASSERT_EQUAL(ESP_OK, hk_chacha20poly1305_encrypt(session_encryption_key, HK_CHACHA_VERIFY_MSG3, sub_result, encrypted_data));
 
     response_tlvs = hk_tlv_add_uint8(response_tlvs, HK_PAIR_TLV_STATE, HK_PAIR_TLV_STATE_M3);
     response_tlvs = hk_tlv_add(response_tlvs, HK_PAIR_TLV_ENCRYPTEDDATA, encrypted_data);
@@ -146,8 +160,9 @@ void hk_pair_verify_device_m3(hk_tlv_t *request_tlvs, hk_tlv_t **response_tlvs_p
 
     hk_curve25519_free(accessory_session_key);
     hk_ed25519_free(accessory_long_term_key);
-    //hk_mem_free(accessory_long_term_public_key);
+    hk_mem_free(accessory_long_term_public_key);
     hk_mem_free(accessory_session_key_public);
+    hk_mem_free(accessory_id);
 
     hk_mem_free(device_id);
     hk_mem_free(device_session_key_public);
@@ -160,6 +175,6 @@ void hk_pair_verify_device_m3(hk_tlv_t *request_tlvs, hk_tlv_t **response_tlvs_p
     hk_mem_free(device_signature);
     hk_mem_free(sub_result);
 
-    hk_tlv_free(request_tlvs_decrypted);
-    hk_tlv_free(sub_tlvs);
+    hk_tlv_free(request_sub_tlvs);
+    hk_tlv_free(response_sub_tlvs);
 }
