@@ -105,8 +105,6 @@ static int hk_gatt_write_ble_chr(uint16_t connection_handle, struct ble_gatt_acc
 
     hk_mem *request = hk_mem_init();
     rc = hk_gatt_decrypt(ctxt, chr_uuid, connection, request);
-    HK_LOGD("New request for %s", hk_uuids_to_str(chr_uuid));
-    hk_mem_log("Received ble write request", request);
 
     hk_transaction_t *transaction;
     uint8_t control_field = request->ptr[0];
@@ -132,38 +130,40 @@ static int hk_gatt_write_ble_chr(uint16_t connection_handle, struct ble_gatt_acc
 
     if (transaction->expected_request_length == transaction->request->size)
     {
+        HK_MEM_ASSIGN_BYTE_STR(request_bytes, transaction->request);
+        HK_UUIDS_ASSIGN_NAME(uuid_name, chr_uuid);
         switch (transaction->opcode)
         {
         case 1:
-            HK_LOGV("Signature read for %s", hk_uuids_to_str(chr_uuid));
+            HK_LOGV("Signature read for %s with: %s", uuid_name, request_bytes);
             res = hk_chr_signature_read(chr_uuid, transaction, chr);
             break;
         case 2:
-            HK_LOGD("Characteristic write for %s", hk_uuids_to_str(chr_uuid));
+            HK_LOGD("Characteristic write for %s with: %s", uuid_name, request_bytes);
             res = hk_chr_write(connection, transaction, chr);
             break;
         case 3:
-            HK_LOGD("Characteristic read for %s", hk_uuids_to_str(chr_uuid));
+            HK_LOGD("Characteristic read for %s with: %s", uuid_name, request_bytes);
             res = hk_chr_read(transaction, chr);
             break;
         case 4:
-            HK_LOGD("Characteristic timed write for %s", hk_uuids_to_str(chr_uuid));
+            HK_LOGD("Characteristic timed write for %s with: %s", uuid_name, request_bytes);
             res = hk_chr_timed_write(transaction, chr);
             break;
         case 5:
-            HK_LOGD("Characteristic execute write for %s", hk_uuids_to_str(chr_uuid));
+            HK_LOGD("Characteristic execute write for %s with: %s", uuid_name, request_bytes);
             res = hk_chr_execute_write(connection, transaction, chr);
             break;
         case 6:
-            //HK_LOGD("Signature read for %s", hk_uuids_to_str(chr_uuid));
+            HK_LOGV("Signature read for %s with: %s", uuid_name, request_bytes);
             res = hk_srv_signature_read(transaction, chr);
             break;
         case 7:
-            HK_LOGD("Characteristic configuration for %s", hk_uuids_to_str(chr_uuid));
+            HK_LOGD("Characteristic configuration for %s with: %s", uuid_name, request_bytes);
             res = hk_chr_configuration(transaction);
             break;
         case 8:
-            HK_LOGD("Protocol configuration for %s", hk_uuids_to_str(chr_uuid));
+            HK_LOGD("Protocol configuration for %s with: %s", uuid_name, request_bytes);
             res = hk_protocol_configuration(connection->security_keys, transaction, chr);
             break;
         default:

@@ -77,11 +77,6 @@ void hk_mem_free(hk_mem *mem)
     }
 }
 
-char *hk_mem_get_str(hk_mem *mem)
-{
-    return strndup(mem->ptr, mem->size);
-}
-
 bool hk_mem_equal_str(hk_mem *mem, const char *str)
 {
     return strncmp(mem->ptr, str, mem->size) == 0;

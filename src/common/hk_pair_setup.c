@@ -16,7 +16,7 @@
 #include "hk_pairings_store.h"
 #include "hk_pair_tlvs.h"
 
-hk_mem *hk_pair_setup_public_key;
+hk_mem *hk_pair_setup_public_key; //todo: move to connection key store
 hk_srp_key_t *hk_pair_setup_srp_key;
 
 void hk_pairing_setup_srp_start(hk_mem *result)
@@ -115,7 +115,7 @@ esp_err_t hk_pairing_setup_exchange_response_verification(hk_tlv_t *tlv, hk_mem 
     esp_err_t ret = ESP_OK;
     hk_mem *encrypted_data = hk_mem_init();
     hk_mem *decrypted_data = hk_mem_init();
-    hk_mem *device_ltpk = hk_mem_init();
+    hk_mem *device_long_term_key_public = hk_mem_init();
     hk_mem *device_signature = hk_mem_init();
     hk_mem *device_info = hk_mem_init();
     hk_mem *device_x = hk_mem_init();
@@ -138,14 +138,14 @@ esp_err_t hk_pairing_setup_exchange_response_verification(hk_tlv_t *tlv, hk_mem 
 
     if (!ret)
     {
-        ret = hk_tlv_get_mem_by_type(tlv_data_decrypted, HK_PAIR_TLV_PUBLICKEY, device_ltpk);
+        ret = hk_tlv_get_mem_by_type(tlv_data_decrypted, HK_PAIR_TLV_PUBLICKEY, device_long_term_key_public);
     }
 
     if (!ret)
         ret = hk_tlv_get_mem_by_type(tlv_data_decrypted, HK_PAIR_TLV_SIGNATURE, device_signature);
 
     if (!ret)
-        ret = hk_ed25519_update_from_random_from_public_key(device_key, device_ltpk);
+        ret = hk_ed25519_update_from_random_from_public_key(device_key, device_long_term_key_public);
 
     if (!ret)
         ret = hk_hkdf(srp_private_key, device_x, HK_HKDF_PAIR_SETUP_CONTROLLER_SALT, HK_HKDF_PAIR_SETUP_CONTROLLER_INFO);
@@ -154,19 +154,19 @@ esp_err_t hk_pairing_setup_exchange_response_verification(hk_tlv_t *tlv, hk_mem 
     {
         hk_mem_append(device_info, device_x);
         hk_mem_append(device_info, device_id);
-        hk_mem_append(device_info, device_ltpk);
+        hk_mem_append(device_info, device_long_term_key_public);
         ret = hk_ed25519_verify(device_key, device_signature, device_info);
     }
 
     if (!ret)
     {
-        hk_pairings_store_add(device_id, device_ltpk, true);
+        hk_pairings_store_add(device_id, device_long_term_key_public, true);
     }
 
     hk_tlv_free(tlv_data_decrypted);
     hk_mem_free(encrypted_data);
     hk_mem_free(decrypted_data);
-    hk_mem_free(device_ltpk);
+    hk_mem_free(device_long_term_key_public);
     hk_mem_free(device_signature);
     hk_mem_free(device_info);
     hk_mem_free(device_x);
@@ -269,7 +269,7 @@ void hk_pairing_setup_exchange_response(hk_tlv_t *tlv, hk_mem *result, hk_mem *d
         ret = hk_pairing_setup_exchange_response_generation(result, shared_secret, srp_private_key);
 
     if (!ret)
-    {
+    {   
         hk_advertising_update_paired();
         HK_LOGI("Accessory paired.");
     }

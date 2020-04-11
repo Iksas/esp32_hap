@@ -29,7 +29,7 @@ void hk_server_handle(hk_session_t *session)
         session->response->result = hk_pair_setup(session->request->content, session->response->content, device_id);
         if (device_id->size > 0)
         {
-            session->device_id = hk_mem_get_str(device_id);
+            session->device_id = strndup(device_id->ptr, device_id->size);
         }
         hk_session_send(session);
         hk_mem_free(device_id);

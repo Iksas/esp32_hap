@@ -54,7 +54,10 @@ void hk_session_free(hk_session_t *session)
     hk_mem_free(session->request->url);
     hk_mem_free(session->request->query);
     hk_mem_free(session->request->content);
-    free(session->device_id);
+    if (session->device_id != NULL)
+    {
+        free(session->device_id);
+    }
     free(session->request);
 
     hk_mem_free(session->response->data);
@@ -117,7 +120,7 @@ const char *hk_session_get_content_type(hk_session_t *session)
 
 // void hk_session_set_device_id(hk_session_t *session, hk_mem *device_id)
 // {
-//     
+//
 // }
 
 void hk_session_send(hk_session_t *session)

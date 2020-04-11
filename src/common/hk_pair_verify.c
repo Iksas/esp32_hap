@@ -40,9 +40,6 @@ esp_err_t hk_pair_verify_create_session(hk_pair_verify_keys_t *keys)
         hk_pair_verify_sessions->shared_secret = hk_mem_init();
         hk_mem_append(hk_pair_verify_sessions->id, session_id);
         hk_mem_append(hk_pair_verify_sessions->shared_secret, keys->shared_secret);
-        HK_LOGW("Initial session created");
-        hk_mem_log("session_id", hk_pair_verify_sessions->id);
-        hk_mem_log("shared_secret", hk_pair_verify_sessions->shared_secret);
     }
 
     hk_mem_free(session_id);
@@ -239,7 +236,6 @@ esp_err_t hk_pair_verify_resume(hk_pair_verify_keys_t *keys, hk_tlv_t *request_t
 
     ret = hk_tlv_get_mem_by_type(request_tlvs, HK_PAIR_TLV_SESSIONID, session_id);
 
-    HK_LOGW("received session_id: %s", hk_mem_get_str(session_id));
     hk_pair_verify_session_t *session = NULL;
     hk_ll_foreach(hk_pair_verify_sessions, s)
     {
@@ -255,74 +251,47 @@ esp_err_t hk_pair_verify_resume(hk_pair_verify_keys_t *keys, hk_tlv_t *request_t
         HK_LOGD("No session for resume found.");
         ret = ESP_ERR_NOT_FOUND;
     }
-    else
-    {
-        hk_mem_log("Found session for resuming.", session_id);
-    }
+
+    RUN_AND_CHECK(ret, hk_tlv_get_mem_by_type, request_tlvs, HK_PAIR_TLV_PUBLICKEY, device_session_key_public);
+    RUN_AND_CHECK(ret, hk_tlv_get_mem_by_type, request_tlvs, HK_PAIR_TLV_ENCRYPTEDDATA, encrypted_data);
 
     if (!ret)
     {
-        ret = hk_tlv_get_mem_by_type(request_tlvs, HK_PAIR_TLV_PUBLICKEY, device_session_key_public);
-        hk_mem_log("device_session_key_public", device_session_key_public);
-    }
-
-    if (!ret)
-    {
-        ret = hk_tlv_get_mem_by_type(request_tlvs, HK_PAIR_TLV_ENCRYPTEDDATA, encrypted_data);
-        hk_mem_log("encryption_data", encrypted_data);
-    }
-
-    if (!ret)
-    {
-        HK_LOGD("Deriving encryption key as device did.");
         hk_mem_append(salt, device_session_key_public);
         hk_mem_append(salt, session_id);
-        hk_hkdf_with_external_salt(session->shared_secret, encryption_key, salt, HK_HKDF_PAIR_RESUME_REQUEST_INFO);
     }
+    RUN_AND_CHECK(ret, hk_hkdf_with_external_salt, session->shared_secret, encryption_key, salt, HK_HKDF_PAIR_RESUME_REQUEST_INFO);
+    RUN_AND_CHECK(ret, hk_chacha20poly1305_verify_auth_tag, encryption_key, HK_CHACHA_RESUME_MSG1, encrypted_data);
 
     if (!ret)
     {
-        HK_LOGD("Verifying auth tag.");
-        ret = hk_chacha20poly1305_verify_auth_tag(encryption_key, HK_CHACHA_RESUME_MSG1, encrypted_data);
-        HK_LOGD("Verify result: %d.", ret);
-    }
-
-    if (!ret)
-    {
-        HK_LOGD("Generating new session id.");
         hk_mem_set(session->id, 0);
         uint32_t random_number = esp_random();
         hk_mem_append_buffer(session->id, &random_number, sizeof(uint32_t));
         random_number = esp_random();
         hk_mem_append_buffer(session->id, &random_number, sizeof(uint32_t));
-        hk_mem_log("new session id", session->id);
     }
 
     if (!ret)
     {
-        HK_LOGD("Deriving new encryption key with new session id.");
         hk_mem_set(salt, 0);
         hk_mem_set(encryption_key, 0);
         hk_mem_append(salt, device_session_key_public);
         hk_mem_append(salt, session->id);
-        hk_mem_log("salt for response key", salt);
-        hk_hkdf_with_external_salt(session->shared_secret, encryption_key, salt, HK_HKDF_PAIR_RESUME_RESPONSE_INFO);
-        hk_mem_log("response key", encryption_key);
     }
+    RUN_AND_CHECK(ret, hk_hkdf_with_external_salt, session->shared_secret, encryption_key, salt, HK_HKDF_PAIR_RESUME_RESPONSE_INFO);
 
     if (!ret)
     {
-        HK_LOGD("Calculating auth tag without message.");
         hk_mem_set(encrypted_data, 0);
-        ret = hk_chacha20poly1305_caluclate_auth_tag_without_message(encryption_key, HK_CHACHA_RESUME_MSG2, encrypted_data);
-        hk_mem_log("RESPONSE", encrypted_data);
+        hk_pair_verify_keys_reset(keys);
     }
+
+    RUN_AND_CHECK(ret, hk_chacha20poly1305_caluclate_auth_tag_without_message, encryption_key, HK_CHACHA_RESUME_MSG2, encrypted_data);
+    RUN_AND_CHECK(ret, hk_hkdf_with_external_salt, session->shared_secret, keys->shared_secret, salt, HK_HKDF_PAIR_RESUME_SHARED_SECRET_INFO);
 
     if (!ret)
     {
-        HK_LOGD("Calculate new shared secret.");
-        hk_pair_verify_keys_reset(keys);
-        hk_hkdf_with_external_salt(session->shared_secret, keys->shared_secret, salt, HK_HKDF_PAIR_RESUME_SHARED_SECRET_INFO);
         hk_mem_set(session->shared_secret, 0);
         hk_mem_append(session->shared_secret, keys->shared_secret);
         hk_create_session_security(keys);
@@ -340,7 +309,6 @@ esp_err_t hk_pair_verify_resume(hk_pair_verify_keys_t *keys, hk_tlv_t *request_t
         // todo: send error if session was found, but encryption failed
         if (session != NULL)
         {
-            HK_LOGD("Invalidating session.");
             hk_mem_free(session->id);
             hk_mem_free(session->shared_secret);
             hk_ll_remove(hk_pair_verify_sessions, session);
@@ -365,7 +333,6 @@ int hk_pair_verify(hk_mem *request, hk_pair_verify_keys_t *keys, hk_mem *result,
     hk_tlv_t *request_tlvs = hk_tlv_deserialize(request);
     hk_tlv_t *response_tlvs = NULL;
     hk_tlv_t *state_tlv = hk_tlv_get_tlv_by_type(request_tlvs, HK_PAIR_TLV_STATE);
-    hk_tlv_log("pair_verify request tlvs", request_tlvs, true, false);
 
     if (state_tlv == NULL)
     {
@@ -418,7 +385,6 @@ int hk_pair_verify(hk_mem *request, hk_pair_verify_keys_t *keys, hk_mem *result,
     }
 
     hk_tlv_serialize(response_tlvs, result);
-    hk_tlv_log("pair_verify response tlvs", response_tlvs, true, false);
 
     hk_tlv_free(request_tlvs);
     hk_tlv_free(response_tlvs);
