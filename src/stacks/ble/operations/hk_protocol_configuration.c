@@ -37,7 +37,6 @@ esp_err_t hk_protocol_configuration(hk_pair_verify_keys_t *keys, hk_transaction_
 
         hk_mem_free(accessory_public_key);
         hk_mem_free(broadcast_key);
-        HK_LOGD("Request for generating broadcast encryption key. Done.");
     }
     else if (hk_tlv_get_tlv_by_type(tlv_data, 0x02) != NULL)
     {

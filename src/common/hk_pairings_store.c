@@ -46,14 +46,14 @@ static void hk_pairings_store_entry_update(hk_pairing_store_pair *entry, char *d
 static esp_err_t hk_pairings_store_entry_get(hk_pairing_store_pair *entry, hk_mem *data, hk_mem *device_id)
 {
     esp_err_t ret = ESP_ERR_NOT_FOUND;
-    const char *device_id_str = strndup(device_id->ptr, device_id->size);
+    char *device_id_str = strndup(device_id->ptr, device_id->size);
 
     if (data->size > 0)
     {
         for (size_t data_read = 0; data_read < data->size;)
         {
             hk_pairings_store_entry_update(entry, data->ptr + data_read);
-            const char *entry_str = strndup(entry->id, entry->id_length);
+            char *entry_str = strndup(entry->id, entry->id_length);
             if (strcmp(device_id_str, entry_str) == 0)
             {
                 ret = ESP_OK;
@@ -137,7 +137,7 @@ esp_err_t hk_pairings_store_remove(hk_mem *device_id)
     hk_mem *new_data = hk_mem_init();
     hk_pairing_store_pair *entry = (hk_pairing_store_pair *)malloc(sizeof(hk_pairing_store_pair));
     esp_err_t ret = ESP_ERR_NOT_FOUND;
-    const char *device_id_str = strndup(device_id->ptr, device_id->size);
+    char *device_id_str = strndup(device_id->ptr, device_id->size);
 
     hk_store_pairings_get(data);
 
@@ -160,7 +160,7 @@ esp_err_t hk_pairings_store_remove(hk_mem *device_id)
 
     hk_mem_free(data);
     hk_mem_free(new_data);
-    free(device_id);
+    free(device_id_str);
     free(entry);
 
     return ret;
