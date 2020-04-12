@@ -63,8 +63,7 @@ esp_err_t hk_com_open_connection(hk_session_t **connections, int listen_socket, 
     if (socket < 0)
     {
         // happens sometimes, after removing device
-        HK_LOGD("Could not accept new connection: %d", socket);
-        hk_log_lwip_err(0, "Error accepting");
+        HK_LOGW("%d - Could not accept new connection: %d", socket, errno);
 
         return ESP_FAIL;
     }
@@ -107,7 +106,7 @@ void hk_com_handle_receive(hk_session_t *connection, esp_err_t (*receiver)(hk_se
     else if (recv_size < 0)
     {
         connection->should_close = true;
-        hk_log_lwip_err(connection->socket, "Error receiving data");
+        HK_LOGW("%d - Error receiving data: %d", connection->socket, errno);
     }
     else if (recv_size == 0)
     {
