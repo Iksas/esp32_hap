@@ -215,7 +215,6 @@ static int hk_gatt_read_ble_chr(uint16_t connection_handle, struct ble_gatt_acce
     }
     else
     {
-        HK_LOGV("Received new request to read ble characteristic %s", hk_uuids_to_str(chr_uuid));
         hk_connection_t *connection = hk_connection_get_by_handle(connection_handle);
         hk_mem *response = hk_mem_init();
         hk_transaction_t *transaction = hk_connection_transaction_get_by_uuid(connection, chr_uuid);
@@ -223,6 +222,10 @@ static int hk_gatt_read_ble_chr(uint16_t connection_handle, struct ble_gatt_acce
         {
             return 0;
         }
+        HK_MEM_ASSIGN_BYTE_STR(response_bytes, transaction->response);
+        HK_UUIDS_ASSIGN_NAME(uuid_name, chr_uuid);
+        //HK_LOGD("Sending response for %s with: %s", uuid_name, response_bytes);
+
         bool continuation = transaction->response_sent > 0;
         bool has_body = transaction->response->size > 0;
         uint8_t control_field = continuation ? 0b10000010 : 0b00000010;

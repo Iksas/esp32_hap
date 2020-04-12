@@ -1,10 +1,11 @@
 #include "../../utils/hk_logging.h"
 #include "../../include/hk.h"
 #include "../../utils/hk_store.h"
+#include "../../common/hk_accessory_id.h"
 #include "../../common/hk_pairings_store.h"
 #include "hk_nimble.h"
-#include "hk_advertising.h"
 #include "hk_gatt.h"
+#include "hk_advertising.h"
 #include "hk_pairing_ble.h"
 
 void (*hk_identify_callback)();
@@ -58,7 +59,7 @@ void hk_setup_start()
 void hk_setup_add_accessory(const char *name, const char *manufacturer, const char *model, const char *serial_number, const char *revision, void (*identify)())
 {
     hk_identify_callback = identify;
-    hk_store_configuration_set(2);
+    hk_store_configuration_set(3);
     hk_gatt_add_srv(HK_SRV_ACCESSORY_INFORMATION, false, false, false);
 
     hk_gatt_add_chr_static_read(HK_CHR_NAME, name);
@@ -99,6 +100,7 @@ void hk_setup_finish()
 void hk_reset()
 {
     HK_LOGW("Resetting homekit for this device.");
+    hk_accessory_id_reset();
     hk_pairings_store_remove_all();
     hk_advertising_update_paired();
 }

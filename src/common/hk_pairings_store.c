@@ -4,10 +4,7 @@
 #include "../utils/hk_res.h"
 #include "../utils/hk_logging.h"
 
-#define HK_PAIRINGS_STORE_PAIRINGS "pairings"
-#define HK_PAIRINGS_STORE_DEVICE_ID "device_id"
-#define HK_PAIRINGS_STORE_DEVICE_LTPK "device_ltpk"
-#define HK_PAIRINGS_STORE_IS_ADMIN "is_admin"
+#define HK_PARING_STORE_KEY "hk_pairings"
 
 typedef struct
 {
@@ -18,6 +15,14 @@ typedef struct
     const char *key;
     size_t length;
 } hk_pairing_store_pair;
+
+static esp_err_t hk_pairings_store_get(hk_mem *data){
+    return hk_store_blob_get(HK_PARING_STORE_KEY, data);
+}
+
+static esp_err_t hk_pairings_store_set(hk_mem *data){
+    return hk_store_blob_set(HK_PARING_STORE_KEY, data);
+}
 
 static void hk_pairings_store_entry_add(hk_pairing_store_pair *entry, hk_mem *data)
 {
@@ -76,14 +81,14 @@ esp_err_t hk_pairings_store_add(hk_mem *device_id, hk_mem *device_ltpk, bool is_
     hk_mem *data = hk_mem_init();
     hk_pairing_store_pair *entry = (hk_pairing_store_pair *)malloc(sizeof(hk_pairing_store_pair));
 
-    hk_store_pairings_get(data);
+    hk_pairings_store_get(data);
     entry->id_length = device_id->size;
     entry->key_length = device_ltpk->size;
     entry->is_admin = is_admin;
     entry->id = device_id->ptr;
     entry->key = device_ltpk->ptr;
     hk_pairings_store_entry_add(entry, data);
-    hk_store_pairings_set(data);
+    hk_pairings_store_set(data);
     hk_mem_free(data);
     free(entry);
 
@@ -95,7 +100,7 @@ esp_err_t hk_pairings_store_device_exists(hk_mem *device_id, bool *exists)
     hk_mem *data = hk_mem_init();
     hk_pairing_store_pair *entry = (hk_pairing_store_pair *)malloc(sizeof(hk_pairing_store_pair));
 
-    hk_store_pairings_get(data);
+    hk_pairings_store_get(data);
     esp_err_t ret = hk_pairings_store_entry_get(entry, data, device_id);
     if (!ret)
     {
@@ -118,7 +123,7 @@ esp_err_t hk_pairings_store_ltpk_get(hk_mem *device_id, hk_mem *device_ltpk)
     hk_mem *data = hk_mem_init();
     hk_pairing_store_pair *entry = (hk_pairing_store_pair *)malloc(sizeof(hk_pairing_store_pair));
 
-    hk_store_pairings_get(data);
+    hk_pairings_store_get(data);
     esp_err_t ret = hk_pairings_store_entry_get(entry, data, device_id);
     if (!ret)
     {
@@ -139,7 +144,7 @@ esp_err_t hk_pairings_store_remove(hk_mem *device_id)
     esp_err_t ret = ESP_ERR_NOT_FOUND;
     char *device_id_str = strndup(device_id->ptr, device_id->size);
 
-    hk_store_pairings_get(data);
+    hk_pairings_store_get(data);
 
     if (data->size > 0)
     {
@@ -172,7 +177,7 @@ esp_err_t hk_pairings_store_is_admin(hk_mem *device_id, bool *is_admin)
     hk_pairing_store_pair *entry = (hk_pairing_store_pair *)malloc(sizeof(hk_pairing_store_pair));
 
     *is_admin = false;
-    hk_store_pairings_get(data);
+    hk_pairings_store_get(data);
     esp_err_t ret = hk_pairings_store_entry_get(entry, data, device_id);
     if (!ret)
     {
@@ -192,7 +197,7 @@ esp_err_t hk_pairings_store_has_admin_pairing(bool *is_admin)
     esp_err_t ret = ESP_OK;
 
     *is_admin = false;
-    hk_store_pairings_get(data);
+    hk_pairings_store_get(data);
     if (data->size > 0)
     {
         for (size_t data_read = 0; data_read < data->size;)
@@ -218,7 +223,7 @@ esp_err_t hk_pairings_store_has_pairing(bool *is_admin)
     hk_mem *data = hk_mem_init();
     esp_err_t ret = ESP_OK;
 
-    hk_store_pairings_get(data);
+    hk_pairings_store_get(data);
     *is_admin = data->size > 0;
 
     hk_mem_free(data);
@@ -228,7 +233,7 @@ esp_err_t hk_pairings_store_has_pairing(bool *is_admin)
 
 esp_err_t hk_pairings_store_remove_all()
 {
-    hk_store_pairings_remove();
+    hk_store_erase(HK_PARING_STORE_KEY);
 
     return ESP_OK;
 }
@@ -246,7 +251,7 @@ esp_err_t hk_pairings_log_devices()
     hk_pairing_store_pair *entry = (hk_pairing_store_pair *)malloc(sizeof(hk_pairing_store_pair));
     esp_err_t ret = ESP_OK;
 
-    hk_store_pairings_get(data);
+    hk_pairings_store_get(data);
     if (data->size > 0)
     {
         for (size_t data_read = 0; data_read < data->size;)

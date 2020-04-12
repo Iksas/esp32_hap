@@ -4,9 +4,8 @@
 #include <string.h>
 #include <esp_heap_caps.h>
 
-TEST_CASE("Mem: check multiple append.", "[mem]")
+TEST_CASE("Check multiple append.", "[mem]")
 {
-    
     size_t freeMemBefore = heap_caps_get_free_size(MALLOC_CAP_DEFAULT);
     const char *test_data = "testData";
     for (size_t i = 0; i < 1000; i++)
@@ -19,22 +18,19 @@ TEST_CASE("Mem: check multiple append.", "[mem]")
     size_t freeMemAfter = heap_caps_get_free_size(MALLOC_CAP_DEFAULT);
     TEST_ASSERT_EQUAL(freeMemBefore, freeMemAfter);
     TEST_ASSERT_TRUE(heap_caps_check_integrity_all(true))
-    
 }
 
-TEST_CASE("Mem: check multiple append string.", "[mem]")
+TEST_CASE("Check multiple append string.", "[mem]")
 {
-    
     const char *test_data = "testData";
 
     hk_mem *hm = hk_mem_init();
 
     hk_mem_append_string(hm, test_data);
     TEST_ASSERT_EQUAL_INT(strlen(test_data), hm->size);
-    
+
     hk_mem_append_string(hm, test_data);
     TEST_ASSERT_EQUAL_INT(strlen(test_data) * 2, hm->size);
 
     hk_mem_free(hm);
-    
 }

@@ -7,7 +7,6 @@
 #define HK_STORE_PAIRED "hk_paired"
 #define HK_STORE_ACC_PRV_KEY "hk_acc_prv_key"
 #define HK_STORE_ACC_PUB_KEY "hk_acc_pub_key"
-#define HK_STORE_PAIRINGS "hk_pairings"
 #define HK_STORE_CONFIGURATION "hk_config"
 
 nvs_handle hk_store_handle;
@@ -30,18 +29,37 @@ static esp_err_t hk_store_uint8_t_get(const char *key, uint8_t *value)
     return ret;
 }
 
-static void hk_store_blob_get(const char *key, hk_mem *value)
+esp_err_t hk_store_blob_get(const char *key, hk_mem *value)
 {
     size_t required_size;
-    ESP_ERROR_CHECK(nvs_get_blob(hk_store_handle, key, NULL, &required_size));
+    esp_err_t ret = nvs_get_blob(hk_store_handle, key, NULL, &required_size);
+    if (!ret)
+    {
+        hk_mem_set(value, required_size);
+        ret = nvs_get_blob(hk_store_handle, key, value->ptr, &required_size);
+    }
+    else if (ret == ESP_ERR_NVS_NOT_FOUND)
+    {
+        ret = ESP_ERR_NOT_FOUND;
+    }
 
-    hk_mem_set(value, required_size);
-    ESP_ERROR_CHECK(nvs_get_blob(hk_store_handle, key, value->ptr, &required_size));
+    return ret;
 }
 
-static void hk_store_blob_set(const char *key, hk_mem *value)
+esp_err_t hk_store_blob_set(const char *key, hk_mem *value)
 {
-    ESP_ERROR_CHECK(nvs_set_blob(hk_store_handle, key, value->ptr, value->size));
+    return nvs_set_blob(hk_store_handle, key, value->ptr, value->size);
+}
+
+esp_err_t hk_store_erase(const char *key)
+{
+    esp_err_t ret = nvs_erase_key(hk_store_handle, key);
+    if (ret == ESP_ERR_NVS_NOT_FOUND)
+    {
+        ret = ESP_OK;
+    }
+
+    return ret;
 }
 
 bool hk_store_keys_can_get()
@@ -52,49 +70,24 @@ bool hk_store_keys_can_get()
     return can_get_priv_key && can_get_pub_key;
 }
 
-void hk_store_key_priv_get(hk_mem *value)
+esp_err_t hk_store_key_priv_get(hk_mem *value)
 {
-    hk_store_blob_get(HK_STORE_ACC_PRV_KEY, value);
+    return hk_store_blob_get(HK_STORE_ACC_PRV_KEY, value);
 }
 
-void hk_store_key_priv_set(hk_mem *value)
+esp_err_t hk_store_key_priv_set(hk_mem *value)
 {
-    hk_store_blob_set(HK_STORE_ACC_PRV_KEY, value);
+    return hk_store_blob_set(HK_STORE_ACC_PRV_KEY, value);
 }
 
-void hk_store_key_pub_get(hk_mem *value)
+esp_err_t hk_store_key_pub_get(hk_mem *value)
 {
-    hk_store_blob_get(HK_STORE_ACC_PUB_KEY, value);
+    return hk_store_blob_get(HK_STORE_ACC_PUB_KEY, value);
 }
 
-void hk_store_key_pub_set(hk_mem *value)
+esp_err_t hk_store_key_pub_set(hk_mem *value)
 {
-    hk_store_blob_set(HK_STORE_ACC_PUB_KEY, value);
-}
-
-void hk_store_pairings_remove()
-{
-    size_t required_size = -1;
-    esp_err_t ret = nvs_get_blob(hk_store_handle, HK_STORE_PAIRINGS, NULL, &required_size);
-    if (ret == ESP_OK && required_size > 0)
-    {
-        ESP_ERROR_CHECK(nvs_erase_key(hk_store_handle, HK_STORE_PAIRINGS));
-    }
-}
-
-void hk_store_pairings_get(hk_mem *pairings)
-{
-    size_t required_size;
-    if (nvs_get_blob(hk_store_handle, HK_STORE_PAIRINGS, NULL, &required_size) == ESP_OK)
-    {
-        hk_mem_set(pairings, required_size);
-        ESP_ERROR_CHECK(nvs_get_blob(hk_store_handle, HK_STORE_PAIRINGS, pairings->ptr, &required_size));
-    }
-}
-
-void hk_store_pairings_set(hk_mem *pairings)
-{
-    hk_store_blob_set(HK_STORE_PAIRINGS, pairings);
+    return hk_store_blob_set(HK_STORE_ACC_PUB_KEY, value);
 }
 
 const char *hk_store_code_get()

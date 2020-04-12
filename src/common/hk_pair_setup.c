@@ -13,6 +13,7 @@
 #include "../crypto/hk_chacha20poly1305.h"
 #include "../stacks/hk_advertising.h"
 
+#include "hk_accessory_id.h"
 #include "hk_pairings_store.h"
 #include "hk_pair_tlvs.h"
 
@@ -212,7 +213,7 @@ esp_err_t hk_pairing_setup_exchange_response_generation(hk_mem *result, hk_mem *
 
     if (!ret)
     {
-        hk_util_get_accessory_id_serialized(accessory_id);
+        hk_accessory_id_get_serialized(accessory_id);
         hk_mem_append_buffer(accessory_info, accessory_id->ptr, accessory_id->size);
         hk_mem_append_buffer(accessory_info, accessory_public_key->ptr, accessory_public_key->size);
         ret = hk_ed25519_sign(accessory_key, accessory_info, accessory_signature);

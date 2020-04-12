@@ -4,6 +4,7 @@
 
 #include "../../utils/hk_logging.h"
 #include "../../common/hk_pairings_store.h"
+#include "../../common/hk_accessory_id.h"
 #include "../../utils/hk_util.h"
 #include "../../include/hk_categories.h"
 
@@ -48,11 +49,11 @@ void hk_advertising_init(const char *name, hk_categories_t category, size_t conf
     hk_advertising_add_txt("pv", "1.0");
     // device ID (required)
     // should be in format XX:XX:XX:XX:XX:XX, otherwise devices will ignore it
-    hk_mem *id = hk_mem_init();
-    hk_util_get_accessory_id_serialized(id);
-    char* id_str = strndup(id->ptr, id->size);
+    hk_mem *accessory_id = hk_mem_init();
+    hk_accessory_id_get_serialized(accessory_id);
+    char* id_str = strndup(accessory_id->ptr, accessory_id->size);
     hk_advertising_add_txt("id", "%s", id_str);
-    hk_mem_free(id);
+    hk_mem_free(accessory_id);
     free(id_str);
     // current configuration number (required)
     hk_advertising_add_txt("c#", "%d", config_version);

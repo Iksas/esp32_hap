@@ -1,15 +1,17 @@
 #include "hk_pair_verify.h"
 
+#include "../crypto/hk_curve25519.h"
+#include "../crypto/hk_hkdf.h"
+#include "../crypto/hk_chacha20poly1305.h"
+#include "../crypto/hk_ed25519.h"
 #include "../utils/hk_logging.h"
 #include "../utils/hk_tlv.h"
 #include "../utils/hk_util.h"
 #include "../utils/hk_store.h"
 #include "../utils/hk_res.h"
 #include "../utils/hk_ll.h"
-#include "../crypto/hk_curve25519.h"
-#include "../crypto/hk_hkdf.h"
-#include "../crypto/hk_chacha20poly1305.h"
-#include "../crypto/hk_ed25519.h"
+
+#include "hk_accessory_id.h"
 #include "hk_pairings_store.h"
 #include "hk_pair_tlvs.h"
 
@@ -106,10 +108,10 @@ esp_err_t hk_pair_verify_start(hk_pair_verify_keys_t *keys, hk_tlv_t *request_tl
     RUN_AND_CHECK(ret, hk_curve25519_calculate_shared_secret, accessory_session_key, device_session_key, keys->shared_secret);
     RUN_AND_CHECK(ret, hk_curve25519_export_public_key, accessory_session_key, keys->accessory_session_key_public);
     RUN_AND_CHECK(ret, hk_ed25519_update_from_random_keys, accessory_long_term_key, accessory_private_key, accessory_public_key);
+    RUN_AND_CHECK(ret, hk_accessory_id_get_serialized, accessory_id);
 
     if (!ret)
     {
-        hk_util_get_accessory_id_serialized(accessory_id);
         hk_mem_append(accessory_info, keys->accessory_session_key_public);
         hk_mem_append(accessory_info, accessory_id);
         hk_mem_append(accessory_info, keys->device_session_key_public);

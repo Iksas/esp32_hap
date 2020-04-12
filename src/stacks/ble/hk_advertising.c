@@ -5,6 +5,7 @@
 #include "../../utils/hk_logging.h"
 #include "../../utils/hk_util.h"
 #include "../../utils/hk_store.h"
+#include "../../common/hk_accessory_id.h"
 #include "../../common/hk_pairings_store.h"
 #include "../../common/hk_global_state.h"
 
@@ -118,29 +119,25 @@ void hk_advertising_start_advertising()
     HK_LOGV("Starting advertising.");
     int res;
 
-    uint8_t device_id[6] = {0, 0, 0, 0, 0, 0};
-    if (hk_util_get_accessory_id(device_id))
-    {
-        HK_LOGE("Could not start advertising, because getting device id failed.");
-        return;
-    }
+    hk_mem *data = hk_mem_init();
+    hk_accessory_id_get(data);
 
     uint16_t global_state = hk_global_state_get();
     bool has_pairing = false;
     hk_pairings_store_has_pairing(&has_pairing);
-    
+
     uint8_t manufacturer_data[17];
     manufacturer_data[0] = 0x4c;                           // company id
     manufacturer_data[1] = 0x00;                           // company id
     manufacturer_data[2] = 0x06;                           // type
     manufacturer_data[3] = 0xcd;                           // subtype and length
     manufacturer_data[4] = has_pairing ? 0x00 : 0x01;      // pairing status flat
-    manufacturer_data[5] = device_id[0];                   // device id
-    manufacturer_data[6] = device_id[1];                   // device id
-    manufacturer_data[7] = device_id[2];                   // device id
-    manufacturer_data[8] = device_id[3];                   // device id
-    manufacturer_data[9] = device_id[4];                   // device id
-    manufacturer_data[10] = device_id[5];                  // device id
+    manufacturer_data[5] = data->ptr[0];                   // device id
+    manufacturer_data[6] = data->ptr[1];                   // device id
+    manufacturer_data[7] = data->ptr[2];                   // device id
+    manufacturer_data[8] = data->ptr[3];                   // device id
+    manufacturer_data[9] = data->ptr[4];                   // device id
+    manufacturer_data[10] = data->ptr[5];                  // device id
     manufacturer_data[11] = (char)hk_advertising_category; // accessory category identifier
     manufacturer_data[12] = 0x00;                          // accessory category identifier
     manufacturer_data[13] = global_state % 256;            // global state number
@@ -148,6 +145,7 @@ void hk_advertising_start_advertising()
     manufacturer_data[15] = hk_store_configuration_get();  // configuration number
     manufacturer_data[16] = 0x02;                          // HAP BLE version
 
+    hk_mem_free(data);
     struct ble_hs_adv_fields fields;
     memset(&fields, 0, sizeof fields);
     fields.flags = BLE_HS_ADV_F_DISC_GEN | BLE_HS_ADV_F_BREDR_UNSUP; // Discoverability in forthcoming advertisement (general) // BLE-only (BR/EDR unsupported)
