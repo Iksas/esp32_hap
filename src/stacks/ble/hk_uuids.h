@@ -1,11 +1,7 @@
 #pragma once
 
 #include <stdbool.h>
-#include "host/ble_uuid.h"
-
-#define HK_UUIDS_ASSIGN_NAME(var_name, uuid) \
-    char var_name[50];                     \
-    hk_uuids_to_name(uuid, var_name)
+#include "host/ble_uuid.h"    
 
 const static ble_uuid128_t hk_uuids_srv_id = BLE_UUID128_INIT(0xd1, 0xa0, 0x83, 0x50, 0x00, 0xaa, 0xd3, 0x87,
                                                               0x17, 0x48, 0x59, 0xa7, 0x5d, 0xe9, 0x04, 0xe6);

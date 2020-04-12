@@ -1,5 +1,6 @@
 #include "hk_gatt.h"
 
+#include <esp_timer.h>
 #include <host/ble_uuid.h>
 #include <host/ble_gatt.h>
 #include <services/gap/ble_svc_gap.h>
@@ -11,7 +12,7 @@
 #include "hk_chr.h"
 #include "hk_uuids.h"
 #include "hk_connection_security.h"
-#include "hk_advertising.h"
+#include "hk_gap.h"
 #include "operations/hk_chr_signature_read.h"
 #include "operations/hk_chr_write.h"
 #include "operations/hk_chr_read.h"
@@ -130,46 +131,51 @@ static int hk_gatt_write_ble_chr(uint16_t connection_handle, struct ble_gatt_acc
 
     if (transaction->expected_request_length == transaction->request->size)
     {
-        HK_MEM_ASSIGN_BYTE_STR(request_bytes, transaction->request);
-        HK_UUIDS_ASSIGN_NAME(uuid_name, chr_uuid);
-        switch (transaction->opcode)
+        char uuid_name[50];
+        hk_uuids_to_name(chr_uuid, uuid_name);
+         switch (transaction->opcode)
         {
         case 1:
-            HK_LOGV("Signature read for %s with: %s", uuid_name, request_bytes);
+            HK_LOGV("Signature read for %s.", uuid_name);
             res = hk_chr_signature_read(chr_uuid, transaction, chr);
             break;
         case 2:
-            HK_LOGD("Characteristic write for %s with: %s", uuid_name, request_bytes);
+            HK_LOGD("Characteristic write for %s.", uuid_name);
             res = hk_chr_write(connection, transaction, chr);
             break;
         case 3:
-            HK_LOGD("Characteristic read for %s with: %s", uuid_name, request_bytes);
+            HK_LOGD("Characteristic read for %s.", uuid_name);
             res = hk_chr_read(transaction, chr);
             break;
         case 4:
-            HK_LOGD("Characteristic timed write for %s with: %s", uuid_name, request_bytes);
+            HK_LOGD("Characteristic timed write for %s.", uuid_name);
             res = hk_chr_timed_write(transaction, chr);
             break;
         case 5:
-            HK_LOGD("Characteristic execute write for %s with: %s", uuid_name, request_bytes);
+            HK_LOGD("Characteristic execute write for %s.", uuid_name);
             res = hk_chr_execute_write(connection, transaction, chr);
             break;
         case 6:
-            HK_LOGV("Signature read for %s with: %s", uuid_name, request_bytes);
+            HK_LOGV("Signature read for %s.", uuid_name);
             res = hk_srv_signature_read(transaction, chr);
             break;
         case 7:
-            HK_LOGD("Characteristic configuration for %s with: %s", uuid_name, request_bytes);
+            HK_LOGD("Characteristic configuration for %s.", uuid_name);
             res = hk_chr_configuration(transaction);
             break;
         case 8:
-            HK_LOGD("Protocol configuration for %s with: %s", uuid_name, request_bytes);
+            HK_LOGD("Protocol configuration for %s.", uuid_name);
             res = hk_protocol_configuration(connection->security_keys, transaction, chr);
             break;
         default:
             HK_LOGE("Unknown opcode.");
             res = ESP_ERR_NOT_SUPPORTED;
         }
+
+        uint64_t now = esp_timer_get_time();
+        char *request_bytes_str = hk_mem_to_debug_string(transaction->request);
+        HK_LOGD("Calculated after %f with: %s", (float)(now - transaction->start_time) / 1000000.0f, request_bytes_str);
+        free(request_bytes_str);
     }
     else
     {
@@ -178,7 +184,7 @@ static int hk_gatt_write_ble_chr(uint16_t connection_handle, struct ble_gatt_acc
 
     if (res == ESP_ERR_HK_TERMINATE)
     {
-        hk_advertising_terminate_connection(connection_handle);
+        hk_gap_terminate_connection(connection_handle);
     }
     else if (res != ESP_OK)
     {
@@ -220,10 +226,9 @@ static int hk_gatt_read_ble_chr(uint16_t connection_handle, struct ble_gatt_acce
         hk_transaction_t *transaction = hk_connection_transaction_get_by_uuid(connection, chr_uuid);
         if (transaction == NULL)
         {
-            return 0;
+            return BLE_ATT_ERR_UNLIKELY;
         }
-        HK_MEM_ASSIGN_BYTE_STR(response_bytes, transaction->response);
-        HK_UUIDS_ASSIGN_NAME(uuid_name, chr_uuid);
+
         //HK_LOGD("Sending response for %s with: %s", uuid_name, response_bytes);
 
         bool continuation = transaction->response_sent > 0;
@@ -245,16 +250,18 @@ static int hk_gatt_read_ble_chr(uint16_t connection_handle, struct ble_gatt_acce
         if (has_body)
         {
             size_t response_size = transaction->response->size - transaction->response_sent;
-            if (response_size > 246)
+            // max response size at this point is: mtu size - already written response stuff - bytes that are need (I dont know why)
+            uint8_t max_response_size = connection->mtu_size - response->size - 2;
+            if (response_size > max_response_size)
             {
-                response_size = 246;
+                response_size = max_response_size;
             }
 
             hk_mem_append_buffer(response, transaction->response->ptr + transaction->response_sent, response_size);
             transaction->response_sent += response_size;
         }
 
-        //hk_log_print_bytewise("Sending ble read response", response->ptr, response->size, false);
+        // hk_log_print_bytewise("Sending ble read response", response->ptr, response->size, false);
         rc = hk_gatt_encrypt(ctxt, chr_uuid, connection, response);
 
         if (transaction->response_sent == transaction->response->size)

@@ -14,7 +14,6 @@
 //     hk_mem *ids = hk_mem_init();
 
 //     hk_html_parser_get_query_value(query, "id", ids);
-//     hk_mem_log_as_string("Ids from query: %s", ids);
 //     TEST_ASSERT_GREATER_THAN_INT(0, ids->size);
 //     hk_mem_free(query);
 //     hk_mem_free(ids);

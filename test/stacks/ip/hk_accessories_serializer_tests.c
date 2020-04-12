@@ -24,7 +24,6 @@
 
 //     hk_mem *out = hk_mem_init();
 //     hk_accessories_serializer_accessories(out);
-//     hk_mem_log_as_string("Accessories", out);
 //     TEST_ASSERT_GREATER_THAN_INT(0, out->size);
 //     hk_mem_free(out);
     

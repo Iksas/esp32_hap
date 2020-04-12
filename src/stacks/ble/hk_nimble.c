@@ -8,7 +8,7 @@
 
 #include "../../utils/hk_logging.h"
 
-#include "hk_advertising.h"
+#include "hk_gap.h"
 
 void ble_store_config_init(void);
 
@@ -41,8 +41,8 @@ static void hk_nimble_on_sync(void)
     }
     
     HK_LOGI("Got bluetooth address: %02x:%02x:%02x:%02x:%02x:%02x", addr_val[5], addr_val[4], addr_val[3], addr_val[2], addr_val[1], addr_val[0]);
-    hk_advertising_set_address(own_addr_type);
-    hk_advertising_start_advertising();
+    hk_gap_set_address(own_addr_type);
+    hk_gap_start_advertising();
 }
 
 void hk_nimble_host_task(void *param)

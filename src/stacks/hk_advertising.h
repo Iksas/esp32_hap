@@ -1,7 +1,7 @@
 #pragma once
 
 #ifdef CONFIG_ESP32_HAP_STACK_BLE
-#include "ble/hk_advertising.h"
+#include "ble/hk_gap.h"
 #endif
 
 #ifdef CONFIG_ESP32_HAP_STACK_IP

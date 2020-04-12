@@ -87,12 +87,23 @@ bool hk_mem_equal(hk_mem *mem1, hk_mem *mem2)
     return strncmp(mem1->ptr, mem2->ptr, mem1->size) == 0;
 }
 
-void hk_mem_log_as_string(const char *title, hk_mem *mem)
+char *hk_mem_to_debug_string(hk_mem *mem)
 {
-    hk_log_print_as_string(title, mem->ptr, mem->size);
-}
+    char *str;
+    if (mem->size > 0)
+    {
+        str = (char*)malloc(mem->size * 2 + 1);
+        for (size_t i = 0; i < mem->size; i++)
+        {
+            sprintf(str + i * 2, "%02x", mem->ptr[i]);
+        };
+    }
+    else
+    {
+        str = (char*)malloc(2);
+        sprintf(str, "-");
+    }
 
-void hk_mem_log(const char *title, hk_mem *mem)
-{
-    hk_log_print_bytewise(title, mem->ptr, mem->size, true);
+    HK_LOGD("String length: %d %d", mem->size, strlen(str));
+    return str;
 }

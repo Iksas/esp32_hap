@@ -1,5 +1,7 @@
 #include "hk_connection.h"
 
+#include <esp_timer.h>
+
 #include "../../utils/hk_ll.h"
 #include "../../utils/hk_logging.h"
 #include "hk_uuids.h"
@@ -20,7 +22,7 @@ hk_transaction_t *hk_connection_transaction_get_by_uuid(hk_connection_t *connect
 
     if (transaction_to_return == NULL)
     {
-        HK_LOGW("Requested transaction was not found: %s", hk_uuids_to_str(chr_uuid));
+        HK_LOGW("%d - Requested transaction was not found: %s", connection->connection_handle,  hk_uuids_to_str(chr_uuid));
     }
 
     return transaction_to_return;
@@ -28,28 +30,32 @@ hk_transaction_t *hk_connection_transaction_get_by_uuid(hk_connection_t *connect
 
 hk_transaction_t *hk_connection_transaction_init(hk_connection_t *connection, const ble_uuid128_t *chr_uuid)
 {
-    HK_LOGV("Adding new transaction with id %s.", hk_uuids_to_str(chr_uuid));
+    HK_LOGV("%d - Adding new transaction for %s.", connection->connection_handle, hk_uuids_to_str(chr_uuid));
 
     hk_transaction_t *transaction = connection->transactions = hk_ll_init(connection->transactions);
 
     transaction->id = -1;
     transaction->opcode = -1;
     transaction->chr_uuid = chr_uuid;
-    
+
     transaction->request = hk_mem_init();
     transaction->expected_request_length = 0;
 
     transaction->response = hk_mem_init();
     transaction->response_sent = 0;
     transaction->response_status = 0;
+    transaction->start_time = esp_timer_get_time();
 
     return transaction;
 }
 
 void hk_connection_transaction_free(hk_connection_t *connection, hk_transaction_t *transaction)
 {
-    HK_LOGV("Removing transaction %s from %d transactions.", hk_uuids_to_str(transaction->chr_uuid), hk_ll_count(connection->transactions));
-
+    HK_LOGV("Removing transaction %s from %d transactions.",
+            hk_uuids_to_str(transaction->chr_uuid),
+            hk_ll_count(connection->transactions));
+    uint64_t now = esp_timer_get_time();
+    HK_LOGD("%d - Removing transaction after %f", connection->connection_handle, (float)(now - transaction->start_time) / 1000000.0f);
     transaction->id = -1;
     hk_mem_free(transaction->request);
     hk_mem_free(transaction->response);
@@ -67,13 +73,13 @@ hk_connection_t *hk_connection_get_by_handle(uint16_t connection_handle)
         }
     }
 
-    HK_LOGW("Requested connection was not found: %d", connection_handle);
+    HK_LOGW("%d - Requested connection was not found.", connection_handle);
     return NULL;
 }
 
 hk_connection_t *hk_connection_init(uint16_t connection_handle)
 {
-    HK_LOGV("Adding new connection with handle %d.", connection_handle);
+    HK_LOGV("%d - Adding new connection.", connection_handle);
 
     hk_connection_t *connection = hk_connection_connections = hk_ll_init(hk_connection_connections);
 
@@ -84,15 +90,23 @@ hk_connection_t *hk_connection_init(uint16_t connection_handle)
     connection->device_id = hk_mem_init();
     connection->security_keys = hk_pair_verify_keys_init();
     connection->transactions = NULL;
+    connection->mtu_size = (uint8_t)256;
 
     return connection;
 }
 
+void hk_connection_mtu_set(uint16_t connection_handle, uint8_t mtu_size)
+{
+    HK_LOGD("%d - Setting new mtu to connection: %d", connection_handle, mtu_size);
+    hk_connection_t *connection = hk_connection_get_by_handle(connection_handle);
+    connection->mtu_size = mtu_size;
+}
+
 void hk_connection_free(uint16_t connection_handle)
 {
-    HK_LOGD("Removing connection with handle %d from %d connections.", connection_handle, hk_ll_count(hk_connection_connections));
+    HK_LOGD("%d - Removing connection from %d connections.", connection_handle, hk_ll_count(hk_connection_connections));
     hk_connection_t *connection = hk_connection_get_by_handle(connection_handle);
-    
+
     while (connection->transactions != NULL)
     {
         hk_connection_transaction_free(connection, connection->transactions);
