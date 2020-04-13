@@ -53,103 +53,70 @@ hk_srp_key_t *hk_srp_init_key()
     return key;
 }
 
-void hk_random_fill(uint8_t *data, size_t size)
+static void hk_random_fill(uint8_t *data, size_t size)
 {
     uint16_t x = esp_random();
     memcpy(data, &x, sizeof(uint8_t));
 }
 
-size_t hk_srp_generate_key(hk_srp_key_t *key, const char *username, const char *password)
+esp_err_t hk_srp_generate_key(hk_srp_key_t *key, const char *username, const char *password)
 {
     byte salt[16];
-    hk_random_fill(salt, sizeof(salt));
+    size_t verifierLen = 1024;
+    byte *verifier = malloc(verifierLen);
+    int ret = 0;
 
-    size_t ret;
+    hk_random_fill(salt, sizeof(salt));
 
     // We initialize srp as client, though we are server. But in order to calculate the
     // verifier, wolf ssl needs to be in client mode.
-    ret = wc_SrpInit((Srp *)key->internal, SRP_TYPE_SHA512, SRP_CLIENT_SIDE);
-    if (ret)
+    HK_CRYPTO_RUN_AND_CHECK(ret, wc_SrpInit, (Srp *)key->internal, SRP_TYPE_SHA512, SRP_CLIENT_SIDE);
+    HK_CRYPTO_RUN_AND_CHECK(ret, wc_SrpSetUsername, (Srp *)key->internal, (byte *)username, strlen(username));
+    HK_CRYPTO_RUN_AND_CHECK(ret, wc_SrpSetParams, (Srp *)key->internal, hk_srp_n, sizeof(hk_srp_n), hk_srp_g, sizeof(hk_srp_g), salt, sizeof(salt));
+    HK_CRYPTO_RUN_AND_CHECK(ret, wc_SrpSetPassword, (Srp *)key->internal, (byte *)password, strlen(password));
+    HK_CRYPTO_RUN_AND_CHECK(ret, wc_SrpGetVerifier, (Srp *)key->internal, verifier, &verifierLen);
+
+    if (!ret)
     {
-        HK_CRYPOT_ERR("Failed to initialize SRP", ret);
-        return ret;
+        ((Srp *)key->internal)->side = SRP_SERVER_SIDE; // now switch to server side
     }
 
-    ret = wc_SrpSetUsername((Srp *)key->internal, (byte *)username, strlen(username));
-    if (ret)
-    {
-        HK_CRYPOT_ERR("Failed to set SRP username", ret);
-        return ret;
-    }
-
-    ret = wc_SrpSetParams((Srp *)key->internal, hk_srp_n, sizeof(hk_srp_n), hk_srp_g, sizeof(hk_srp_g), salt, sizeof(salt));
-    if (ret)
-    {
-        HK_CRYPOT_ERR("Failed to set SRP params", ret);
-        return ret;
-    }
-
-    ret = wc_SrpSetPassword((Srp *)key->internal, (byte *)password, strlen(password));
-    if (ret)
-    {
-        HK_CRYPOT_ERR("Srp: Failed to set SRP password (code %d)", ret);
-        return ret;
-    }
-
-    size_t verifierLen = 1024;
-    byte *verifier = malloc(verifierLen);
-    ret = wc_SrpGetVerifier((Srp *)key->internal, verifier, &verifierLen);
-    if (ret)
-    {
-        HK_CRYPOT_ERR("Failed to get SRP verifier", ret);
-        free(verifier);
-        return ret;
-    }
-
-    ((Srp *)key->internal)->side = SRP_SERVER_SIDE; // now switch to server side
-    ret = wc_SrpSetVerifier((Srp *)key->internal, verifier, verifierLen);
-    if (ret)
-    {
-        HK_CRYPOT_ERR("Failed to set SRP verifier", ret);
-        free(verifier);
-        return ret;
-    }
+    HK_CRYPTO_RUN_AND_CHECK(ret, wc_SrpSetVerifier, (Srp *)key->internal, verifier, verifierLen);
 
     free(verifier);
 
-    return ret;
+    return ret ? ESP_FAIL : ESP_OK;
 }
 
-size_t hk_srp_export_public_key(hk_srp_key_t *key, hk_mem *public_key)
+esp_err_t hk_srp_export_public_key(hk_srp_key_t *key, hk_mem *public_key)
 {
+    int ret = 0;
     hk_mem_set(public_key, 384);
 
-    size_t ret = wc_SrpGetPublic((Srp *)key->internal, (byte *)public_key->ptr, &public_key->size);
-    if (ret)
-    {
-        HK_CRYPOT_ERR("Error getting public key", ret);
-    }
+    HK_CRYPTO_RUN_AND_CHECK(ret, wc_SrpGetPublic, (Srp *)key->internal, (byte *)public_key->ptr, &public_key->size);
 
-    return ret;
+    return ret ? ESP_FAIL : ESP_OK;
 }
 
-size_t hk_srp_export_private_key(hk_srp_key_t *key, hk_mem *private_key)
+esp_err_t hk_srp_export_private_key(hk_srp_key_t *key, hk_mem *private_key)
 {
     hk_mem_append_buffer(private_key, (char *)((Srp *)key->internal)->key, ((Srp *)key->internal)->keySz);
     return ESP_OK;
 }
 
-size_t hk_srp_export_salt(hk_srp_key_t *key, hk_mem *salt)
+esp_err_t hk_srp_export_salt(hk_srp_key_t *key, hk_mem *salt)
 {
     hk_mem_append_buffer(salt, (char *)((Srp *)key->internal)->salt, ((Srp *)key->internal)->saltSz);
     return ESP_OK;
 }
 
-size_t hk_srp_verify(hk_srp_key_t *key, hk_mem *proof)
+esp_err_t hk_srp_verify(hk_srp_key_t *key, hk_mem *proof, bool *valid)
 {
-    size_t ret = wc_SrpVerifyPeersProof((Srp *)key->internal, (byte *)proof->ptr, proof->size);
+    *valid = true;
+    int ret = wc_SrpVerifyPeersProof((Srp *)key->internal, (byte *)proof->ptr, proof->size);
     if (ret == SRP_VERIFY_E)
     {
+        *valid = false;
         HK_LOGW("Error verifying client proof. Maybe the password entered on ios device was wrong. Error: %d", ret);
     }
     else if (ret)
@@ -157,75 +124,53 @@ size_t hk_srp_verify(hk_srp_key_t *key, hk_mem *proof)
         HK_CRYPOT_ERR("Error verifying client proof", ret);
     }
 
-    return ret;
+    return ret ? ESP_FAIL : ESP_OK;
 }
 
-int hk_srp_set_key(Srp *srp, byte *secret, word32 size)
+esp_err_t hk_srp_set_key(Srp *srp, byte *secret, word32 size)
 {
+    int ret = 0;
     SrpHash hash;
-    size_t ret = ESP_OK;
 
     srp->key = (byte *)XMALLOC(WC_SHA512_DIGEST_SIZE, NULL, DYNAMIC_TYPE_SRP);
-    if (!srp->key)
+    
+    if (srp->key)
     {
-        HK_CRYPOT_ERR("Error allocating key", ret);
-        return -1;
+        srp->keySz = WC_SHA512_DIGEST_SIZE;
+
+        HK_CRYPTO_RUN_AND_CHECK(ret, wc_InitSha512, &hash.data.sha512);
+        HK_CRYPTO_RUN_AND_CHECK(ret, wc_Sha512Update, &hash.data.sha512, secret, size);
+        HK_CRYPTO_RUN_AND_CHECK(ret, wc_Sha512Final, &hash.data.sha512, srp->key);
+
+        memset(&hash, 0, sizeof(hash)); //todo: why?
+        return ret ? ESP_FAIL : ESP_OK;
     }
-
-    srp->keySz = WC_SHA512_DIGEST_SIZE;
-
-    ret = wc_InitSha512(&hash.data.sha512);
-    if (ret)
+    else
     {
-        HK_CRYPOT_ERR("Failed to initialize generation of Sha512", ret);
-        return ret;
+        HK_LOGE("Could not allocate srp key.");
+        return ESP_FAIL;
     }
-
-    ret = wc_Sha512Update(&hash.data.sha512, secret, size);
-    if (ret)
-    {
-        HK_CRYPOT_ERR("Failed to update Sha512", ret);
-        return ret;
-    }
-
-    ret = wc_Sha512Final(&hash.data.sha512, srp->key);
-    if (ret)
-    {
-        HK_CRYPOT_ERR("Failed to finalize Sha512", ret);
-        return ret;
-    }
-
-    memset(&hash, 0, sizeof(hash));
-
-    return ret;
 }
 
-size_t hk_srp_compute_key(hk_srp_key_t *key, hk_mem *server_public_key, hk_mem *client_public_key)
+esp_err_t hk_srp_compute_key(hk_srp_key_t *key, hk_mem *server_public_key, hk_mem *client_public_key)
 {
+    int ret = 0;
     ((Srp *)key->internal)->keyGenFunc_cb = hk_srp_set_key;
-    size_t ret = wc_SrpComputeKey(
-        (Srp *)key->internal,
-        (byte *)client_public_key->ptr, client_public_key->size,
-        (byte *)server_public_key->ptr, server_public_key->size);
+    HK_CRYPTO_RUN_AND_CHECK(ret, wc_SrpComputeKey,
+                            (Srp *)key->internal,
+                            (byte *)client_public_key->ptr, client_public_key->size,
+                            (byte *)server_public_key->ptr, server_public_key->size);
 
-    if (ret)
-    {
-        HK_CRYPOT_ERR("Error computing key", ret);
-    }
-
-    return ret;
+    return ret ? ESP_FAIL : ESP_OK;
 }
 
-size_t hk_srp_export_proof(hk_srp_key_t *key, hk_mem *proof)
+esp_err_t hk_srp_export_proof(hk_srp_key_t *key, hk_mem *proof)
 {
+    int ret = 0;
     hk_mem_set(proof, WC_SHA512_DIGEST_SIZE);
-    int ret = wc_SrpGetProof((Srp *)key->internal, (byte *)proof->ptr, &proof->size);
-    if (ret)
-    {
-        HK_CRYPOT_ERR("Error getting server proof", ret);
-    }
+    HK_CRYPTO_RUN_AND_CHECK(ret, wc_SrpGetProof, (Srp *)key->internal, (byte *)proof->ptr, &proof->size);
 
-    return ret;
+    return ret ? ESP_FAIL : ESP_OK;
 }
 
 void hk_srp_free_key(hk_srp_key_t *key)
