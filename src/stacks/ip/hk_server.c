@@ -18,6 +18,7 @@
 #include "hk_com.h"
 #include "hk_session.h"
 #include "hk_accessories_serializer.h"
+#include "hk_advertising.h"
 
 void hk_server_handle(hk_session_t *session)
 {
@@ -26,19 +27,25 @@ void hk_server_handle(hk_session_t *session)
     if (hk_mem_equal_str(session->request->url, "/pair-setup") && HK_SESSION_HTML_METHOD_POST == session->request->method)
     {
         hk_mem *device_id = hk_mem_init();
-        session->response->result = hk_pair_setup(session->request->content, session->response->content, device_id);
+        bool is_paired = false;
+        session->response->result = hk_pair_setup(session->request->content, session->response->content, device_id, &is_paired);
         if (device_id->size > 0)
         {
             session->device_id = strndup(device_id->ptr, device_id->size);
         }
+        if (is_paired)
+        {
+            hk_advertising_update_paired();
+        }
+
         hk_session_send(session);
         hk_mem_free(device_id);
     }
     else if (hk_mem_equal_str(session->request->url, "/pair-verify") && HK_SESSION_HTML_METHOD_POST == session->request->method)
     {
         bool session_is_secure = false;
-        session->response->result = hk_pair_verify(session->request->content, session->keys, 
-            session->response->content, &session_is_secure);
+        session->response->result = hk_pair_verify(session->request->content, session->keys,
+                                                   session->response->content, &session_is_secure);
 
         hk_session_send(session);
 
@@ -66,8 +73,13 @@ void hk_server_handle(hk_session_t *session)
     }
     else if (hk_mem_equal_str(session->request->url, "/pairings") && HK_SESSION_HTML_METHOD_POST == session->request->method)
     {
-        session->response->result = hk_pairings(session->request->content, session->response->data, &session->kill);
+        bool is_paired = true;
+        session->response->result = hk_pairings(session->request->content, session->response->data, &session->kill, &is_paired);
         hk_session_send(session);
+        if (!is_paired)
+        {
+            hk_advertising_update_paired();
+        }
     }
     else if (hk_mem_equal_str(session->request->url, "/identify") && HK_SESSION_HTML_METHOD_POST == session->request->method)
     {

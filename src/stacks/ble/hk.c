@@ -102,7 +102,6 @@ void hk_reset()
     HK_LOGW("Resetting homekit for this device.");
     hk_accessory_id_reset();
     hk_pairings_store_remove_all();
-    hk_advertising_update_paired();
 }
 
 void hk_notify(void *chr)

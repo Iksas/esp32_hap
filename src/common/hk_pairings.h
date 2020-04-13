@@ -2,4 +2,4 @@
 
 #include "../include/hk_mem.h"
 
-int hk_pairings(hk_mem *request, hk_mem *data, bool *kill_session);
+int hk_pairings(hk_mem *request, hk_mem *data, bool *kill_session, bool *is_paired);

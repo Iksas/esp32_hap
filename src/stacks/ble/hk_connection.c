@@ -22,7 +22,11 @@ hk_transaction_t *hk_connection_transaction_get_by_uuid(hk_connection_t *connect
 
     if (transaction_to_return == NULL)
     {
-        HK_LOGW("%d - Requested transaction was not found: %s", connection->connection_handle,  hk_uuids_to_str(chr_uuid));
+        HK_LOGW("%d - Requested transaction was not found: %s", connection->connection_handle, hk_uuids_to_str(chr_uuid));
+    }
+    else
+    {
+        HK_LOGV("%d - Requested transaction was found: %s", connection->connection_handle, hk_uuids_to_str(chr_uuid));
     }
 
     return transaction_to_return;
@@ -54,8 +58,6 @@ void hk_connection_transaction_free(hk_connection_t *connection, hk_transaction_
     HK_LOGV("Removing transaction %s from %d transactions.",
             hk_uuids_to_str(transaction->chr_uuid),
             hk_ll_count(connection->transactions));
-    uint64_t now = esp_timer_get_time();
-    HK_LOGD("%d - Removing transaction after %f", connection->connection_handle, (float)(now - transaction->start_time) / 1000000.0f);
     transaction->id = -1;
     hk_mem_free(transaction->request);
     hk_mem_free(transaction->response);
@@ -95,16 +97,16 @@ hk_connection_t *hk_connection_init(uint16_t connection_handle)
     return connection;
 }
 
-void hk_connection_mtu_set(uint16_t connection_handle, uint8_t mtu_size)
+void hk_connection_mtu_set(uint16_t connection_handle, uint16_t mtu_size)
 {
-    HK_LOGD("%d - Setting new mtu to connection: %d", connection_handle, mtu_size);
+    HK_LOGV("%d - Setting new mtu to connection: %d", connection_handle, mtu_size);
     hk_connection_t *connection = hk_connection_get_by_handle(connection_handle);
     connection->mtu_size = mtu_size;
 }
 
 void hk_connection_free(uint16_t connection_handle)
 {
-    HK_LOGD("%d - Removing connection from %d connections.", connection_handle, hk_ll_count(hk_connection_connections));
+    HK_LOGV("%d - Removing connection from %d connections.", connection_handle, hk_ll_count(hk_connection_connections));
     hk_connection_t *connection = hk_connection_get_by_handle(connection_handle);
 
     while (connection->transactions != NULL)

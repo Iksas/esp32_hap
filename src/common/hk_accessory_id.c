@@ -34,10 +34,11 @@ esp_err_t hk_accessory_id_get_serialized(hk_mem *id)
     esp_err_t ret = hk_accessory_id_get(id_mem);
     if (!ret)
     {
-        hk_mem_set(id, 17);
+        hk_mem_set(id, 18);
         sprintf(id->ptr, "%02X:%02X:%02X:%02X:%02X:%02X",
                 id_mem->ptr[0], id_mem->ptr[1], id_mem->ptr[2],
                 id_mem->ptr[3], id_mem->ptr[4], id_mem->ptr[5]);
+        hk_mem_set(id, 17); // trim newline
     }
 
     hk_mem_free(id_mem);

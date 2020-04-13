@@ -47,7 +47,7 @@ static int hk_gap_gap_event(struct ble_gap_event *event, void *arg)
     switch (event->type)
     {
     case BLE_GAP_EVENT_CONNECT:
-        HK_LOGI("Connect event; status=%d ", event->connect.status);
+        HK_LOGD("Connect event; status=%d ", event->connect.status);
         if (event->connect.status == 0)
         {
             hk_gap_connect(event->connect.conn_handle);
@@ -59,7 +59,7 @@ static int hk_gap_gap_event(struct ble_gap_event *event, void *arg)
         }
         break;
     case BLE_GAP_EVENT_DISCONNECT:
-        HK_LOGI("Disconnect event; reason=%d ", event->disconnect.reason);
+        HK_LOGD("Disconnect event; reason=%d ", event->disconnect.reason);
         hk_gap_disconnect(event->disconnect.conn.conn_handle);
         hk_gap_start_advertising(hk_gap_own_addr_type);
         break;
@@ -139,12 +139,13 @@ void hk_gap_start_advertising()
     manufacturer_data[9] = data->ptr[4];                   // device id
     manufacturer_data[10] = data->ptr[5];                  // device id
     manufacturer_data[11] = (char)hk_gap_category; // accessory category identifier
-    manufacturer_data[12] = 0x00;                          // accessory category identifier
+    manufacturer_data[12] = 0x00;                          // accessory category identifier // todo: make custom
     manufacturer_data[13] = global_state % 256;            // global state number
     manufacturer_data[14] = global_state / 256;            // global state number
     manufacturer_data[15] = hk_store_configuration_get();  // configuration number
     manufacturer_data[16] = 0x02;                          // HAP BLE version
 
+    HK_LOGV("With status flag sf: %d, global state: %d, configuration: %d", manufacturer_data[4], global_state, hk_store_configuration_get());
     hk_mem_free(data);
     struct ble_hs_adv_fields fields;
     memset(&fields, 0, sizeof fields);
@@ -197,12 +198,6 @@ void hk_gap_init(const char *name, size_t category, size_t config_version)
         HK_LOGE("Error setting name for advertising.");
         return;
     }
-}
-
-void hk_advertising_update_paired()
-{
-    //hk_gap_stop_advertising();
-    //hk_gap_start_advertising();
 }
 
 void hk_gap_terminate_connection(uint16_t connection_handle)

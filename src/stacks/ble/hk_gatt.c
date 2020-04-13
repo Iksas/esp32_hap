@@ -1,6 +1,5 @@
 #include "hk_gatt.h"
 
-#include <esp_timer.h>
 #include <host/ble_uuid.h>
 #include <host/ble_gatt.h>
 #include <services/gap/ble_svc_gap.h>
@@ -53,7 +52,7 @@ static int hk_gatt_read_ble_descriptor(struct ble_gatt_access_ctxt *ctxt, void *
     return rc == 0 ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES;
 }
 
-static int_fast8_t hk_gatt_decrypt(struct ble_gatt_access_ctxt *ctxt, const ble_uuid128_t *chr_uuid, hk_connection_t *connection, hk_mem *request)
+static int hk_gatt_decrypt(struct ble_gatt_access_ctxt *ctxt, const ble_uuid128_t *chr_uuid, hk_connection_t *connection, hk_mem *request)
 {
     uint8_t buffer_len = OS_MBUF_PKTLEN(ctxt->om);
     uint8_t buffer[buffer_len];
@@ -133,7 +132,7 @@ static int hk_gatt_write_ble_chr(uint16_t connection_handle, struct ble_gatt_acc
     {
         char uuid_name[50];
         hk_uuids_to_name(chr_uuid, uuid_name);
-         switch (transaction->opcode)
+        switch (transaction->opcode)
         {
         case 1:
             HK_LOGV("Signature read for %s.", uuid_name);
@@ -171,11 +170,6 @@ static int hk_gatt_write_ble_chr(uint16_t connection_handle, struct ble_gatt_acc
             HK_LOGE("Unknown opcode.");
             res = ESP_ERR_NOT_SUPPORTED;
         }
-
-        uint64_t now = esp_timer_get_time();
-        char *request_bytes_str = hk_mem_to_debug_string(transaction->request);
-        HK_LOGD("Calculated after %f with: %s", (float)(now - transaction->start_time) / 1000000.0f, request_bytes_str);
-        free(request_bytes_str);
     }
     else
     {
@@ -228,6 +222,15 @@ static int hk_gatt_read_ble_chr(uint16_t connection_handle, struct ble_gatt_acce
         {
             return BLE_ATT_ERR_UNLIKELY;
         }
+        bool is_ps = hk_uuids_cmp(chr_uuid, hk_uuids_get(HK_CHR_PAIR_SETUP)) && transaction->opcode != 1;
+
+        if (is_ps)
+        {
+
+            char uuid_name[50];
+            hk_uuids_to_name(chr_uuid, uuid_name);
+            printf("...%s %d", uuid_name, transaction->opcode);
+        }
 
         //HK_LOGD("Sending response for %s with: %s", uuid_name, response_bytes);
 
@@ -240,6 +243,11 @@ static int hk_gatt_read_ble_chr(uint16_t connection_handle, struct ble_gatt_acce
         if (!continuation) // no continuation
         {
             hk_mem_append_buffer(response, (char *)&transaction->response_status, 1);
+        }
+        else
+        {
+            if (is_ps)
+                printf("...continuation");
         }
 
         if (!continuation && has_body)
@@ -271,6 +279,8 @@ static int hk_gatt_read_ble_chr(uint16_t connection_handle, struct ble_gatt_acce
 
         hk_mem_free(response);
         HK_LOGV("Sent response.");
+        if (is_ps)
+            printf("...done\n");
     }
 
     return rc == 0 ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES;

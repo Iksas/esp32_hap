@@ -1,5 +1,7 @@
 #include "hk_pairing_ble.h"
 
+#include <esp_timer.h>
+
 #include "../../utils/hk_tlv.h"
 #include "../../include/hk_mem.h"
 #include "../../common/hk_pair_setup.h"
@@ -13,13 +15,19 @@
 esp_err_t hk_pairing_ble_write_pair_setup(hk_connection_t *connection, hk_mem *request, hk_mem *response)
 {
     esp_err_t res = ESP_OK;
-
-    int rc = hk_pair_setup(request, response, connection->device_id);
+    bool is_paired = false; // not needed in ble
+    int rc = hk_pair_setup(request, response, connection->device_id, &is_paired);
     if (rc != 0)
     {
         HK_LOGE("Error in pair setup: %d", res);
         res = ESP_ERR_HK_UNSUPPORTED_REQUEST;
     }
+
+    // uint64_t now = esp_timer_get_time();
+    // char *request_bytes_str = hk_mem_to_debug_string(connection->transactions->request);
+    // HK_LOGD("Calculated after %f", (float)(now - connection->transactions->start_time) / 1000000.0f);
+    // printf("...with %s", request_bytes_str);
+    // free(request_bytes_str);
 
     return res;
 }
@@ -57,10 +65,10 @@ esp_err_t hk_pairing_ble_read_pairing_pairings(hk_mem *response)
 
 esp_err_t hk_pairing_ble_write_pairing_pairings(hk_connection_t *connection, hk_mem *request, hk_mem *response)
 {
-    bool kill_chr = false;
-    hk_pairings(request, response, &kill_chr);
-    HK_LOGI("Pairing removed. Killing chr: %d", kill_chr);
-    if (kill_chr)
+    bool kill_connection = false;
+    bool is_paired = true;
+    hk_pairings(request, response, &kill_connection, &is_paired);
+    if (kill_connection)
     {
         return ESP_ERR_HK_TERMINATE;
     }

@@ -79,7 +79,8 @@ void hk_advertising_update_paired()
         ESP_ERROR_CHECK(mdns_service_txt_item_remove("_hap", "_tcp", "sf"));
     }
 
-    bool paired = hk_pairings_store_has_pairing();
+    bool paired = false;
+    hk_pairings_store_has_pairing(&paired);
     if (!paired)
     {
         // status flags

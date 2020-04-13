@@ -104,6 +104,5 @@ char *hk_mem_to_debug_string(hk_mem *mem)
         sprintf(str, "-");
     }
 
-    HK_LOGD("String length: %d %d", mem->size, strlen(str));
     return str;
 }

@@ -29,7 +29,7 @@ typedef struct
     uint32_t sent_frame_count;
     hk_mem *device_id;
     hk_transaction_t *transactions;
-    uint8_t mtu_size;
+    uint16_t mtu_size;
 } hk_connection_t;
 
 hk_transaction_t *hk_connection_transaction_get_by_uuid(hk_connection_t *connection, const ble_uuid128_t *chr_uuid);
@@ -38,5 +38,5 @@ void hk_connection_transaction_free(hk_connection_t *connection, hk_transaction_
 
 hk_connection_t *hk_connection_init(uint16_t connection_handle);
 hk_connection_t *hk_connection_get_by_handle(uint16_t connection_handle);
-void hk_connection_mtu_set(uint16_t connection_handle, uint8_t mtu_size);
+void hk_connection_mtu_set(uint16_t connection_handle, uint16_t mtu_size);
 void hk_connection_free(uint16_t connection_handle);

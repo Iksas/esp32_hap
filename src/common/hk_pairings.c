@@ -5,12 +5,12 @@
 #include "../utils/hk_store.h"
 #include "hk_pairings_store.h"
 #include "hk_pair_tlvs.h"
-#include "../stacks/hk_advertising.h"
 
-esp_err_t hk_pairings_remove(hk_tlv_t *tlv_data, hk_mem *result)
+static esp_err_t hk_pairings_remove(hk_tlv_t *tlv_data, hk_mem *result, bool *is_paired)
 {
     HK_LOGI("Remove pairing.");
 
+    *is_paired = true;
     hk_tlv_t *tlv_return = NULL;
     tlv_return = hk_tlv_add_uint8(tlv_return, HK_PAIR_TLV_STATE, HK_PAIR_TLV_STATE_M2); //state M2 is always returned
 
@@ -29,7 +29,7 @@ esp_err_t hk_pairings_remove(hk_tlv_t *tlv_data, hk_mem *result)
             {
                 HK_LOGD("Removing all pairings, because no further admin pairing.");
                 hk_pairings_store_remove_all();
-                hk_advertising_update_paired();
+                *is_paired = false;
             }
         }
         else
@@ -50,7 +50,7 @@ esp_err_t hk_pairings_remove(hk_tlv_t *tlv_data, hk_mem *result)
     return ret;
 }
 
-int hk_pairings(hk_mem *request, hk_mem *data, bool *kill_session)
+int hk_pairings(hk_mem *request, hk_mem *data, bool *kill_session, bool *is_paired)
 {
     HK_LOGD("Pairings");
     int res = HK_RES_OK;
@@ -87,7 +87,7 @@ int hk_pairings(hk_mem *request, hk_mem *data, bool *kill_session)
             HK_LOGE("Adding a second device is not implemented at the moment.");
             break;
         case 4:
-            hk_pairings_remove(tlv_data, data);
+            hk_pairings_remove(tlv_data, data, is_paired);
             break;
         case 5:
             HK_LOGE("Listing devices is not implemented at the moment.");
