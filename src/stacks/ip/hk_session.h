@@ -6,7 +6,7 @@
 #include <freertos/queue.h>
 
 #include "../../include/hk_mem.h"
-#include "../../common/hk_pair_verify_keys.h"
+#include "../../common/hk_conn_key_store.h"
 #include "hk_session_security.h"
 
 #define HK_SESSION_RESPONSE_MESSAGE 0
@@ -48,7 +48,7 @@ typedef struct hk_session
     hk_session_request_t *request;
     hk_session_response_t *response;    
     hk_encryption_data_t* encryption_data;
-    hk_pair_verify_keys_t *keys;
+    hk_conn_key_store_t *keys;
 
     char *device_id;
     int socket;

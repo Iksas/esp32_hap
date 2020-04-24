@@ -10,7 +10,7 @@
 #include "../hk_formats_ble.h"
 #include "../hk_connection_security.h"
 
-esp_err_t hk_protocol_configuration(hk_pair_verify_keys_t *keys, hk_transaction_t *transaction, hk_chr_t *chr)
+esp_err_t hk_protocol_configuration(hk_conn_key_store_t *keys, hk_transaction_t *transaction, hk_chr_t *chr)
 {
     esp_err_t res = ESP_OK;
     hk_tlv_t *tlv_data = hk_tlv_deserialize(transaction->request);

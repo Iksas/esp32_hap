@@ -16,7 +16,7 @@ esp_err_t hk_pairing_ble_write_pair_setup(hk_connection_t *connection, hk_mem *r
 {
     esp_err_t res = ESP_OK;
     bool is_paired = false; // not needed in ble
-    int rc = hk_pair_setup(request, response, connection->device_id, &is_paired);
+    int rc = hk_pair_setup(request, response, connection->security_keys, connection->device_id, &is_paired);
     if (rc != 0)
     {
         HK_LOGE("Error in pair setup: %d", res);
@@ -35,7 +35,7 @@ esp_err_t hk_pairing_ble_write_pair_setup(hk_connection_t *connection, hk_mem *r
 esp_err_t hk_pairing_ble_write_pair_verify(hk_connection_t *connection, hk_mem *request, hk_mem *response)
 {
     bool is_encrypted = false;
-    int res = hk_pair_verify(request, connection->security_keys, response, &is_encrypted);
+    int res = hk_pair_verify(request, response, connection->security_keys, &is_encrypted);
     if (res != 0)
     {
         HK_LOGE("Error in pair verify: %d", res);

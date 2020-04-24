@@ -7,7 +7,7 @@
 #define HK_AUTHTAG_SIZE 16 //16 = CHACHA20_POLY1305_AUTH_TAG_LENGTH
 #define HK_MAX_DATA_SIZE 1024 - HK_AAD_SIZE - HK_AUTHTAG_SIZE
 
-esp_err_t hk_connection_security_decrypt_frames(hk_encryption_data_t *encryption_data, hk_pair_verify_keys_t *keys, hk_mem *in, hk_mem *out)
+esp_err_t hk_connection_security_decrypt_frames(hk_encryption_data_t *encryption_data, hk_conn_key_store_t *keys, hk_mem *in, hk_mem *out)
 {
     size_t offset = 0;
     while (offset < in->size)
@@ -39,7 +39,7 @@ esp_err_t hk_connection_security_decrypt_frames(hk_encryption_data_t *encryption
     return ESP_OK;
 }
 
-esp_err_t hk_connection_security_encrypt_frames(hk_encryption_data_t *encryption_data, hk_pair_verify_keys_t *keys, hk_mem *in, 
+esp_err_t hk_connection_security_encrypt_frames(hk_encryption_data_t *encryption_data, hk_conn_key_store_t *keys, hk_mem *in, 
     esp_err_t (*callback)(hk_mem *frame_data, void *args), void* args)
 {
     char nonce[12] = {

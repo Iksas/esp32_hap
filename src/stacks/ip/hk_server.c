@@ -28,7 +28,7 @@ void hk_server_handle(hk_session_t *session)
     {
         hk_mem *device_id = hk_mem_init();
         bool is_paired = false;
-        session->response->result = hk_pair_setup(session->request->content, session->response->content, device_id, &is_paired);
+        session->response->result = hk_pair_setup(session->request->content, session->response->content, session->keys, device_id, &is_paired);
         if (device_id->size > 0)
         {
             session->device_id = strndup(device_id->ptr, device_id->size);
@@ -44,8 +44,7 @@ void hk_server_handle(hk_session_t *session)
     else if (hk_mem_equal_str(session->request->url, "/pair-verify") && HK_SESSION_HTML_METHOD_POST == session->request->method)
     {
         bool session_is_secure = false;
-        session->response->result = hk_pair_verify(session->request->content, session->keys,
-                                                   session->response->content, &session_is_secure);
+        session->response->result = hk_pair_verify(session->request->content, session->response->content, session->keys, &session_is_secure);
 
         hk_session_send(session);
 

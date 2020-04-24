@@ -23,7 +23,7 @@ typedef struct
 typedef struct
 {
     uint16_t connection_handle;
-    hk_pair_verify_keys_t *security_keys;
+    hk_conn_key_store_t *security_keys;
     bool is_secure;
     uint32_t received_frame_count;
     uint32_t sent_frame_count;

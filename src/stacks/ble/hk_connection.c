@@ -90,7 +90,7 @@ hk_connection_t *hk_connection_init(uint16_t connection_handle)
     connection->received_frame_count = 0;
     connection->sent_frame_count = 0;
     connection->device_id = hk_mem_init();
-    connection->security_keys = hk_pair_verify_keys_init();
+    connection->security_keys = hk_conn_key_store_init();
     connection->transactions = NULL;
     connection->mtu_size = (uint8_t)256;
 
@@ -118,7 +118,7 @@ void hk_connection_free(uint16_t connection_handle)
 
     connection->connection_handle = -1;
     hk_mem_free(connection->device_id);
-    hk_pair_verify_keys_free(connection->security_keys);
+    hk_conn_key_store_free(connection->security_keys);
 
     hk_connection_connections = hk_ll_remove(hk_connection_connections, connection);
 }

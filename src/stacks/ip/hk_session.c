@@ -27,7 +27,7 @@ void hk_session_init(hk_session_t *session, int socket)
     session->response->type = HK_SESSION_RESPONSE_MESSAGE;
     session->response->content_type = HK_SESSION_CONTENT_TLV;
 
-    session->keys = hk_pair_verify_keys_init();
+    session->keys = hk_conn_key_store_init();
     session->encryption_data = hk_encryption_data_init();
 }
 
@@ -70,7 +70,7 @@ void hk_session_free(hk_session_t *session)
     }
     vQueueDelete(session->response->data_to_send);
     free(session->response);
-    hk_pair_verify_keys_free(session->keys);
+    hk_conn_key_store_free(session->keys);
     hk_encryption_data_free(session->encryption_data);
 }
 

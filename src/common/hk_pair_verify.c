@@ -23,7 +23,7 @@ typedef struct
 
 hk_pair_verify_session_t *hk_pair_verify_sessions = NULL;
 
-esp_err_t hk_pair_verify_create_session(hk_pair_verify_keys_t *keys)
+esp_err_t hk_pair_verify_create_session(hk_conn_key_store_t *keys)
 {
     esp_err_t ret = ESP_OK;
 
@@ -49,7 +49,7 @@ esp_err_t hk_pair_verify_create_session(hk_pair_verify_keys_t *keys)
     return ret;
 }
 
-esp_err_t hk_create_session_security(hk_pair_verify_keys_t *keys)
+esp_err_t hk_create_session_security(hk_conn_key_store_t *keys)
 {
     esp_err_t ret = ESP_OK;
 
@@ -63,7 +63,7 @@ esp_err_t hk_create_session_security(hk_pair_verify_keys_t *keys)
     return ret;
 }
 
-esp_err_t hk_pair_verify_start(hk_pair_verify_keys_t *keys, hk_tlv_t *request_tlvs, hk_tlv_t **response_tlvs_ptr)
+esp_err_t hk_pair_verify_start(hk_conn_key_store_t *keys, hk_tlv_t *request_tlvs, hk_tlv_t **response_tlvs_ptr)
 {
     HK_LOGD("Now running pair verify start.");
     esp_err_t ret = ESP_OK;
@@ -80,7 +80,7 @@ esp_err_t hk_pair_verify_start(hk_pair_verify_keys_t *keys, hk_tlv_t *request_tl
     hk_tlv_t *response_sub_tlvs = NULL;
     hk_tlv_t *response_tlvs = NULL;
 
-    hk_pair_verify_keys_reset(keys);
+    hk_conn_key_store_reset(keys);
     keys->session_key = hk_mem_init();
     keys->accessory_session_key_public = hk_mem_init();
     keys->device_session_key_public = hk_mem_init();
@@ -159,7 +159,7 @@ esp_err_t hk_pair_verify_start(hk_pair_verify_keys_t *keys, hk_tlv_t *request_tl
     return ret;
 }
 
-esp_err_t hk_pair_verify_finish(hk_pair_verify_keys_t *keys, hk_tlv_t *request_tlvs, hk_tlv_t **response_tlvs_ptr)
+esp_err_t hk_pair_verify_finish(hk_conn_key_store_t *keys, hk_tlv_t *request_tlvs, hk_tlv_t **response_tlvs_ptr)
 {
     HK_LOGD("Now running pair verify finish.");
     hk_ed25519_key_t *device_long_term_key = hk_ed25519_init();
@@ -224,7 +224,7 @@ esp_err_t hk_pair_verify_finish(hk_pair_verify_keys_t *keys, hk_tlv_t *request_t
     return ret;
 }
 
-esp_err_t hk_pair_verify_resume(hk_pair_verify_keys_t *keys, hk_tlv_t *request_tlvs, hk_tlv_t **response_tlvs_ptr)
+esp_err_t hk_pair_verify_resume(hk_conn_key_store_t *keys, hk_tlv_t *request_tlvs, hk_tlv_t **response_tlvs_ptr)
 {
     hk_mem *session_id = hk_mem_init();
     hk_mem *encryption_key = hk_mem_init();
@@ -286,7 +286,7 @@ esp_err_t hk_pair_verify_resume(hk_pair_verify_keys_t *keys, hk_tlv_t *request_t
     if (!ret)
     {
         hk_mem_set(encrypted_data, 0);
-        hk_pair_verify_keys_reset(keys);
+        hk_conn_key_store_reset(keys);
     }
 
     RUN_AND_CHECK(ret, hk_chacha20poly1305_caluclate_auth_tag_without_message, encryption_key, HK_CHACHA_RESUME_MSG2, encrypted_data);
@@ -329,7 +329,7 @@ esp_err_t hk_pair_verify_resume(hk_pair_verify_keys_t *keys, hk_tlv_t *request_t
     return ret;
 }
 
-int hk_pair_verify(hk_mem *request, hk_pair_verify_keys_t *keys, hk_mem *result, bool *is_session_encrypted)
+int hk_pair_verify(hk_mem *request, hk_mem *result, hk_conn_key_store_t *keys, bool *is_session_encrypted)
 {
     esp_err_t res = HK_RES_OK;
     hk_tlv_t *request_tlvs = hk_tlv_deserialize(request);

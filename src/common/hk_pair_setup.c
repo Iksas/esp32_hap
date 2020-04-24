@@ -16,29 +16,26 @@
 #include "hk_pairings_store.h"
 #include "hk_pair_tlvs.h"
 
-hk_mem *hk_pair_setup_public_key; //todo: move to connection key store
-hk_srp_key_t *hk_pair_setup_srp_key;
-
-static esp_err_t hk_pairing_setup_srp_start(hk_mem *result)
+static esp_err_t hk_pairing_setup_srp_start(hk_mem *result, hk_conn_key_store_t *keys)
 {
     HK_LOGI("Starting pairing");
     HK_LOGD("pairing setup 1/3 (start).");
 
     esp_err_t ret = ESP_OK;
-    hk_pair_setup_public_key = hk_mem_init();
+    keys->pair_setup_public_key = hk_mem_init();
     hk_mem *salt = hk_mem_init();
     hk_tlv_t *tlv_data = NULL;
 
     // init
-    hk_pair_setup_srp_key = hk_srp_init_key();
-    RUN_AND_CHECK(ret, hk_srp_generate_key, hk_pair_setup_srp_key, "Pair-Setup", hk_store_code_get()); // username has to be Pair-Setup according to specification
-    RUN_AND_CHECK(ret, hk_srp_export_public_key, hk_pair_setup_srp_key, hk_pair_setup_public_key);
-    RUN_AND_CHECK(ret, hk_srp_export_salt, hk_pair_setup_srp_key, salt);
+    keys->pair_setup_srp_key = hk_srp_init_key();
+    RUN_AND_CHECK(ret, hk_srp_generate_key, keys->pair_setup_srp_key, "Pair-Setup", hk_store_code_get()); // username has to be Pair-Setup according to specification
+    RUN_AND_CHECK(ret, hk_srp_export_public_key, keys->pair_setup_srp_key, keys->pair_setup_public_key);
+    RUN_AND_CHECK(ret, hk_srp_export_salt, keys->pair_setup_srp_key, salt);
 
     tlv_data = hk_tlv_add_uint8(tlv_data, HK_PAIR_TLV_STATE, HK_PAIR_TLV_STATE_M2);
     if (!ret)
     {
-        tlv_data = hk_tlv_add(tlv_data, HK_PAIR_TLV_PUBLICKEY, hk_pair_setup_public_key);
+        tlv_data = hk_tlv_add(tlv_data, HK_PAIR_TLV_PUBLICKEY, keys->pair_setup_public_key);
         tlv_data = hk_tlv_add(tlv_data, HK_PAIR_TLV_SALT, salt);
     }
     else
@@ -56,7 +53,7 @@ static esp_err_t hk_pairing_setup_srp_start(hk_mem *result)
     return ret;
 }
 
-static esp_err_t hk_pairing_setup_srp_verify(hk_tlv_t *tlv, hk_mem *result)
+static esp_err_t hk_pairing_setup_srp_verify(hk_tlv_t *tlv, hk_mem *result, hk_conn_key_store_t *keys)
 {
     HK_LOGD("pairing setup 2/3 (verifying).");
 
@@ -69,9 +66,9 @@ static esp_err_t hk_pairing_setup_srp_verify(hk_tlv_t *tlv, hk_mem *result)
 
     RUN_AND_CHECK(ret, hk_tlv_get_mem_by_type, tlv, HK_PAIR_TLV_PUBLICKEY, ios_pk);
     RUN_AND_CHECK(ret, hk_tlv_get_mem_by_type, tlv, HK_PAIR_TLV_PROOF, ios_proof);
-    RUN_AND_CHECK(ret, hk_srp_compute_key, hk_pair_setup_srp_key, hk_pair_setup_public_key, ios_pk);
-    RUN_AND_CHECK(ret, hk_srp_verify, hk_pair_setup_srp_key, ios_proof, &valid);
-    RUN_AND_CHECK(ret, hk_srp_export_proof, hk_pair_setup_srp_key, accessory_proof);
+    RUN_AND_CHECK(ret, hk_srp_compute_key, keys->pair_setup_srp_key, keys->pair_setup_public_key, ios_pk);
+    RUN_AND_CHECK(ret, hk_srp_verify, keys->pair_setup_srp_key, ios_proof, &valid);
+    RUN_AND_CHECK(ret, hk_srp_export_proof, keys->pair_setup_srp_key, accessory_proof);
 
     tlv_data = hk_tlv_add_uint8(tlv_data, HK_PAIR_TLV_STATE, HK_PAIR_TLV_STATE_M4);
     if (!ret)
@@ -86,7 +83,7 @@ static esp_err_t hk_pairing_setup_srp_verify(hk_tlv_t *tlv, hk_mem *result)
     hk_tlv_serialize(tlv_data, result);
 
     hk_tlv_free(tlv_data);
-    hk_mem_free(hk_pair_setup_public_key);
+    hk_mem_free(keys->pair_setup_public_key);
     hk_mem_free(ios_pk);
     hk_mem_free(ios_proof);
     hk_mem_free(accessory_proof);
@@ -145,7 +142,6 @@ static esp_err_t hk_pairing_setup_exchange_response_verification(hk_tlv_t *tlv, 
     hk_mem_free(device_info);
     hk_mem_free(device_x);
     hk_ed25519_free(device_key);
-    hk_srp_free_key(hk_pair_setup_srp_key);
 
     return ret;
 }
@@ -216,7 +212,7 @@ static esp_err_t hk_pairing_setup_exchange_response_generation(hk_mem *result, h
     return ret;
 }
 
-static esp_err_t hk_pairing_setup_exchange_response(hk_tlv_t *tlv, hk_mem *result, hk_mem *device_id, bool *is_paired)
+static esp_err_t hk_pairing_setup_exchange_response(hk_tlv_t *tlv, hk_mem *result, hk_conn_key_store_t *keys, hk_mem *device_id, bool *is_paired)
 {
     HK_LOGD("pairing setup 3/3 (exchange response).");
 
@@ -225,7 +221,7 @@ static esp_err_t hk_pairing_setup_exchange_response(hk_tlv_t *tlv, hk_mem *resul
 
     esp_err_t ret = ESP_OK;
 
-    RUN_AND_CHECK(ret, hk_srp_export_private_key, hk_pair_setup_srp_key, srp_private_key);
+    RUN_AND_CHECK(ret, hk_srp_export_private_key, keys->pair_setup_srp_key, srp_private_key);
     RUN_AND_CHECK(ret, hk_pairing_setup_exchange_response_verification, tlv, shared_secret, srp_private_key, device_id);
     RUN_AND_CHECK(ret, hk_pairing_setup_exchange_response_generation, result, shared_secret, srp_private_key);
 
@@ -237,12 +233,13 @@ static esp_err_t hk_pairing_setup_exchange_response(hk_tlv_t *tlv, hk_mem *resul
 
     hk_mem_free(shared_secret);
     hk_mem_free(srp_private_key);
+    hk_srp_free_key(keys->pair_setup_srp_key);
 
     HK_LOGD("pairing setup 3/3 done.");
     return ret;
 }
 
-esp_err_t hk_pair_setup(hk_mem *request, hk_mem *response, hk_mem *device_id, bool *is_paired)
+esp_err_t hk_pair_setup(hk_mem *request, hk_mem *response, hk_conn_key_store_t *keys, hk_mem *device_id, bool *is_paired)
 {
     hk_tlv_t *tlv_data = hk_tlv_deserialize(request);
     hk_tlv_t *type_tlv = hk_tlv_get_tlv_by_type(tlv_data, HK_PAIR_TLV_STATE);
@@ -258,13 +255,13 @@ esp_err_t hk_pair_setup(hk_mem *request, hk_mem *response, hk_mem *device_id, bo
         switch (*type_tlv->value)
         {
         case HK_PAIR_TLV_STATE_M1:
-            RUN_AND_CHECK(ret, hk_pairing_setup_srp_start, response);
+            RUN_AND_CHECK(ret, hk_pairing_setup_srp_start, response, keys);
             break;
         case HK_PAIR_TLV_STATE_M3:
-            RUN_AND_CHECK(ret, hk_pairing_setup_srp_verify, tlv_data, response);
+            RUN_AND_CHECK(ret, hk_pairing_setup_srp_verify, tlv_data, response, keys);
             break;
         case HK_PAIR_TLV_STATE_M5:
-            RUN_AND_CHECK(ret, hk_pairing_setup_exchange_response, tlv_data, response, device_id, is_paired);
+            RUN_AND_CHECK(ret, hk_pairing_setup_exchange_response, tlv_data, response, keys, device_id, is_paired);
             break;
         default:
             HK_LOGE("Unexpected value in tlv in pair setup: %d", *type_tlv->value);

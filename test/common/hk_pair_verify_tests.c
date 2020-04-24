@@ -1,6 +1,6 @@
 #include "unity.h"
 
-#include "../../src/common/hk_pair_verify_keys.h"
+#include "../../src/common/hk_conn_key_store.h"
 #include "../../src/common/hk_pair_tlvs.h"
 #include "../../src/common/hk_pairings_store.h"
 #include "../../src/crypto/hk_ed25519.h"
@@ -14,8 +14,8 @@
 #include "hk_pair_verify_test_vectors.h"
 
 
-esp_err_t hk_pair_verify_start(hk_pair_verify_keys_t *keys, hk_tlv_t *request_tlvs, hk_tlv_t **response_tlvs_ptr);
-esp_err_t hk_pair_verify_finish(hk_pair_verify_keys_t *keys, hk_tlv_t *request_tlvs, hk_tlv_t **response_tlvs_ptr);
+esp_err_t hk_pair_verify_start(hk_conn_key_store_t *keys, hk_tlv_t *request_tlvs, hk_tlv_t **response_tlvs_ptr);
+esp_err_t hk_pair_verify_finish(hk_conn_key_store_t *keys, hk_tlv_t *request_tlvs, hk_tlv_t **response_tlvs_ptr);
 void hk_pair_verify_device_m1(hk_tlv_t **response_tlvs_ptr, hk_curve25519_key_t *device_session_key);
 void hk_pair_verify_device_m3(hk_tlv_t *request_tlvs, hk_tlv_t **response_tlvs_ptr,
                               hk_curve25519_key_t *device_session_key, hk_ed25519_key_t *device_long_term_key);
@@ -33,7 +33,7 @@ TEST_CASE("verify once", "[pair] [verify]")
     hk_tlv_t *m32_tlvs = NULL;
     hk_tlv_t *m42_tlvs = NULL;
 
-    hk_pair_verify_keys_t *keys = hk_pair_verify_keys_init();
+    hk_conn_key_store_t *keys = hk_conn_key_store_init();
 
     hk_curve25519_key_t *device_session_key = hk_curve25519_init();
     hk_ed25519_key_t *device_long_term_key = hk_ed25519_init();
@@ -77,7 +77,7 @@ TEST_CASE("verify once", "[pair] [verify]")
     hk_tlv_free(m2_tlvs);
     hk_tlv_free(m3_tlvs);
     hk_tlv_free(m4_tlvs);
-    hk_pair_verify_keys_free(keys);
+    hk_conn_key_store_free(keys);
     hk_store_free();
     hk_mem_free(accessory_public_key);
     hk_mem_free(accessory_private_key);
