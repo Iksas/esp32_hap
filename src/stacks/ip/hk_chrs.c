@@ -4,7 +4,6 @@
 #include "../../include/hk_srvs.h"
 #include "../../include/hk_chrs.h"
 #include "../../utils/hk_logging.h"
-#include "../../utils/hk_res.h"
 #include "../../utils/hk_ll.h"
 #include "hk_html.h"
 #include "hk_html_parser.h"
@@ -40,7 +39,7 @@ void hk_chrs_get(hk_session_t *session)
         cJSON *j_chrs = cJSON_CreateArray();
         cJSON_AddItemToObject(j_root, "characteristics", j_chrs);
         char *id_ptr = ids->ptr;
-        session->response->result = HK_RES_OK;
+        session->response->result = ESP_OK;
         while (id_ptr != NULL)
         {
             id_ptr = hk_chrs_get_next_id_pair(id_ptr, results);
@@ -48,7 +47,7 @@ void hk_chrs_get(hk_session_t *session)
             if (chr == NULL)
             {
                 HK_LOGE("Could not find chr %d.%d.", results[0], results[1]);
-                session->response->result = HK_RES_UNKNOWN;
+                session->response->result = ESP_ERR_NOT_FOUND;
                 break;
             }
 
@@ -60,7 +59,7 @@ void hk_chrs_get(hk_session_t *session)
         }
     }
 
-    if (session->response->result == HK_RES_OK)
+    if (session->response->result == ESP_OK)
     {
         char *serialized = cJSON_PrintUnformatted(j_root);
         hk_mem_append_string(session->response->content, (const char *)serialized);
@@ -290,19 +289,19 @@ void hk_chrs_put(hk_session_t *session)
     if (j_root == NULL)
     {
         HK_LOGE("Failed to parse request for chrs put: %s", session->request->content->ptr);
-        session->response->result = HK_RES_UNKNOWN;
+        session->response->result = ESP_ERR_HK_UNSUPPORTED_REQUEST;
     }
 
-    if (session->response->result == HK_RES_OK)
+    if (session->response->result == ESP_OK)
     {
         cJSON *j_chrs = cJSON_GetObjectItem(j_root, "characteristics");
-        for (int i = 0; i < cJSON_GetArraySize(j_chrs) && session->response->result == HK_RES_OK; i++)
+        for (int i = 0; i < cJSON_GetArraySize(j_chrs) && session->response->result == ESP_OK; i++)
         {
             cJSON *j_chr = cJSON_GetArrayItem(j_chrs, i);
             if (j_chr == NULL)
             {
                 HK_LOGE("Could not find first element in chrs put.");
-                session->response->result = HK_RES_UNKNOWN;
+                session->response->result = ESP_ERR_HK_UNSUPPORTED_REQUEST;
                 break;
             }
 
@@ -334,10 +333,10 @@ void hk_chrs_identify(hk_session_t *session)
     if (chr == NULL)
     {
         HK_LOGE("Could not find identify chr.");
-        session->response->result = HK_RES_UNKNOWN;
+        session->response->result = ESP_ERR_NOT_FOUND;
     }
 
-    if (session->response->result == HK_RES_OK)
+    if (session->response->result == ESP_OK)
     {
         HK_LOGE("%d - Calling write on identify chr!", session->socket);
         chr->write(NULL);

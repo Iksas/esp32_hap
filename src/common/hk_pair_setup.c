@@ -243,12 +243,12 @@ esp_err_t hk_pair_setup(hk_mem *request, hk_mem *response, hk_conn_key_store_t *
 {
     hk_tlv_t *tlv_data = hk_tlv_deserialize(request);
     hk_tlv_t *type_tlv = hk_tlv_get_tlv_by_type(tlv_data, HK_PAIR_TLV_STATE);
-    esp_err_t ret = HK_RES_OK;
+    esp_err_t ret = ESP_OK;
 
     if (type_tlv == NULL)
     {
         HK_LOGE("Could not find tlv with type state.");
-        ret = HK_RES_MALFORMED_REQUEST;
+        ret = ESP_ERR_HK_UNSUPPORTED_REQUEST;
     }
     else
     {
@@ -265,7 +265,7 @@ esp_err_t hk_pair_setup(hk_mem *request, hk_mem *response, hk_conn_key_store_t *
             break;
         default:
             HK_LOGE("Unexpected value in tlv in pair setup: %d", *type_tlv->value);
-            ret = HK_RES_MALFORMED_REQUEST;
+            ret = ESP_ERR_HK_UNSUPPORTED_REQUEST;
         }
     }
 

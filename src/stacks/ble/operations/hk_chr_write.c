@@ -14,7 +14,7 @@ esp_err_t hk_chr_write(hk_connection_t *connection, hk_transaction_t *transactio
     hk_mem *write_response = hk_mem_init();
     hk_tlv_t *tlv_data = hk_tlv_deserialize(transaction->request);
 
-    if (hk_tlv_get_mem_by_type(tlv_data, 0x01, write_request) != HK_RES_OK)
+    if (hk_tlv_get_mem_by_type(tlv_data, 0x01, write_request) != ESP_OK)
     {
         HK_LOGE("Error getting value of write request.");
         res = ESP_ERR_HK_UNSUPPORTED_REQUEST;

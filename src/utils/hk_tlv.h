@@ -1,8 +1,10 @@
 #pragma once
 
 #include <stdlib.h>
+#include <esp_types.h>
+#include <esp_err.h>
+
 #include "../include/hk_mem.h"
-#include "hk_res.h"
 
 typedef struct
 {

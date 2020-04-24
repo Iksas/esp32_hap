@@ -1,6 +1,5 @@
 #include "hk_session.h"
 
-#include "../../utils/hk_res.h"
 #include "../../utils/hk_logging.h"
 
 #include "hk_html.h"
@@ -23,7 +22,7 @@ void hk_session_init(hk_session_t *session, int socket)
     session->response->data_to_send = xQueueCreate(10, sizeof(hk_mem *));
     session->response->data = hk_mem_init();
     session->response->content = hk_mem_init();
-    session->response->result = HK_RES_OK;
+    session->response->result = ESP_OK;
     session->response->type = HK_SESSION_RESPONSE_MESSAGE;
     session->response->content_type = HK_SESSION_CONTENT_TLV;
 
@@ -35,7 +34,7 @@ void hk_session_clean_response(hk_session_t *session)
 {
     hk_mem_set(session->response->data, 0);
     hk_mem_set(session->response->content, 0);
-    session->response->result = HK_RES_OK;
+    session->response->result = ESP_OK;
     session->response->type = HK_SESSION_RESPONSE_MESSAGE;
 }
 
@@ -78,11 +77,11 @@ const char *hk_session_get_status(hk_session_t *session)
 {
     switch (session->response->result)
     {
-    case HK_RES_OK:
+    case ESP_OK:
         return HK_HTML_200;
-    case HK_RES_MALFORMED_REQUEST:
+    case ESP_ERR_HK_UNSUPPORTED_REQUEST:
         return HK_HTML_400;
-    case HK_RES_UNKNOWN:
+    case ESP_ERR_NOT_FOUND:
         return HK_HTML_500;
     default:
         HK_LOGE("Unknown response status: %d", session->response->result);

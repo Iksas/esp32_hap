@@ -8,7 +8,6 @@
 #include "../utils/hk_tlv.h"
 #include "../utils/hk_util.h"
 #include "../utils/hk_store.h"
-#include "../utils/hk_res.h"
 #include "../utils/hk_ll.h"
 
 #include "hk_accessory_id.h"
@@ -93,13 +92,13 @@ esp_err_t hk_pair_verify_start(hk_conn_key_store_t *keys, hk_tlv_t *request_tlvs
     else
     {
         HK_LOGE("Cannot get key from store for pairing.");
-        ret = HK_RES_UNKNOWN;
+        ret = ESP_ERR_NOT_FOUND;
     }
 
     if (accessory_public_key->size < 1 || accessory_private_key->size < 1)
     {
         HK_LOGE("Verfiy was called, but accessory keys are not present.");
-        ret = HK_RES_UNKNOWN;
+        ret = ESP_ERR_NOT_FOUND;
     }
 
     RUN_AND_CHECK(ret, hk_tlv_get_mem_by_type, request_tlvs, HK_PAIR_TLV_PUBLICKEY, keys->device_session_key_public);
@@ -331,7 +330,7 @@ esp_err_t hk_pair_verify_resume(hk_conn_key_store_t *keys, hk_tlv_t *request_tlv
 
 int hk_pair_verify(hk_mem *request, hk_mem *result, hk_conn_key_store_t *keys, bool *is_session_encrypted)
 {
-    esp_err_t res = HK_RES_OK;
+    esp_err_t res = ESP_OK;
     hk_tlv_t *request_tlvs = hk_tlv_deserialize(request);
     hk_tlv_t *response_tlvs = NULL;
     hk_tlv_t *state_tlv = hk_tlv_get_tlv_by_type(request_tlvs, HK_PAIR_TLV_STATE);
@@ -339,7 +338,7 @@ int hk_pair_verify(hk_mem *request, hk_mem *result, hk_conn_key_store_t *keys, b
     if (state_tlv == NULL)
     {
         HK_LOGE("Could not find tlv with type state.");
-        res = HK_RES_MALFORMED_REQUEST;
+        res = ESP_ERR_HK_UNSUPPORTED_REQUEST;
     }
     else
     {
@@ -382,7 +381,7 @@ int hk_pair_verify(hk_mem *request, hk_mem *result, hk_conn_key_store_t *keys, b
         }
         default:
             HK_LOGE("Unexpected value in tlv in pair setup: %d", *state_tlv->value);
-            res = HK_RES_MALFORMED_REQUEST;
+            res = ESP_ERR_HK_UNSUPPORTED_REQUEST;
         }
     }
 

@@ -125,6 +125,7 @@ void hk_gap_start_advertising()
     uint16_t global_state = hk_global_state_get();
     bool has_pairing = false;
     hk_pairings_store_has_pairing(&has_pairing);
+    uint8_t configuration = hk_store_configuration_get();
 
     uint8_t manufacturer_data[17];
     manufacturer_data[0] = 0x4c;                           // company id
@@ -138,14 +139,15 @@ void hk_gap_start_advertising()
     manufacturer_data[8] = data->ptr[3];                   // device id
     manufacturer_data[9] = data->ptr[4];                   // device id
     manufacturer_data[10] = data->ptr[5];                  // device id
-    manufacturer_data[11] = (char)hk_gap_category; // accessory category identifier
+    manufacturer_data[11] = (char)hk_gap_category;         // accessory category identifier
     manufacturer_data[12] = 0x00;                          // accessory category identifier // todo: make custom
     manufacturer_data[13] = global_state % 256;            // global state number
     manufacturer_data[14] = global_state / 256;            // global state number
-    manufacturer_data[15] = hk_store_configuration_get();  // configuration number
+    manufacturer_data[15] = configuration;                 // configuration number
     manufacturer_data[16] = 0x02;                          // HAP BLE version
 
-    HK_LOGV("With status flag sf: %d, global state: %d, configuration: %d", manufacturer_data[4], global_state, hk_store_configuration_get());
+    HK_LOGD("With status flag sf: %d, global state: %d, configuration: %d, pairing: %d", 
+        manufacturer_data[4], global_state, configuration, has_pairing);
     hk_mem_free(data);
     struct ble_hs_adv_fields fields;
     memset(&fields, 0, sizeof fields);
