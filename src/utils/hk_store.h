@@ -7,6 +7,8 @@
 
 esp_err_t hk_store_init();
 
+esp_err_t hk_store_u16_get(const char *key, uint16_t *value);
+esp_err_t hk_store_u16_set(const char *key, uint16_t value);
 esp_err_t hk_store_blob_get(const char *key, hk_mem *value);
 esp_err_t hk_store_blob_set(const char *key, hk_mem *value);
 esp_err_t hk_store_erase(const char *key);

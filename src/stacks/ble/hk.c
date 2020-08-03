@@ -3,6 +3,7 @@
 #include "../../utils/hk_store.h"
 #include "../../common/hk_accessory_id.h"
 #include "../../common/hk_pairings_store.h"
+#include "../../common/hk_global_state.h"
 #include "hk_nimble.h"
 #include "hk_gatt.h"
 #include "hk_gap.h"
@@ -41,6 +42,7 @@ esp_err_t hk_write_chr_signature(hk_mem *response)
 void hk_init(const char *name, const hk_categories_t category, const char *code)
 {
     hk_store_code_set(code);
+    hk_global_state_init();
     hk_nimble_init();
     hk_gap_init(name, category, 2);
     hk_gatt_start();
@@ -101,10 +103,11 @@ void hk_reset()
 {
     HK_LOGW("Resetting homekit for this device.");
     hk_accessory_id_reset();
+    hk_global_state_reset();
     hk_pairings_store_remove_all();
 }
 
 void hk_notify(void *chr)
 {
-    //hk_chrs_notify(chr);
+    hk_gatt_indicate(chr);
 }

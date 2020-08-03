@@ -1,4 +1,10 @@
-- make unit test work for ip and ble
+- ble: check notifications against spec
+- ble: check memory leak in read
+- ble: longer name
+- ble: make category work
+- ble: break in foreach
+- review error handling, shouldnt every function have this?
+- move special functions of store out to usages
 - Document all header files
 - Document project start
 - create exampe projects

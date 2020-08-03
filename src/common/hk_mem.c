@@ -35,22 +35,6 @@ void hk_mem_append_string_terminator(hk_mem *mem)
     mem->ptr[mem->size - 1] = 0;
 }
 
-void hk_mem_insert_buffer(hk_mem *mem, void *data, size_t size, size_t index)
-{
-    size_t new_size = mem->size + size;
-    mem->ptr = realloc(mem->ptr, new_size);
-
-    // move after insertion in buffer
-    char buffer[mem->size - index];
-    memcpy(buffer, mem->ptr + index, mem->size - index);
-    // copy data to insert in mem
-    memcpy(mem->ptr + index, data, size);
-    // prepend new data
-    memcpy(mem->ptr + index + size, buffer, mem->size - index);
-    // set new size
-    mem->size = new_size;
-}
-
 void hk_mem_set(hk_mem *mem, size_t size)
 {
     if (mem->size != size)

@@ -54,9 +54,9 @@ esp_err_t hk_pairings(hk_mem *request, hk_mem *response, bool *kill_session, boo
 {
     HK_LOGD("Pairings");
     esp_err_t ret = ESP_OK;
-    hk_tlv_t *request_tlvs = hk_tlv_deserialize(request);
-    hk_tlv_t *response_tlvs = NULL;
-    hk_tlv_t *type_tlv = hk_tlv_get_tlv_by_type(request_tlvs, HK_PAIR_TLV_STATE);
+    hk_tlv_t *tlv_data_request = hk_tlv_deserialize(request);
+    hk_tlv_t *tlv_data_response = NULL;
+    hk_tlv_t *type_tlv = hk_tlv_get_tlv_by_type(tlv_data_request, HK_PAIR_TLV_STATE);
 
     if (type_tlv == NULL)
     {
@@ -76,7 +76,7 @@ esp_err_t hk_pairings(hk_mem *request, hk_mem *response, bool *kill_session, boo
     hk_tlv_t *method_tlv = NULL;
     if (ret == ESP_OK)
     {
-        method_tlv = hk_tlv_get_tlv_by_type(request_tlvs, HK_PAIR_TLV_METHOD);
+        method_tlv = hk_tlv_get_tlv_by_type(tlv_data_request, HK_PAIR_TLV_METHOD);
         if (method_tlv == NULL)
         {
             HK_LOGE("Could not find tlv with type method.");
@@ -92,7 +92,7 @@ esp_err_t hk_pairings(hk_mem *request, hk_mem *response, bool *kill_session, boo
             HK_LOGE("Adding a second device is not implemented at the moment.");
             break;
         case 4:
-            RUN_AND_CHECK(ret, hk_pairings_remove, request_tlvs, &response_tlvs, is_paired);
+            RUN_AND_CHECK(ret, hk_pairings_remove, tlv_data_request, &tlv_data_response, is_paired);
 
             if (ret == ESP_OK)
             {
@@ -108,10 +108,10 @@ esp_err_t hk_pairings(hk_mem *request, hk_mem *response, bool *kill_session, boo
         }
     }
 
-    hk_tlv_serialize(response_tlvs, response);
+    hk_tlv_serialize(tlv_data_response, response);
 
-    hk_tlv_free(request_tlvs);
-    hk_tlv_free(response_tlvs);
+    hk_tlv_free(tlv_data_request);
+    hk_tlv_free(tlv_data_response);
 
     return ret;
 }

@@ -1,8 +1,10 @@
 #include "hk_store.h"
-#include "hk_logging.h"
 
 #include <esp_system.h>
 #include <nvs_flash.h>
+
+#include "hk_logging.h"
+#include "hk_util.h"
 
 #define HK_STORE_PAIRED "hk_paired"
 #define HK_STORE_ACC_PRV_KEY "hk_acc_prv_key"
@@ -12,6 +14,30 @@
 nvs_handle hk_store_handle;
 const char *hk_store_name = "hk_store";
 const char *hk_store_code;
+
+#define RUN_AND_CHECK_STORE(ret, func, args...)                          \
+    ret = func(args);                                                    \
+    if (ret == ESP_ERR_NVS_NOT_FOUND)                                    \
+    {                                                                    \
+    }                                                                    \
+    else if (ret)                                                        \
+    {                                                                    \
+        HK_LOGE("Error executing: %s (%d)", hk_error_to_name(ret), ret); \
+    }
+
+// esp_err_t hk_store_bool_get(const char *key, bool *value)
+// {
+//     esp_err_t ret = ESP_OK;
+//     RUN_AND_CHECK_STORE(ret, nvs_get_u8, hk_store_handle, key, (uint8_t *)value);
+//     return ret;
+// }
+
+// esp_err_t hk_store_bool_set(const char *key, bool value)
+// {
+//     esp_err_t ret = ESP_OK;
+//     RUN_AND_CHECK_STORE(ret, nvs_set_u8, hk_store_handle, key, value);
+//     return ret;
+// }
 
 static void hk_store_uint8_t_set(const char *key, uint8_t value)
 {
@@ -26,6 +52,20 @@ static esp_err_t hk_store_uint8_t_get(const char *key, uint8_t *value)
         ESP_ERROR_CHECK(ret);
     }
 
+    return ret;
+}
+
+esp_err_t hk_store_u16_get(const char *key, uint16_t *value)
+{
+    esp_err_t ret = ESP_OK;
+    RUN_AND_CHECK_STORE(ret, nvs_get_u16, hk_store_handle, key, value);
+    return ret;
+}
+
+esp_err_t hk_store_u16_set(const char *key, uint16_t value)
+{
+    esp_err_t ret = ESP_OK;
+    RUN_AND_CHECK_STORE(ret, nvs_set_u16, hk_store_handle, key, value);
     return ret;
 }
 

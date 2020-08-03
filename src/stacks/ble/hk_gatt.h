@@ -29,3 +29,4 @@ void* hk_gatt_add_chr(
 void hk_gatt_add_chr_static_read(hk_chr_types_t type, const char *value);
 void hk_gatt_end_config();
 void hk_gatt_start();
+esp_err_t hk_gatt_indicate(void *ble_chr);

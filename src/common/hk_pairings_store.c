@@ -84,7 +84,7 @@ esp_err_t hk_pairings_store_add(hk_mem *device_id, hk_mem *device_ltpk, bool is_
     hk_mem *data = hk_mem_init();
     hk_pairing_store_pair *entry = (hk_pairing_store_pair *)malloc(sizeof(hk_pairing_store_pair));
 
-    RUN_AND_CHECK(ret, hk_pairings_store_get, data);
+    hk_pairings_store_get(data);
     entry->id_length = device_id->size;
     entry->key_length = device_ltpk->size;
     entry->is_admin = is_admin;
@@ -270,8 +270,8 @@ esp_err_t hk_pairings_log_devices()
         for (size_t data_read = 0; data_read < data->size;)
         {
             hk_pairings_store_entry_update(entry, data->ptr + data_read);
-
-            HK_LOGD("   %s", entry->id);
+            
+            HK_LOGI("%s", strndup(entry->id, entry->id_length));
             data_read += entry->length;
         }
     }

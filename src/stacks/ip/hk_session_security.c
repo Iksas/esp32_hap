@@ -65,9 +65,9 @@ esp_err_t hk_connection_security_encrypt_frames(hk_encryption_data_t *encryption
         {
             return ret;
         }
-        hk_mem* frame_data = hk_mem_init(); // is disposed by server, after it was sent
-        hk_mem_append_buffer(frame_data, encrypted, encrypted_size);
-        ret = callback(frame_data, args);
+        hk_mem* data_to_send = hk_mem_init(); // is disposed by server, after it was sent
+        hk_mem_append_buffer(data_to_send, encrypted, encrypted_size);
+        ret = callback(data_to_send, args);
         if (ret < 0)
         {
             return ret;

@@ -24,7 +24,7 @@ static esp_err_t hk_pairing_setup_srp_start(hk_mem *result, hk_conn_key_store_t 
     esp_err_t ret = ESP_OK;
     keys->pair_setup_public_key = hk_mem_init();
     hk_mem *salt = hk_mem_init();
-    hk_tlv_t *tlv_data = NULL;
+    hk_tlv_t *tlv_data_response = NULL;
 
     // init
     keys->pair_setup_srp_key = hk_srp_init_key();
@@ -32,20 +32,20 @@ static esp_err_t hk_pairing_setup_srp_start(hk_mem *result, hk_conn_key_store_t 
     RUN_AND_CHECK(ret, hk_srp_export_public_key, keys->pair_setup_srp_key, keys->pair_setup_public_key);
     RUN_AND_CHECK(ret, hk_srp_export_salt, keys->pair_setup_srp_key, salt);
 
-    tlv_data = hk_tlv_add_uint8(tlv_data, HK_PAIR_TLV_STATE, HK_PAIR_TLV_STATE_M2);
+    tlv_data_response = hk_tlv_add_uint8(tlv_data_response, HK_PAIR_TLV_STATE, HK_PAIR_TLV_STATE_M2);
     if (!ret)
     {
-        tlv_data = hk_tlv_add(tlv_data, HK_PAIR_TLV_PUBLICKEY, keys->pair_setup_public_key);
-        tlv_data = hk_tlv_add(tlv_data, HK_PAIR_TLV_SALT, salt);
+        tlv_data_response = hk_tlv_add(tlv_data_response, HK_PAIR_TLV_PUBLICKEY, keys->pair_setup_public_key);
+        tlv_data_response = hk_tlv_add(tlv_data_response, HK_PAIR_TLV_SALT, salt);
     }
     else
     {
-        tlv_data = hk_tlv_add_uint8(tlv_data, HK_PAIR_TLV_ERROR, HK_PAIR_TLV_ERROR_UNKNOWN);
+        tlv_data_response = hk_tlv_add_uint8(tlv_data_response, HK_PAIR_TLV_ERROR, HK_PAIR_TLV_ERROR_UNKNOWN);
     }
 
-    hk_tlv_serialize(tlv_data, result);
+    hk_tlv_serialize(tlv_data_response, result);
 
-    hk_tlv_free(tlv_data);
+    hk_tlv_free(tlv_data_response);
     hk_mem_free(salt);
 
     HK_LOGD("pairing setup 1/3 done.");
@@ -61,7 +61,7 @@ static esp_err_t hk_pairing_setup_srp_verify(hk_tlv_t *tlv, hk_mem *result, hk_c
     hk_mem *ios_pk = hk_mem_init();
     hk_mem *ios_proof = hk_mem_init();
     hk_mem *accessory_proof = hk_mem_init();
-    hk_tlv_t *tlv_data = NULL;
+    hk_tlv_t *tlv_data_response = NULL;
     bool valid = true;
 
     RUN_AND_CHECK(ret, hk_tlv_get_mem_by_type, tlv, HK_PAIR_TLV_PUBLICKEY, ios_pk);
@@ -70,19 +70,19 @@ static esp_err_t hk_pairing_setup_srp_verify(hk_tlv_t *tlv, hk_mem *result, hk_c
     RUN_AND_CHECK(ret, hk_srp_verify, keys->pair_setup_srp_key, ios_proof, &valid);
     RUN_AND_CHECK(ret, hk_srp_export_proof, keys->pair_setup_srp_key, accessory_proof);
 
-    tlv_data = hk_tlv_add_uint8(tlv_data, HK_PAIR_TLV_STATE, HK_PAIR_TLV_STATE_M4);
+    tlv_data_response = hk_tlv_add_uint8(tlv_data_response, HK_PAIR_TLV_STATE, HK_PAIR_TLV_STATE_M4);
     if (!ret)
     {
-        tlv_data = hk_tlv_add(tlv_data, HK_PAIR_TLV_PROOF, accessory_proof);
+        tlv_data_response = hk_tlv_add(tlv_data_response, HK_PAIR_TLV_PROOF, accessory_proof);
     }
     else
     {
-        tlv_data = hk_tlv_add_uint8(tlv_data, HK_PAIR_TLV_ERROR, valid ? HK_PAIR_TLV_ERROR_UNKNOWN : HK_PAIR_TLV_ERROR_AUTHENTICATION);
+        tlv_data_response = hk_tlv_add_uint8(tlv_data_response, HK_PAIR_TLV_ERROR, valid ? HK_PAIR_TLV_ERROR_UNKNOWN : HK_PAIR_TLV_ERROR_AUTHENTICATION);
     }
 
-    hk_tlv_serialize(tlv_data, result);
+    hk_tlv_serialize(tlv_data_response, result);
 
-    hk_tlv_free(tlv_data);
+    hk_tlv_free(tlv_data_response);
     hk_mem_free(keys->pair_setup_public_key);
     hk_mem_free(ios_pk);
     hk_mem_free(ios_proof);
@@ -157,8 +157,8 @@ static esp_err_t hk_pairing_setup_exchange_response_generation(hk_mem *result, h
     hk_mem *accessory_id = hk_mem_init();
     hk_mem *sub_result = hk_mem_init();
     hk_mem *encrypted = hk_mem_init();
-    hk_tlv_t *tlv_data = NULL;
-    hk_tlv_t *sub_tlv_data = NULL;
+    hk_tlv_t *tlv_data_response = NULL;
+    hk_tlv_t *tlv_data_response_sub = NULL;
 
     RUN_AND_CHECK(ret, hk_ed25519_update_from_random, accessory_key);
     RUN_AND_CHECK(ret, hk_ed25519_export_public_key, accessory_key, accessory_public_key);
@@ -178,28 +178,29 @@ static esp_err_t hk_pairing_setup_exchange_response_generation(hk_mem *result, h
 
     if (!ret)
     {
-        sub_tlv_data = hk_tlv_add(sub_tlv_data, HK_PAIR_TLV_IDENTIFIER, accessory_id);
-        sub_tlv_data = hk_tlv_add(sub_tlv_data, HK_PAIR_TLV_PUBLICKEY, accessory_public_key);
-        sub_tlv_data = hk_tlv_add(sub_tlv_data, HK_PAIR_TLV_SIGNATURE, accessory_signature);
+        tlv_data_response_sub = hk_tlv_add(tlv_data_response_sub, HK_PAIR_TLV_IDENTIFIER, accessory_id);
+        tlv_data_response_sub = hk_tlv_add(tlv_data_response_sub, HK_PAIR_TLV_PUBLICKEY, accessory_public_key);
+        tlv_data_response_sub = hk_tlv_add(tlv_data_response_sub, HK_PAIR_TLV_SIGNATURE, accessory_signature);
 
-        hk_tlv_serialize(sub_tlv_data, sub_result);
+        hk_tlv_serialize(tlv_data_response_sub, sub_result);
     }
 
     RUN_AND_CHECK(ret, hk_chacha20poly1305_encrypt, shared_secret, HK_CHACHA_SETUP_MSG6, sub_result, encrypted);
 
-    tlv_data = hk_tlv_add_uint8(tlv_data, HK_PAIR_TLV_STATE, HK_PAIR_TLV_STATE_M6);
+    tlv_data_response = hk_tlv_add_uint8(tlv_data_response, HK_PAIR_TLV_STATE, HK_PAIR_TLV_STATE_M6);
     if (!ret)
     {
-        tlv_data = hk_tlv_add(tlv_data, HK_PAIR_TLV_ENCRYPTEDDATA, encrypted);
+        tlv_data_response = hk_tlv_add(tlv_data_response, HK_PAIR_TLV_ENCRYPTEDDATA, encrypted);
     }
     else
     {
-        tlv_data = hk_tlv_add_uint8(tlv_data, HK_PAIR_TLV_ERROR, HK_PAIR_TLV_ERROR_AUTHENTICATION);
+        tlv_data_response = hk_tlv_add_uint8(tlv_data_response, HK_PAIR_TLV_ERROR, HK_PAIR_TLV_ERROR_AUTHENTICATION);
     }
 
-    hk_tlv_serialize(tlv_data, result);
+    hk_tlv_serialize(tlv_data_response, result);
 
-    hk_tlv_free(tlv_data);
+    hk_tlv_free(tlv_data_response_sub);
+    hk_tlv_free(tlv_data_response);
     hk_mem_free(accessory_id);
     hk_mem_free(accessory_public_key);
     hk_mem_free(accessory_private_key);
@@ -241,8 +242,8 @@ static esp_err_t hk_pairing_setup_exchange_response(hk_tlv_t *tlv, hk_mem *resul
 
 esp_err_t hk_pair_setup(hk_mem *request, hk_mem *response, hk_conn_key_store_t *keys, hk_mem *device_id, bool *is_paired)
 {
-    hk_tlv_t *tlv_data = hk_tlv_deserialize(request);
-    hk_tlv_t *type_tlv = hk_tlv_get_tlv_by_type(tlv_data, HK_PAIR_TLV_STATE);
+    hk_tlv_t *tlv_data_request = hk_tlv_deserialize(request);
+    hk_tlv_t *type_tlv = hk_tlv_get_tlv_by_type(tlv_data_request, HK_PAIR_TLV_STATE);
     esp_err_t ret = ESP_OK;
 
     if (type_tlv == NULL)
@@ -258,10 +259,10 @@ esp_err_t hk_pair_setup(hk_mem *request, hk_mem *response, hk_conn_key_store_t *
             RUN_AND_CHECK(ret, hk_pairing_setup_srp_start, response, keys);
             break;
         case HK_PAIR_TLV_STATE_M3:
-            RUN_AND_CHECK(ret, hk_pairing_setup_srp_verify, tlv_data, response, keys);
+            RUN_AND_CHECK(ret, hk_pairing_setup_srp_verify, tlv_data_request, response, keys);
             break;
         case HK_PAIR_TLV_STATE_M5:
-            RUN_AND_CHECK(ret, hk_pairing_setup_exchange_response, tlv_data, response, keys, device_id, is_paired);
+            RUN_AND_CHECK(ret, hk_pairing_setup_exchange_response, tlv_data_request, response, keys, device_id, is_paired);
             break;
         default:
             HK_LOGE("Unexpected value in tlv in pair setup: %d", *type_tlv->value);
@@ -269,7 +270,7 @@ esp_err_t hk_pair_setup(hk_mem *request, hk_mem *response, hk_conn_key_store_t *
         }
     }
 
-    hk_tlv_free(tlv_data);
+    hk_tlv_free(tlv_data_request);
 
     return ret;
 }

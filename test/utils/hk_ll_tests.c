@@ -1,5 +1,6 @@
 #include "unity.h"
 
+#include <esp_system.h>
 #include "../../src/utils/hk_ll.h"
 
 typedef struct
@@ -10,7 +11,7 @@ typedef struct
 
 TEST_CASE("create and free", "[ll]")
 {
-    
+    size_t memory_before = esp_get_free_heap_size();
     hk_ll_test_t *list = NULL;
 
     list = hk_ll_init(list);
@@ -20,12 +21,12 @@ TEST_CASE("create and free", "[ll]")
     TEST_ASSERT_EQUAL_INT(3, hk_ll_count(list));
 
     hk_ll_free(list);
-    
+    size_t memory_after = esp_get_free_heap_size();
+    TEST_ASSERT_EQUAL_INT(0, memory_after - memory_before);
 }
 
 TEST_CASE("iterate", "[ll]")
 {
-    
     hk_ll_test_t *list = NULL;
 
     list = hk_ll_init(list);
@@ -46,12 +47,11 @@ TEST_CASE("iterate", "[ll]")
     TEST_ASSERT_EQUAL_INT(-1, count);
 
     hk_ll_free(list);
-    
 }
 
 TEST_CASE("reverse", "[ll]")
 {
-    
+
     hk_ll_test_t *list = NULL;
 
     list = hk_ll_init(list);
@@ -74,12 +74,11 @@ TEST_CASE("reverse", "[ll]")
     TEST_ASSERT_EQUAL_INT(2, count);
 
     hk_ll_free(list);
-    
 }
 
 TEST_CASE("remove first", "[ll]")
 {
-    
+    size_t memory_before = esp_get_free_heap_size();
     hk_ll_test_t *list = NULL;
 
     list = hk_ll_init(list);
@@ -99,12 +98,13 @@ TEST_CASE("remove first", "[ll]")
     TEST_ASSERT_EQUAL_INT(item1->data, list->data);
 
     hk_ll_free(list);
-    
+    size_t memory_after = esp_get_free_heap_size();
+    TEST_ASSERT_EQUAL_INT(0, memory_after - memory_before);
 }
 
 TEST_CASE("remove middle", "[ll]")
 {
-    
+
     hk_ll_test_t *list = NULL;
 
     list = hk_ll_init(list);
@@ -131,12 +131,11 @@ TEST_CASE("remove middle", "[ll]")
     TEST_ASSERT_EQUAL_INT(item0->data, item->data);
 
     hk_ll_free(list);
-    
 }
 
 TEST_CASE("remove last", "[ll]")
 {
-    
+
     hk_ll_test_t *list = NULL;
 
     list = hk_ll_init(list);
@@ -163,7 +162,6 @@ TEST_CASE("remove last", "[ll]")
     TEST_ASSERT_EQUAL_INT(item1->data, item->data);
 
     hk_ll_free(list);
-    
 }
 
 TEST_CASE("remove odd in iteration", "[ll]")
@@ -202,7 +200,6 @@ TEST_CASE("remove odd in iteration", "[ll]")
     TEST_ASSERT_EQUAL_INT(expected_list_after_delete, list);
 
     hk_ll_free(list);
-    
 }
 
 TEST_CASE("remove even in iteration", "[ll]")

@@ -11,12 +11,14 @@ hk_accessory_t *hk_accessories_store_get_accessories()
 
 void hk_accessories_store_add_accessory()
 {
+        HK_LOGD("hk_ll_init");
     hk_accessories = hk_ll_init(hk_accessories);
     hk_accessories->srvs = NULL;
 }
 
 void hk_accessories_store_add_srv(hk_srv_types_t type, bool primary, bool hidden)
 {
+        HK_LOGD("hk_ll_init");
     hk_srv_t *srv = hk_ll_init(hk_accessories->srvs);
 
     srv->type = type;
@@ -29,6 +31,7 @@ void hk_accessories_store_add_srv(hk_srv_types_t type, bool primary, bool hidden
 
 void *hk_accessories_store_add_chr(hk_chr_types_t type, esp_err_t (*read)(hk_mem* response), esp_err_t (*write)(hk_mem* request), bool can_notify)
 {
+        HK_LOGD("hk_ll_init");
     hk_chr_t *chr = hk_ll_init(hk_accessories->srvs->chrs);
 
     chr->type = type;
@@ -44,6 +47,7 @@ void *hk_accessories_store_add_chr(hk_chr_types_t type, esp_err_t (*read)(hk_mem
 
 void hk_accessories_store_add_chr_static_read(hk_chr_types_t type, void *value)
 {
+        HK_LOGD("hk_ll_init");
     hk_chr_t *chr = hk_ll_init(hk_accessories->srvs->chrs);
 
     chr->type = type;

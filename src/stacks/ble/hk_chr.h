@@ -30,7 +30,8 @@ typedef struct
     bool srv_hidden;
     bool srv_supports_configuration;
     const ble_uuid128_t* srv_uuid;
-    char chr_index;
+    const ble_uuid128_t* uuid;
+    uint16_t chr_index;
     hk_chr_types_t chr_type;
     float max_length;
     float min_length;

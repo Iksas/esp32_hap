@@ -107,7 +107,7 @@ esp_err_t hk_chacha20poly1305_decrypt(hk_mem *key, const char *nonce, hk_mem *en
 }
 
 esp_err_t hk_chacha20poly1305_decrypt_buffer(hk_mem *key, const char *nonce, char *aad, size_t aad_size, char *encrypted,
-                                          char *message, size_t message_size)
+                                             char *message, size_t message_size)
 {
     int ret = wc_ChaCha20Poly1305_Decrypt(
         (byte *)key->ptr,
@@ -127,18 +127,19 @@ esp_err_t hk_chacha20poly1305_decrypt_buffer(hk_mem *key, const char *nonce, cha
 
 esp_err_t hk_chacha20poly1305_verify_auth_tag(hk_mem *key, const char *nonce, hk_mem *auth_tag)
 {
+    esp_err_t ret = ESP_OK;
     hk_mem *calculated_auth_tag = hk_mem_init();
-    esp_err_t ret = hk_chacha20poly1305_caluclate_auth_tag_without_message(key, nonce, calculated_auth_tag);
+    ret = hk_chacha20poly1305_caluclate_auth_tag_without_message(key, nonce, calculated_auth_tag);
 
-    if (ret != ESP_OK)
+    if (ret == ESP_OK)
     {
-        return ret;
+        if (!hk_mem_equal(auth_tag, calculated_auth_tag))
+        {
+            ret = ESP_ERR_INVALID_MAC;
+        }
     }
 
-    if (!hk_mem_equal(auth_tag, calculated_auth_tag))
-    {
-        return ESP_ERR_INVALID_MAC;
-    }
-
-    return ESP_OK;
+    hk_mem_free(calculated_auth_tag);
+    
+    return ret;
 }

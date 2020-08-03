@@ -12,9 +12,9 @@ esp_err_t hk_chr_write(hk_connection_t *connection, hk_transaction_t *transactio
     esp_err_t res = ESP_OK;
     hk_mem *write_request = hk_mem_init();
     hk_mem *write_response = hk_mem_init();
-    hk_tlv_t *tlv_data = hk_tlv_deserialize(transaction->request);
+    hk_tlv_t *tlv_data_request = hk_tlv_deserialize(transaction->request);
 
-    if (hk_tlv_get_mem_by_type(tlv_data, 0x01, write_request) != ESP_OK)
+    if (hk_tlv_get_mem_by_type(tlv_data_request, 0x01, write_request) != ESP_OK)
     {
         HK_LOGE("Error getting value of write request.");
         res = ESP_ERR_HK_UNSUPPORTED_REQUEST;
@@ -44,10 +44,12 @@ esp_err_t hk_chr_write(hk_connection_t *connection, hk_transaction_t *transactio
             hk_tlv_t *tlv_data_response = NULL;
             tlv_data_response = hk_tlv_add_mem(tlv_data_response, 0x01, write_response);
             hk_tlv_serialize(tlv_data_response, transaction->response);
+            hk_tlv_free(tlv_data_response);
         }
     }
 
     hk_mem_free(write_request);
     hk_mem_free(write_response);
+    hk_tlv_free(tlv_data_request);
     return res;
 }

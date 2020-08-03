@@ -7,9 +7,11 @@
 #include <host/ble_hs.h>
 
 #include "../../utils/hk_logging.h"
+#include "../../utils/hk_ll.h"
 
 #include "hk_chr.h"
 #include "hk_uuids.h"
+#include "hk_connection.h"
 #include "hk_connection_security.h"
 #include "hk_gap.h"
 #include "operations/hk_chr_signature_read.h"
@@ -21,6 +23,8 @@
 #include "operations/hk_protocol_configuration.h"
 
 #include "../../crypto/hk_chacha20poly1305.h"
+#include "../../common/hk_global_state.h"
+#include "../../common/hk_pairings_store.h"
 
 typedef struct ble_gatt_svc_def hk_ble_srv_t;
 typedef struct ble_gatt_chr_def hk_ble_chr_t;
@@ -30,15 +34,94 @@ hk_chr_setup_info_t *hk_gatt_setup_info = NULL;
 hk_ble_srv_t *hk_gatt_srvs = NULL;
 uint8_t last_transaction_id;
 
+
+esp_err_t hk_gatt_indicate(void *hk_chr_void)
+{
+    if (hk_chr_void == NULL)
+    {
+        return ESP_FAIL;
+    }
+
+    int ble_ret = 0;
+    esp_err_t ret = ESP_OK;
+    bool has_pairing = false;
+
+    ret = hk_pairings_store_has_pairing(&has_pairing);
+    if (ret != ESP_OK || !has_pairing)
+    {
+        return ESP_OK;
+    }
+
+    hk_chr_t *chr = (hk_chr_t *)hk_chr_void;
+
+    hk_connection_t *connections = hk_connection_get_all();
+    if (connections != NULL)
+    {
+        uint16_t chr_val_handle = 0;
+        ble_ret = ble_gatts_find_chr(BLE_UUID(chr->srv_uuid), BLE_UUID(chr->uuid), NULL, &chr_val_handle);
+
+        hk_ll_foreach(connections, connection)
+        {
+            // caching the values of the connection, to minimize the chance the pointer of the connection
+            // gets invalid, due to disconnect. 
+            bool is_secure = connection->is_secure;
+            bool global_state_was_changed_once = connection->global_state_was_changed_once;
+            bool handle = connection->handle;
+
+            if (is_secure)
+            {
+                if (!global_state_was_changed_once)
+                {
+                    global_state_was_changed_once = true;
+                    hk_global_state_next();
+                }
+
+                if (!ble_ret)
+                {
+                    struct os_mbuf* om = ble_hs_mbuf_att_pkt();
+                    ble_ret = ble_gattc_indicate_custom(handle, chr_val_handle, om);
+                }
+
+                if (ble_ret)
+                {
+                    HK_LOGE("Error indicating during active connection.");
+                    // todo: break;
+                    ret = ESP_FAIL;
+                }
+            }
+        }
+    }
+    else
+    {
+        hk_global_state_next();
+
+        hk_mem *response = hk_mem_init();
+        ret = chr->read_callback(response);
+
+        if (!ret)
+        {
+            hk_gap_start_advertising_change(chr->chr_index, response);
+        }
+
+        hk_mem_free(response);
+    }
+
+    return ret;
+}
+
 static int hk_gatt_read_ble_descriptor(struct ble_gatt_access_ctxt *ctxt, void *arg)
 {
     int rc = 0;
     const ble_uuid128_t *chr_uuid = BLE_UUID128(ctxt->chr->uuid);
-    const ble_uuid128_t *descriptor_uuid = BLE_UUID128(ctxt->dsc->uuid);
-    HK_LOGV("Read descriptor of chr %s with id %s", hk_uuids_to_str(chr_uuid), hk_uuids_to_str(descriptor_uuid));
+    const ble_uuid128_t *desc_uuid = BLE_UUID128(ctxt->dsc->uuid);
+    char char_uid_str[40];
+    hk_uuids_to_name(chr_uuid, char_uid_str);
+    char desc_uid_str[40];
+    hk_uuids_to_name(desc_uuid, desc_uid_str);
+    HK_LOGV("Read descriptor %s of chr %s.", desc_uid_str, char_uid_str);
     hk_chr_t *chr = (hk_chr_t *)arg;
 
-    if (hk_uuids_cmp(descriptor_uuid, (ble_uuid128_t *)&hk_uuids_descriptor_instance_id))
+    if (hk_uuids_cmp(desc_uuid, (ble_uuid128_t *)&hk_uuids_descriptor_instance_id))
     {
         HK_LOGV("Returning instance id for chr: %d", chr->chr_index);
         uint16_t id = chr->chr_index;
@@ -61,7 +144,6 @@ static int hk_gatt_decrypt(struct ble_gatt_access_ctxt *ctxt, const ble_uuid128_
     const ble_uuid128_t *chr_uuid_pair_verify = hk_uuids_get((uint8_t)HK_CHR_PAIR_VERIFY);
     if (connection->is_secure && !hk_uuids_cmp(chr_uuid, chr_uuid_pair_verify))
     {
-        HK_LOGV("Decrypting request for %s", hk_uuids_to_str(chr_uuid));
         hk_mem *received_before_encryption = hk_mem_init();
         hk_mem_append_buffer(received_before_encryption, buffer, out_len);
         hk_connection_security_decrypt(connection, received_before_encryption, request); //todo: catch error
@@ -95,12 +177,12 @@ static int hk_gatt_encrypt(struct ble_gatt_access_ctxt *ctxt, const ble_uuid128_
     return rc;
 }
 
-static int hk_gatt_write_ble_chr(uint16_t connection_handle, struct ble_gatt_access_ctxt *ctxt, void *arg)
+static int hk_gatt_write_ble_chr(uint16_t handle, struct ble_gatt_access_ctxt *ctxt, void *arg)
 {
     int rc = 0;
     esp_err_t res = ESP_OK;
     const ble_uuid128_t *chr_uuid = BLE_UUID128(ctxt->chr->uuid);
-    hk_connection_t *connection = hk_connection_get_by_handle(connection_handle);
+    hk_connection_t *connection = hk_connection_get_by_handle(handle);
     hk_chr_t *chr = (hk_chr_t *)arg;
 
     hk_mem *request = hk_mem_init();
@@ -130,12 +212,12 @@ static int hk_gatt_write_ble_chr(uint16_t connection_handle, struct ble_gatt_acc
 
     if (transaction->expected_request_length == transaction->request->size)
     {
-        char uuid_name[50];
+        char uuid_name[40];
         hk_uuids_to_name(chr_uuid, uuid_name);
         switch (transaction->opcode)
         {
         case 1:
-            HK_LOGV("Signature read for %s.", uuid_name);
+            HK_LOGV("Signature read for characteristc %s.", uuid_name);
             res = hk_chr_signature_read(chr_uuid, transaction, chr);
             break;
         case 2:
@@ -144,7 +226,7 @@ static int hk_gatt_write_ble_chr(uint16_t connection_handle, struct ble_gatt_acc
             break;
         case 3:
             HK_LOGD("Characteristic read for %s.", uuid_name);
-            res = hk_chr_read(transaction, chr);
+            res = hk_chr_read(transaction, chr);;
             break;
         case 4:
             HK_LOGD("Characteristic timed write for %s.", uuid_name);
@@ -155,7 +237,7 @@ static int hk_gatt_write_ble_chr(uint16_t connection_handle, struct ble_gatt_acc
             res = hk_chr_execute_write(connection, transaction, chr);
             break;
         case 6:
-            HK_LOGV("Signature read for %s.", uuid_name);
+            HK_LOGV("Signature read for service %s.", uuid_name);
             res = hk_srv_signature_read(transaction, chr);
             break;
         case 7:
@@ -178,7 +260,7 @@ static int hk_gatt_write_ble_chr(uint16_t connection_handle, struct ble_gatt_acc
 
     if (res == ESP_ERR_HK_TERMINATE)
     {
-        hk_gap_terminate_connection(connection_handle);
+        hk_gap_terminate_connection(handle);
     }
     else if (res != ESP_OK)
     {
@@ -197,10 +279,11 @@ static int hk_gatt_write_ble_chr(uint16_t connection_handle, struct ble_gatt_acc
     rc = rc == 0 ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES;
     HK_LOGV("Done, status is %d, %d.", transaction->response_status, rc);
 
+    hk_mem_free(request);
     return rc;
 }
 
-static int hk_gatt_read_ble_chr(uint16_t connection_handle, struct ble_gatt_access_ctxt *ctxt, void *arg)
+static int hk_gatt_read_ble_chr(uint16_t handle, struct ble_gatt_access_ctxt *ctxt, void *arg)
 {
     int rc = 0;
     const ble_uuid128_t *chr_uuid = BLE_UUID128(ctxt->chr->uuid);
@@ -208,31 +291,22 @@ static int hk_gatt_read_ble_chr(uint16_t connection_handle, struct ble_gatt_acce
 
     if (hk_uuids_cmp(chr_uuid, (ble_uuid128_t *)&hk_uuids_srv_id))
     {
+        char char_uid_str[40];
+        hk_uuids_to_name(chr_uuid, char_uid_str);
         HK_LOGV("Received new request to read ble characteristic %s and returning instance id of service %d.",
-                hk_uuids_to_str(chr_uuid), chr->srv_id);
+                char_uid_str, chr->srv_id);
         uint16_t id = chr->srv_id;
         rc = os_mbuf_append(ctxt->om, &id, sizeof(uint16_t));
     }
     else
     {
-        hk_connection_t *connection = hk_connection_get_by_handle(connection_handle);
+        hk_connection_t *connection = hk_connection_get_by_handle(handle);
         hk_mem *response = hk_mem_init();
         hk_transaction_t *transaction = hk_connection_transaction_get_by_uuid(connection, chr_uuid);
         if (transaction == NULL)
         {
             return BLE_ATT_ERR_UNLIKELY;
         }
-        bool is_ps = hk_uuids_cmp(chr_uuid, hk_uuids_get(HK_CHR_PAIR_SETUP)) && transaction->opcode != 1;
-
-        if (is_ps)
-        {
-
-            char uuid_name[50];
-            hk_uuids_to_name(chr_uuid, uuid_name);
-            printf("...%s %d", uuid_name, transaction->opcode);
-        }
-
-        //HK_LOGD("Sending response for %s with: %s", uuid_name, response_bytes);
 
         bool continuation = transaction->response_sent > 0;
         bool has_body = transaction->response->size > 0;
@@ -246,8 +320,6 @@ static int hk_gatt_read_ble_chr(uint16_t connection_handle, struct ble_gatt_acce
         }
         else
         {
-            if (is_ps)
-                printf("...continuation");
         }
 
         if (!continuation && has_body)
@@ -279,10 +351,9 @@ static int hk_gatt_read_ble_chr(uint16_t connection_handle, struct ble_gatt_acce
 
         hk_mem_free(response);
         HK_LOGV("Sent response.");
-        if (is_ps)
-            printf("...done\n");
     }
 
+    HK_LOGW("Mem: %d", esp_get_free_heap_size());
     return rc == 0 ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES;
 }
 
@@ -291,7 +362,7 @@ static int hk_gatt_access_callback(uint16_t connection_handle, uint16_t attr_han
     int rc = 0;
     if (ctxt->op == BLE_GATT_ACCESS_OP_READ_CHR)
     {
-        HK_LOGV("BLE_GATT_ACCESS_OP_READ_CHR");
+        HK_LOGV("BLE_GATT_ACCESS_OP_READ_CHR for connection: %d, attribute: %d", connection_handle, attr_handle);
         rc = hk_gatt_read_ble_chr(connection_handle, ctxt, arg);
     }
     else if (ctxt->op == BLE_GATT_ACCESS_OP_WRITE_CHR)
@@ -355,12 +426,10 @@ hk_ble_chr_t *hk_gatt_alloc_new_chr(hk_ble_srv_t *current_srv)
 
 void hk_gatt_chr_init(
     hk_ble_chr_t *ble_chr,
-    const ble_uuid_t *srv_uuid,
-    ble_uuid128_t *chr_uuid,
+    const ble_uuid128_t *srv_uuid,
+    const ble_uuid128_t *chr_uuid,
     ble_gatt_chr_flags flags,
-    hk_chr_t *chr,
-    bool add_descriptors, // todo: remove
-    bool can_notify)
+    hk_chr_t *chr)
 {
     ble_chr->uuid = &chr_uuid->u;
     ble_chr->access_cb = hk_gatt_access_callback;
@@ -368,10 +437,6 @@ void hk_gatt_chr_init(
     ble_chr->arg = (void *)chr;
 
     uint8_t number_of_descriptors = 2; // one for instance id and one for array end marker
-    if (can_notify)
-    {
-        number_of_descriptors++;
-    }
 
     size_t memory_size = number_of_descriptors * sizeof(hk_ble_descriptor_t);
     ble_chr->descriptors = (hk_ble_descriptor_t *)malloc(memory_size);
@@ -381,20 +446,11 @@ void hk_gatt_chr_init(
     ble_chr->descriptors[0].att_flags = BLE_ATT_F_READ;
     ble_chr->descriptors[0].arg = (void *)chr;
     ble_chr->descriptors[0].access_cb = hk_gatt_access_callback;
-
-    if (can_notify)
-    {
-        ble_chr->descriptors[1].uuid = &hk_uuids_descriptor_client_configuration.u;
-        ble_chr->descriptors[1].att_flags = BLE_ATT_F_READ;
-        ble_chr->descriptors[1].arg = (void *)chr;
-        ble_chr->descriptors[1].access_cb = hk_gatt_access_callback;
-    }
 }
 
 void hk_gatt_init()
 {
     HK_LOGD("Initializing GATT.");
-
     hk_gatt_setup_info = malloc(sizeof(hk_chr_setup_info_t));
     hk_gatt_setup_info->srv_index = -1;
     hk_gatt_setup_info->chr_index = -1;
@@ -414,7 +470,7 @@ void hk_gatt_add_srv(hk_srv_types_t srv_type, bool primary, bool hidden,
 
     hk_ble_srv_t *srv = hk_gatt_alloc_new_srv();
 
-    ble_uuid128_t *srv_uuid = hk_uuids_get((uint8_t)srv_type);
+    const ble_uuid128_t *srv_uuid = hk_uuids_get((uint8_t)srv_type);
     srv->type = 1;
     srv->uuid = &srv_uuid->u;
 
@@ -426,7 +482,7 @@ void hk_gatt_add_srv(hk_srv_types_t srv_type, bool primary, bool hidden,
     chr->srv_primary = hk_gatt_setup_info->srv_primary = primary;
     chr->srv_hidden = hk_gatt_setup_info->srv_hidden = hidden;
     chr->srv_supports_configuration = hk_gatt_setup_info->srv_supports_configuration = supports_configuration;
-    hk_gatt_chr_init(ble_chr, srv->uuid, (ble_uuid128_t *)&hk_uuids_srv_id, BLE_GATT_CHR_F_READ, chr, false, false);
+    hk_gatt_chr_init(ble_chr, BLE_UUID128(srv->uuid), &hk_uuids_srv_id, BLE_GATT_CHR_F_READ, chr);
 }
 
 void *hk_gatt_add_chr(
@@ -439,11 +495,12 @@ void *hk_gatt_add_chr(
     float max_length)
 {
     hk_ble_srv_t *current_srv = &hk_gatt_srvs[hk_gatt_setup_info->srv_index];
-    ble_uuid128_t *chr_uuid = hk_uuids_get((uint8_t)chr_type);
+    const ble_uuid128_t *chr_uuid = hk_uuids_get((uint8_t)chr_type);
     hk_ble_chr_t *ble_chr = hk_gatt_alloc_new_chr(current_srv);
 
     hk_chr_t *chr = hk_chr_init(chr_type, hk_gatt_setup_info);
-    chr->srv_uuid = (ble_uuid128_t *)current_srv->uuid;
+    chr->srv_uuid = BLE_UUID128(current_srv->uuid);
+    chr->uuid = chr_uuid;
     chr->srv_id = hk_gatt_setup_info->srv_id;
     chr->srv_primary = hk_gatt_setup_info->srv_primary;
     chr->srv_hidden = hk_gatt_setup_info->srv_hidden;
@@ -464,18 +521,18 @@ void *hk_gatt_add_chr(
 
     hk_gatt_chr_init(
         ble_chr,
-        current_srv->uuid,
+        BLE_UUID128(current_srv->uuid),
         chr_uuid,
         flags,
-        chr, true, can_notify);
+        chr);
 
-    return NULL;
+    return chr;
 }
 
 void hk_gatt_add_chr_static_read(hk_chr_types_t chr_type, const char *value)
 {
     hk_ble_srv_t *current_srv = &hk_gatt_srvs[hk_gatt_setup_info->srv_index];
-    ble_uuid128_t *chr_uuid = hk_uuids_get((uint8_t)chr_type);
+    const ble_uuid128_t *chr_uuid = hk_uuids_get((uint8_t)chr_type);
     hk_ble_chr_t *ble_chr = hk_gatt_alloc_new_chr(current_srv);
 
     hk_chr_t *chr = hk_chr_init(chr_type, hk_gatt_setup_info);
@@ -489,10 +546,10 @@ void hk_gatt_add_chr_static_read(hk_chr_types_t chr_type, const char *value)
 
     hk_gatt_chr_init(
         ble_chr,
-        current_srv->uuid,
+        BLE_UUID128(current_srv->uuid),
         chr_uuid,
         BLE_GATT_CHR_F_READ | BLE_GATT_CHR_F_WRITE | BLE_GATT_CHR_PROP_READ,
-        chr, true, false);
+        chr);
 }
 
 void hk_gatt_end_config()

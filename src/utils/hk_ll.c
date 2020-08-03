@@ -4,14 +4,7 @@
 #define hk_ll_next_ptr(ptr) (*ptr)
 #define hk_ll_data_to_next_ptr(data_ptr) (((void **)data_ptr) - 1)
 #define hk_ll_next_ptr_to_data(ptr) (((void **)ptr) + 1)
-
-void *_hk_ll_init(void *next, size_t size)
-{
-    void **ptr = (void **)malloc(sizeof(void *) + size);
-    *ptr = next;
-    void *data_ptr = hk_ll_next_ptr_to_data(ptr);
-    return data_ptr;
-}
+size_t hk_ll_mem = 0;
 
 void *_hk_ll_next(void *data)
 {
@@ -60,7 +53,7 @@ void *hk_ll_remove(void *list, void *data_to_remove)
             }
 
             free(current_ptr);
-            return list;
+            break;
         }
         else
         {
@@ -81,6 +74,15 @@ int hk_ll_count(void *data)
     }
 
     return count;
+}
+
+void *_hk_ll_init(void *next, size_t size)
+{
+    size_t s = sizeof(void *) + size;
+    void **ptr = (void **)malloc(s);
+    *ptr = next;
+    void *data_ptr = hk_ll_next_ptr_to_data(ptr);
+    return data_ptr;
 }
 
 void hk_ll_free(void *data)

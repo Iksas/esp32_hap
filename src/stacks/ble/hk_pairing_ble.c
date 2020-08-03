@@ -23,12 +23,6 @@ esp_err_t hk_pairing_ble_write_pair_setup(hk_connection_t *connection, hk_mem *r
         res = ESP_ERR_HK_UNSUPPORTED_REQUEST;
     }
 
-    // uint64_t now = esp_timer_get_time();
-    // char *request_bytes_str = hk_mem_to_debug_string(connection->transactions->request);
-    // HK_LOGD("Calculated after %f", (float)(now - connection->transactions->start_time) / 1000000.0f);
-    // printf("...with %s", request_bytes_str);
-    // free(request_bytes_str);
-
     return res;
 }
 

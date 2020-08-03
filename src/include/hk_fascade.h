@@ -21,4 +21,5 @@ void *hk_setup_add_motion_sensor(
     const char *serial_number,
     const char *revision,
     bool primary,
+    void (*identify)(), 
     esp_err_t (*read)(hk_mem* response));

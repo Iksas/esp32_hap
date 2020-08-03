@@ -15,6 +15,7 @@ To use the component on macos/linux, do the following:
 3. choose the stack of hap
 4. enable bluetooth (nimble only)
 5. disable task watchdog
+6. build and flash app
 
 ## Debugging
 ### Set log level

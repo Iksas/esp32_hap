@@ -19,10 +19,10 @@ typedef struct
     esp_err_t (*receiver)(hk_session_t *connection, hk_mem *data);
 } hk_com_arguments_t;
 
-esp_err_t hk_com_queue_frame(hk_mem *frame_data, void *args)
+esp_err_t hk_com_queue_frame(hk_mem *data_to_send, void *args)
 {
     hk_session_t *connection = (hk_session_t *)args;
-    if (xQueueSendToBack(connection->response->data_to_send, &frame_data, 10) != pdPASS)
+    if (xQueueSendToBack(connection->response->data_to_send, &data_to_send, 10) != pdPASS)
     {
         HK_LOGE("Error queuing data to send.");
         return ESP_FAIL;
@@ -45,9 +45,9 @@ esp_err_t hk_com_send_data(hk_session_t *connection)
     }
     else
     {
-        hk_mem *frame_data = hk_mem_init(); // is disposed by server, after it was sent
-        hk_mem_append(frame_data, connection->response->data);
-        ret = hk_com_queue_frame(frame_data, (void *)connection);
+        hk_mem *data_to_send = hk_mem_init(); // is disposed by server, after it was sent
+        hk_mem_append(data_to_send, connection->response->data);
+        ret = hk_com_queue_frame(data_to_send, (void *)connection);
     }
 
     return ret;
@@ -83,6 +83,7 @@ esp_err_t hk_com_open_connection(hk_session_t **connections, int listen_socket, 
     const int maxpkt = 4; /* Drop connection after 4 probes without response */
     setsockopt(socket, IPPROTO_TCP, TCP_KEEPCNT, &maxpkt, sizeof(maxpkt));
 
+        HK_LOGD("hk_ll_init");
     *connections = hk_ll_init(*connections);
     hk_session_t *connection = *connections;
     hk_session_init(connection, socket);

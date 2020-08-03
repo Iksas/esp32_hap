@@ -20,6 +20,9 @@ const char *hk_error_to_name(esp_err_t err){
         case ESP_ERR_HK_UNSUPPORTED_REQUEST:
             ret = "ESP_ERR_HK_UNSUPPORTED_REQUEST";
             break;
+        case ESP_ERR_HK_UNKNOWN:
+            ret = "ESP_ERR_HK_UNKNOWN";
+            break;
         default:
             ret = "Unknown";
             break;
