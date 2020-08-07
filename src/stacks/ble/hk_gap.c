@@ -18,14 +18,25 @@ const char *hk_gap_name; // todo: move to config
 size_t hk_gap_category;  // todo: move to config, type to uint16_t
 hk_mem *hk_gap_broadcast_key = NULL;
 
-static void hk_gap_connect(uint16_t handle)
-{
-    hk_connection_init(handle);
-}
-
 static void hk_gap_disconnect(uint16_t handle)
 {
     hk_connection_free(handle);
+}
+
+static esp_err_t hk_gap_get_peer_address(int handle, hk_mem *address)
+{
+    struct ble_gap_conn_desc conn_desc;
+    esp_err_t ret = ble_gap_conn_find(handle, &conn_desc);
+    if (!ret)
+    {
+        hk_mem_set(address, 18);
+        sprintf(address->ptr, "%x.%x.%x.%x.%x.%x",
+                conn_desc.peer_id_addr.val[0], conn_desc.peer_id_addr.val[1],
+                conn_desc.peer_id_addr.val[2], conn_desc.peer_id_addr.val[3],
+                conn_desc.peer_id_addr.val[4], conn_desc.peer_id_addr.val[5]);
+    }
+
+    return ret;
 }
 
 /**
@@ -50,10 +61,13 @@ static int hk_gap_gap_event(struct ble_gap_event *event, void *arg)
     switch (event->type)
     {
     case BLE_GAP_EVENT_CONNECT:
-        HK_LOGD("Connect event; status=%d ", event->connect.status);
+        HK_LOGV("Connect event; status=%d ", event->connect.status);
         if (event->connect.status == 0)
         {
-            hk_gap_connect(event->connect.conn_handle);
+            hk_mem *address = hk_mem_init();
+            hk_gap_get_peer_address(event->connect.conn_handle, address);
+            hk_connection_init(event->connect.conn_handle, address);
+            hk_mem_free(address);
         }
         else
         {
@@ -92,10 +106,10 @@ static int hk_gap_gap_event(struct ble_gap_event *event, void *arg)
         rc = 0;
         break;
     case BLE_GAP_EVENT_MTU:
-        HK_LOGV("mtu update event; conn_handle=%d cid=%d mtu=%d",
-                event->mtu.conn_handle,
-                event->mtu.channel_id,
-                event->mtu.value);
+        // HK_LOGD("mtu update event; conn_handle=%d cid=%d mtu=%d",
+        //         event->mtu.conn_handle,
+        //         event->mtu.channel_id,
+        //         event->mtu.value);
         hk_connection_mtu_set(event->mtu.conn_handle, event->mtu.value);
         rc = 0;
         break;
@@ -204,9 +218,8 @@ esp_err_t hk_gap_start_advertising()
 
 void hk_gap_broadcast_key_set(hk_mem *broadcast_key)
 {
-    hk_mem_set(hk_gap_broadcast_key, 0);
-
-    hk_mem_append(hk_gap_broadcast_key, broadcast_key);
+    HK_LOGD("Broadcast key length: %d", broadcast_key->size);
+    hk_mem_set_mem(hk_gap_broadcast_key, broadcast_key);
 }
 
 esp_err_t hk_gap_start_advertising_change(uint16_t chr_index, hk_mem *value)
@@ -283,6 +296,7 @@ void hk_gap_init(const char *name, size_t category, size_t config_version)
     HK_LOGD("Initializing GAP.");
 
     hk_gap_broadcast_key = hk_mem_init();
+
     ble_svc_gap_init();
     hk_gap_name = name;
     hk_gap_category = category;

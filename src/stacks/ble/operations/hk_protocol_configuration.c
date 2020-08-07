@@ -24,7 +24,7 @@ esp_err_t hk_protocol_configuration(hk_conn_key_store_t *keys, hk_transaction_t 
 
         // generate broadcast_key
         hk_mem *broadcast_key = hk_mem_init();
-        hk_hkdf_with_external_salt(keys->shared_secret, broadcast_key, accessory_public_key, HK_HKDF_BROADCAST_ENCRYPTION_KEY_INFO);
+        hk_hkdf_with_external_salt(keys->accessory_shared_secret, broadcast_key, accessory_public_key, HK_HKDF_BROADCAST_ENCRYPTION_KEY_INFO);
 
         hk_gap_broadcast_key_set(broadcast_key);
 

@@ -6,7 +6,7 @@
 TEST_CASE("Generate key", "[crypto] [ed25519]")
 {
     hk_ed25519_key_t* key = hk_ed25519_init();
-    size_t ret = hk_ed25519_update_from_random(key);
+    size_t ret = hk_ed25519_init_from_random(key);
     
     TEST_ASSERT_FALSE(ret);
 
@@ -27,7 +27,7 @@ TEST_CASE("Sign and verify", "[crypto] [ed25519]")
     hk_mem* message = hk_mem_init();
     hk_mem_append_string(message, "my message");
 
-    TEST_ASSERT_FALSE(hk_ed25519_update_from_random(key));
+    TEST_ASSERT_FALSE(hk_ed25519_init_from_random(key));
     TEST_ASSERT_FALSE(hk_ed25519_sign(key, message, signature));
     TEST_ASSERT_FALSE(hk_ed25519_verify(key, signature, message));
 
@@ -45,11 +45,11 @@ TEST_CASE("Sign and verify with export and import of public key", "[crypto] [ed2
     hk_mem* public_key = hk_mem_init();
     hk_mem_append_string(message, "my message");
 
-    TEST_ASSERT_FALSE(hk_ed25519_update_from_random(key));
+    TEST_ASSERT_FALSE(hk_ed25519_init_from_random(key));
     TEST_ASSERT_FALSE(hk_ed25519_sign(key, message, signature));
     TEST_ASSERT_FALSE(hk_ed25519_export_public_key(key, public_key));
 
-    TEST_ASSERT_FALSE(hk_ed25519_update_from_random_from_public_key(key_imported, public_key));
+    TEST_ASSERT_FALSE(hk_ed25519_init_from_public_key(key_imported, public_key));
     TEST_ASSERT_FALSE(hk_ed25519_verify(key_imported, signature, message));
 
     hk_ed25519_free(key);
@@ -70,14 +70,14 @@ TEST_CASE("Sign and verify with export and import of public and private keys", "
     hk_mem* message = hk_mem_init();
     hk_mem_append_string(message, "my message");
 
-    TEST_ASSERT_FALSE(hk_ed25519_update_from_random(key));
+    TEST_ASSERT_FALSE(hk_ed25519_init_from_random(key));
     TEST_ASSERT_FALSE(hk_ed25519_export_public_key(key, public_key));
     TEST_ASSERT_FALSE(hk_ed25519_export_private_key(key, private_key));
 
-    TEST_ASSERT_FALSE(hk_ed25519_update_from_random_keys(key_imported, private_key, public_key));
+    TEST_ASSERT_FALSE(hk_ed25519_init_from_keys(key_imported, private_key, public_key));
     TEST_ASSERT_FALSE(hk_ed25519_sign(key_imported, message, signature));
 
-    TEST_ASSERT_FALSE(hk_ed25519_update_from_random_from_public_key(key_imported_public, public_key));
+    TEST_ASSERT_FALSE(hk_ed25519_init_from_public_key(key_imported_public, public_key));
     TEST_ASSERT_FALSE(hk_ed25519_verify(key_imported_public, signature, message));
 
     hk_ed25519_free(key);

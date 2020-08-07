@@ -37,7 +37,7 @@ TEST_CASE("verify once", "[pair] [verify]")
 
     hk_curve25519_key_t *device_session_key = hk_curve25519_init();
     hk_ed25519_key_t *device_long_term_key = hk_ed25519_init();
-    hk_ed25519_update_from_random(device_long_term_key);
+    hk_ed25519_init_from_random(device_long_term_key);
     hk_mem *device_long_term_key_public = hk_mem_init();
     hk_ed25519_export_public_key(device_long_term_key, device_long_term_key_public);
 
@@ -141,7 +141,7 @@ void hk_pair_verify_device_m3(hk_tlv_t *request_tlvs, hk_tlv_t **response_tlvs_p
     TEST_ASSERT_EQUAL(ESP_OK, hk_chacha20poly1305_decrypt(session_encryption_key, HK_CHACHA_VERIFY_MSG2, encrypted_data, decrypted_data));
     request_sub_tlvs = hk_tlv_deserialize(decrypted_data);
     TEST_ASSERT_EQUAL(ESP_OK, hk_tlv_get_mem_by_type(request_sub_tlvs, HK_PAIR_TLV_IDENTIFIER, accessory_id));
-    TEST_ASSERT_EQUAL(ESP_OK, hk_ed25519_update_from_random_from_public_key(accessory_long_term_key, accessory_long_term_public_key));
+    TEST_ASSERT_EQUAL(ESP_OK, hk_ed25519_init_from_public_key(accessory_long_term_key, accessory_long_term_public_key));
     hk_mem_append(device_info, device_session_key_public);
     hk_mem_append(device_info, device_id);
     hk_mem_append(device_info, accessory_session_key_public);

@@ -34,10 +34,10 @@ typedef struct
 } hk_connection_t;
 
 hk_transaction_t *hk_connection_transaction_get_by_uuid(hk_connection_t *connection, const ble_uuid128_t *chr_uuid);
-hk_transaction_t *hk_connection_transaction_init(hk_connection_t *connection, const ble_uuid128_t *chr_uuid);
+hk_transaction_t *hk_connection_transaction_init(hk_connection_t *connection, uint8_t transaction_id, uint8_t opcode, const ble_uuid128_t *chr_uuid);
 void hk_connection_transaction_free(hk_connection_t *connection, hk_transaction_t *transaction);
 
-hk_connection_t *hk_connection_init(uint16_t handle);
+hk_connection_t *hk_connection_init(uint16_t handle, hk_mem *address);
 hk_connection_t *hk_connection_get_all();
 hk_connection_t *hk_connection_get_by_handle(uint16_t handle);
 void hk_connection_mtu_set(uint16_t handle, uint16_t mtu_size);

@@ -2,6 +2,7 @@
 
 #include <esp_system.h>
 #include "../../src/utils/hk_ll.h"
+#include "../../src/utils/hk_heap_debug.h"
 
 typedef struct
 {
@@ -11,7 +12,7 @@ typedef struct
 
 TEST_CASE("create and free", "[ll]")
 {
-    size_t memory_before = esp_get_free_heap_size();
+    hk_heap_debug_start();
     hk_ll_test_t *list = NULL;
 
     list = hk_ll_init(list);
@@ -21,8 +22,7 @@ TEST_CASE("create and free", "[ll]")
     TEST_ASSERT_EQUAL_INT(3, hk_ll_count(list));
 
     hk_ll_free(list);
-    size_t memory_after = esp_get_free_heap_size();
-    TEST_ASSERT_EQUAL_INT(0, memory_after - memory_before);
+    hk_heap_debug_stop();
 }
 
 TEST_CASE("iterate", "[ll]")
@@ -78,7 +78,7 @@ TEST_CASE("reverse", "[ll]")
 
 TEST_CASE("remove first", "[ll]")
 {
-    size_t memory_before = esp_get_free_heap_size();
+    hk_heap_debug_start();
     hk_ll_test_t *list = NULL;
 
     list = hk_ll_init(list);
@@ -98,8 +98,7 @@ TEST_CASE("remove first", "[ll]")
     TEST_ASSERT_EQUAL_INT(item1->data, list->data);
 
     hk_ll_free(list);
-    size_t memory_after = esp_get_free_heap_size();
-    TEST_ASSERT_EQUAL_INT(0, memory_after - memory_before);
+    hk_heap_debug_stop();
 }
 
 TEST_CASE("remove middle", "[ll]")

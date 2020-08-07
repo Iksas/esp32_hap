@@ -80,6 +80,16 @@ void hk_mem_append_string_terminator(hk_mem *mem);
 void hk_mem_set(hk_mem *mem, size_t size);
 
 /**
+ * @brief Replaces the memory
+ *
+ * Replaces the memory with the given one.
+ *
+ * @param mem A pointer to an initialized memory.
+ * @param mem_to_set The new data.
+ */
+void hk_mem_set_mem(hk_mem *mem, hk_mem* mem_to_set);
+
+/**
  * @brief Free the memory
  *
  * Free the memory.

@@ -45,7 +45,6 @@ void hk_subscription_store_add_session(hk_chr_t *chr, hk_session_t *session)
 
     if (subscription == NULL)
     {
-        HK_LOGD("hk_ll_init");
         subscription = subscriptions = hk_ll_init(subscriptions);
         subscription->chr = chr;
         subscription->sessions = NULL;
@@ -64,7 +63,6 @@ void hk_subscription_store_add_session(hk_chr_t *chr, hk_session_t *session)
 
     HK_LOGD("Adding session %d (%x) to subscription list of %x.", 
         session->socket, (uint)session, (uint)chr);
-        HK_LOGD("hk_ll_init");
     subscription->sessions = hk_ll_init(subscription->sessions);
     *subscription->sessions = session;
 }

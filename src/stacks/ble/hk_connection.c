@@ -31,16 +31,16 @@ hk_transaction_t *hk_connection_transaction_get_by_uuid(hk_connection_t *connect
     return transaction_to_return;
 }
 
-hk_transaction_t *hk_connection_transaction_init(hk_connection_t *connection, const ble_uuid128_t *chr_uuid)
+hk_transaction_t *hk_connection_transaction_init(hk_connection_t *connection, uint8_t transaction_id, uint8_t opcode, const ble_uuid128_t *chr_uuid)
 {
     char char_uid_str[40];
     hk_uuids_to_name(chr_uuid, char_uid_str);
-    HK_LOGV("%d - Adding new transaction for %s.", connection->handle, char_uid_str);
+    HK_LOGV("%d.%d - Adding new transaction for %s.", connection->handle, transaction_id, char_uid_str);
 
     hk_transaction_t *transaction = connection->transactions = hk_ll_init(connection->transactions);
 
-    transaction->id = -1;
-    transaction->opcode = -1;
+    transaction->id = transaction_id;
+    transaction->opcode = opcode;
     transaction->chr_uuid = chr_uuid;
 
     transaction->request = hk_mem_init();
@@ -61,6 +61,7 @@ void hk_connection_transaction_free(hk_connection_t *connection, hk_transaction_
     hk_mem_free(transaction->response);
 
     connection->transactions = hk_ll_remove(connection->transactions, transaction);
+    HK_LOGV("%d.%d - Transaction closed.", connection->handle, transaction->id);
 }
 
 hk_connection_t *hk_connection_get_by_handle(uint16_t handle)
@@ -82,9 +83,9 @@ hk_connection_t *hk_connection_get_all()
     return hk_connection_connections;
 }
 
-hk_connection_t *hk_connection_init(uint16_t handle)
+hk_connection_t *hk_connection_init(uint16_t handle, hk_mem *address)
 {
-    HK_LOGV("%d - Adding new connection.", handle);
+    HK_LOGD("%d - Adding new connection (%s).", handle, address->ptr);
 
     hk_connection_t *connection = hk_connection_connections = hk_ll_init(hk_connection_connections);
 
@@ -125,4 +126,5 @@ void hk_connection_free(uint16_t handle)
     hk_conn_key_store_free(connection->security_keys);
 
     hk_connection_connections = hk_ll_remove(hk_connection_connections, connection);
+    HK_LOGD("%d - Connection closed.", handle);
 }

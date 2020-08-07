@@ -9,9 +9,9 @@ typedef struct
     void *internal;
 } hk_ed25519_key_t;
 
-esp_err_t hk_ed25519_update_from_random(hk_ed25519_key_t *key);
-esp_err_t hk_ed25519_update_from_random_keys(hk_ed25519_key_t *key, hk_mem *private_key, hk_mem *public_key);
-esp_err_t hk_ed25519_update_from_random_from_public_key(hk_ed25519_key_t *key, hk_mem *public_key);
+esp_err_t hk_ed25519_init_from_random(hk_ed25519_key_t *key);
+esp_err_t hk_ed25519_init_from_keys(hk_ed25519_key_t *key, hk_mem *private_key, hk_mem *public_key);
+esp_err_t hk_ed25519_init_from_public_key(hk_ed25519_key_t *key, hk_mem *public_key);
 esp_err_t hk_ed25519_export_public_key(hk_ed25519_key_t *key, hk_mem *public_key);
 esp_err_t hk_ed25519_export_private_key(hk_ed25519_key_t *key, hk_mem *private_key);
 esp_err_t hk_ed25519_verify(hk_ed25519_key_t *key, hk_mem *signature, hk_mem *message);

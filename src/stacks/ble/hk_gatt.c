@@ -106,6 +106,8 @@ esp_err_t hk_gatt_indicate(void *hk_chr_void)
         hk_mem_free(response);
     }
 
+    // at the moment we do not need a disconnected event mode, as we are always notifying. It might be needed when introducing device sleep.
+
     return ret;
 }
 
@@ -199,9 +201,9 @@ static int hk_gatt_write_ble_chr(uint16_t handle, struct ble_gatt_access_ctxt *c
     }
     else
     {
-        transaction = hk_connection_transaction_init(connection, chr_uuid);
-        transaction->opcode = request->ptr[1];
-        transaction->id = request->ptr[2];
+        uint8_t opcode = request->ptr[1];
+        uint8_t transaction_id = request->ptr[2];
+        transaction = hk_connection_transaction_init(connection, transaction_id, opcode, chr_uuid);
 
         if (request->size > 5)
         {
@@ -318,9 +320,6 @@ static int hk_gatt_read_ble_chr(uint16_t handle, struct ble_gatt_access_ctxt *ct
         {
             hk_mem_append_buffer(response, (char *)&transaction->response_status, 1);
         }
-        else
-        {
-        }
 
         if (!continuation && has_body)
         {
@@ -330,13 +329,14 @@ static int hk_gatt_read_ble_chr(uint16_t handle, struct ble_gatt_access_ctxt *ct
         if (has_body)
         {
             size_t response_size = transaction->response->size - transaction->response_sent;
-            // max response size at this point is: mtu size - already written response stuff - bytes that are need (I dont know why)
-            uint8_t max_response_size = connection->mtu_size - response->size - 2;
+            // max response size at this point is: mtu size - bytes that are need for header
+            uint8_t max_response_size = connection->mtu_size - 7;
             if (response_size > max_response_size)
             {
                 response_size = max_response_size;
             }
 
+            //HK_LOGD("Setting response length to %d of %d. MTU is %d.", response_size, transaction->response->size - transaction->response_sent, connection->mtu_size);
             hk_mem_append_buffer(response, transaction->response->ptr + transaction->response_sent, response_size);
             transaction->response_sent += response_size;
         }
@@ -344,16 +344,15 @@ static int hk_gatt_read_ble_chr(uint16_t handle, struct ble_gatt_access_ctxt *ct
         // hk_log_print_bytewise("Sending ble read response", response->ptr, response->size, false);
         rc = hk_gatt_encrypt(ctxt, chr_uuid, connection, response);
 
+        hk_mem_free(response);
         if (transaction->response_sent == transaction->response->size)
         {
             hk_connection_transaction_free(connection, transaction);
         }
 
-        hk_mem_free(response);
         HK_LOGV("Sent response.");
     }
 
-    HK_LOGW("Mem: %d", esp_get_free_heap_size());
     return rc == 0 ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES;
 }
 

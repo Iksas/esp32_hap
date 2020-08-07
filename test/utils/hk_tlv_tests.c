@@ -6,6 +6,7 @@
 #include "../../src/utils/hk_tlv.h"
 #include "../../src/utils/hk_logging.h"
 #include "../../src/include/hk_mem.h"
+#include "../../src/utils/hk_heap_debug.h"
 
 hk_tlv_t* append_string(hk_tlv_t *tlv, const char* str, char type){
     hk_mem *mem = hk_mem_init();
@@ -19,7 +20,7 @@ hk_tlv_t* append_string(hk_tlv_t *tlv, const char* str, char type){
 
 TEST_CASE("full run", "[tlv]")
 {
-    size_t memory_before = esp_get_free_heap_size();
+    hk_heap_debug_start();
     HK_LOGI("Memory before: %d", memory_before);
     
     hk_tlv_t *input_tlv = NULL;
@@ -50,9 +51,7 @@ TEST_CASE("full run", "[tlv]")
     HK_LOGI("hk_tlv_free");
     hk_tlv_free(output_tlv);
 
-    size_t memory_after = esp_get_free_heap_size();
-    HK_LOGI("Memory after: %d", memory_after);
-    TEST_ASSERT_EQUAL_INT(0, memory_after - memory_before);    
+    hk_heap_debug_stop();   
 }
 
 TEST_CASE("simple add", "[tlv]")

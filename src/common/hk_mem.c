@@ -44,6 +44,13 @@ void hk_mem_set(hk_mem *mem, size_t size)
     }
 }
 
+void hk_mem_set_mem(hk_mem *mem, hk_mem* mem_to_set)
+{
+    mem->ptr = realloc(mem->ptr, mem_to_set->size);
+    memcpy(mem->ptr, mem_to_set->ptr, mem_to_set->size);
+    mem->size = mem_to_set->size;
+}
+
 void hk_mem_free(hk_mem *mem)
 {
     if (mem != NULL)

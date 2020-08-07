@@ -117,7 +117,7 @@ static esp_err_t hk_pairing_setup_exchange_response_verification(hk_tlv_t *tlv, 
     RUN_AND_CHECK(ret, hk_tlv_get_mem_by_type, tlv_data_decrypted, HK_PAIR_TLV_IDENTIFIER, device_id);
     RUN_AND_CHECK(ret, hk_tlv_get_mem_by_type, tlv_data_decrypted, HK_PAIR_TLV_PUBLICKEY, device_long_term_key_public);
     RUN_AND_CHECK(ret, hk_tlv_get_mem_by_type, tlv_data_decrypted, HK_PAIR_TLV_SIGNATURE, device_signature);
-    RUN_AND_CHECK(ret, hk_ed25519_update_from_random_from_public_key, device_key, device_long_term_key_public);
+    RUN_AND_CHECK(ret, hk_ed25519_init_from_public_key, device_key, device_long_term_key_public);
     RUN_AND_CHECK(ret, hk_hkdf, srp_private_key, device_x, HK_HKDF_PAIR_SETUP_CONTROLLER_SALT, HK_HKDF_PAIR_SETUP_CONTROLLER_INFO);
 
     if (!ret)
@@ -160,7 +160,7 @@ static esp_err_t hk_pairing_setup_exchange_response_generation(hk_mem *result, h
     hk_tlv_t *tlv_data_response = NULL;
     hk_tlv_t *tlv_data_response_sub = NULL;
 
-    RUN_AND_CHECK(ret, hk_ed25519_update_from_random, accessory_key);
+    RUN_AND_CHECK(ret, hk_ed25519_init_from_random, accessory_key);
     RUN_AND_CHECK(ret, hk_ed25519_export_public_key, accessory_key, accessory_public_key);
     RUN_AND_CHECK(ret, hk_store_key_pub_set, accessory_public_key);
     RUN_AND_CHECK(ret, hk_ed25519_export_private_key, accessory_key, accessory_private_key);

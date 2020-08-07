@@ -21,7 +21,6 @@ uint16_t hk_global_state_get()
 {
     uint16_t value = 0;
     hk_store_u16_get(HK_GLOBAL_STATE_STORE_KEY, &value);
-    HK_LOGD("Globalstate requested: %d", value);
     return value;
 }
 

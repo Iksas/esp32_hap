@@ -83,7 +83,6 @@ esp_err_t hk_com_open_connection(hk_session_t **connections, int listen_socket, 
     const int maxpkt = 4; /* Drop connection after 4 probes without response */
     setsockopt(socket, IPPROTO_TCP, TCP_KEEPCNT, &maxpkt, sizeof(maxpkt));
 
-        HK_LOGD("hk_ll_init");
     *connections = hk_ll_init(*connections);
     hk_session_t *connection = *connections;
     hk_session_init(connection, socket);
