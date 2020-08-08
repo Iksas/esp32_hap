@@ -249,7 +249,7 @@ esp_err_t hk_pair_verify_resume(hk_conn_key_store_t *keys, hk_tlv_t *request_tlv
         if (hk_mem_equal(s->id, session_id))
         {
             session = s;
-            //todo: break;
+            hk_ll_break();
         }
     }
 

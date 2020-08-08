@@ -17,7 +17,7 @@ hk_transaction_t *hk_connection_transaction_get_by_uuid(hk_connection_t *connect
         if (hk_uuids_cmp(transaction->chr_uuid, chr_uuid))
         {
             transaction_to_return = transaction;
-            //todo: break;
+            hk_ll_break();
         }
     }
 

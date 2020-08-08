@@ -49,6 +49,31 @@ TEST_CASE("iterate", "[ll]")
     hk_ll_free(list);
 }
 
+TEST_CASE("break", "[ll]")
+{
+    hk_ll_test_t *list = NULL;
+
+    list = hk_ll_init(list);
+    list = hk_ll_init(list);
+    list = hk_ll_init(list);
+    list = hk_ll_init(list);
+
+    int count = 0;
+    hk_ll_foreach(list, item)
+    {
+        if(count == 2)
+        {
+            hk_ll_break();
+        }
+
+        count++;
+    }
+
+    TEST_ASSERT_EQUAL_INT(2, count);
+
+    hk_ll_free(list);
+}
+
 TEST_CASE("reverse", "[ll]")
 {
 

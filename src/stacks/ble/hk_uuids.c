@@ -15,7 +15,7 @@ const ble_uuid128_t *hk_uuids_get(uint8_t id)
         if (uuid->value[12] == id)
         {
             result_uuid = uuid;
-            //todo break;
+            hk_ll_break();
         }
     }
 
@@ -26,7 +26,6 @@ const ble_uuid128_t *hk_uuids_get(uint8_t id)
         hk_uuids_uuids = hk_ll_init(hk_uuids_uuids);
         ble_uuid_init_from_buf((ble_uuid_any_t*)hk_uuids_uuids, (const void *)buffer, 16);
         result_uuid = hk_uuids_uuids;
-        // HK_LOGD("Service uuid not found for %d, generated new one at: %x", id, (uint)result_uuid);
     }
 
     return result_uuid;

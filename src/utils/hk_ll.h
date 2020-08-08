@@ -7,6 +7,7 @@
 
 #define hk_ll_foreach(ll, item) \
     for (typeof (ll) item = ll; item; item = _hk_ll_next(item))
+#define hk_ll_break() break
 
 void *_hk_ll_init(void *ll, size_t size);
 void *_hk_ll_next(void *ll);

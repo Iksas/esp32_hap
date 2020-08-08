@@ -68,7 +68,7 @@ TEST_CASE("Remove pairing", "[pair] [store]")
     TEST_ASSERT_EQUAL(ESP_OK, hk_pairings_store_add(device_id, device_ltpk, true));
     TEST_ASSERT_EQUAL(ESP_OK, hk_pairings_store_remove(device_id));
     TEST_ASSERT_EQUAL(ESP_OK, hk_pairings_store_device_exists(device_id, &device_exists));
-    TEST_ASSERT_TRUE(device_exists);
+    TEST_ASSERT_FALSE(device_exists);
 
     // cleanup
     hk_mem_free(device_id);

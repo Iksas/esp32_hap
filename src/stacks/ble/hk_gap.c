@@ -207,7 +207,6 @@ esp_err_t hk_gap_start_advertising()
     hk_mem_append_buffer(manufacturer_data, &configuration, 1);
     hk_mem_append_buffer(manufacturer_data, &ble, 1);
 
-    //HK_LOGD("manu: %s", hk_mem_to_debug_string(manufacturer_data));
     RUN_AND_CHECK(ret, hk_gap_start_advertising_internal, manufacturer_data, true);
 
     hk_mem_free(accessory_id);
@@ -263,7 +262,6 @@ esp_err_t hk_gap_start_advertising_change(uint16_t chr_index, hk_mem *value)
     //HK_LOGD("encrypting done: %s", hk_mem_to_debug_string(encrypted));
     if (!ret)
     {
-        HK_LOGD("Current message length: %d", encrypted->size);
         hk_mem_set(encrypted, 16);
 
         hk_mem_append_buffer(manufacturer_data, &company_id, 2);
@@ -272,8 +270,6 @@ esp_err_t hk_gap_start_advertising_change(uint16_t chr_index, hk_mem *value)
         hk_mem_append(manufacturer_data, accessory_id);
         hk_mem_append(manufacturer_data, encrypted);
 
-        HK_LOGD("Starting internal");
-        hk_log_print_bytewise("manu", manufacturer_data->ptr, manufacturer_data->size, false);
         RUN_AND_CHECK(ret, hk_gap_start_advertising_internal, manufacturer_data, false);
     }
 
