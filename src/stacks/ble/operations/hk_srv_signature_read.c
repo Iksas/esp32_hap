@@ -5,12 +5,9 @@
 
 #include "../hk_formats_ble.h"
 
-enum hk_srv_signature_read_srv_properties //todo: as defines
-{
-    HK_SRV_PROP_PRIMARY = 0x0001,
-    HK_SRV_PROP_HIDDEN = 0x0002,
-    HK_SRV_PROP_SUPPORTS_CONFIGURATION = 0x0004
-};
+#define HK_SRV_PROP_PRIMARY 0x0001
+#define HK_SRV_PROP_HIDDEN 0x0002
+#define HK_SRV_PROP_SUPPORTS_CONFIGURATION 0x0004
 
 esp_err_t hk_srv_signature_read(hk_transaction_t *transaction, hk_chr_t *chr)
 {

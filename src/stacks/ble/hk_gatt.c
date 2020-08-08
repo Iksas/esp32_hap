@@ -57,6 +57,7 @@ esp_err_t hk_gatt_indicate(void *hk_chr_void)
     hk_connection_t *connections = hk_connection_get_all();
     if (connections != NULL)
     {
+        HK_LOGD("Starting notify event.");
         uint16_t chr_val_handle = 0;
         ble_ret = ble_gatts_find_chr(BLE_UUID(chr->srv_uuid), BLE_UUID(chr->uuid), NULL, &chr_val_handle);
 
@@ -100,6 +101,7 @@ esp_err_t hk_gatt_indicate(void *hk_chr_void)
 
         if (!ret)
         {
+            HK_LOGD("Starting notify broadcast.");
             hk_gap_start_advertising_change(chr->chr_index, response);
         }
 
@@ -148,7 +150,7 @@ static int hk_gatt_decrypt(struct ble_gatt_access_ctxt *ctxt, const ble_uuid128_
     {
         hk_mem *received_before_encryption = hk_mem_init();
         hk_mem_append_buffer(received_before_encryption, buffer, out_len);
-        hk_connection_security_decrypt(connection, received_before_encryption, request); //todo: catch error
+        hk_connection_security_decrypt(connection, received_before_encryption, request); 
         hk_mem_free(received_before_encryption);
     }
     else
@@ -167,7 +169,7 @@ static int hk_gatt_encrypt(struct ble_gatt_access_ctxt *ctxt, const ble_uuid128_
     {
         HK_LOGV("Encrypting response");
         hk_mem *encrypted_response = hk_mem_init();
-        hk_connection_security_encrypt(connection, response, encrypted_response); //todo: catch error
+        hk_connection_security_encrypt(connection, response, encrypted_response);
         rc = os_mbuf_append(ctxt->om, encrypted_response->ptr, encrypted_response->size);
         hk_mem_free(encrypted_response);
     }
@@ -257,7 +259,7 @@ static int hk_gatt_write_ble_chr(uint16_t handle, struct ble_gatt_access_ctxt *c
     }
     else
     {
-        HK_LOGD("Received %d of %d. Waiting for continuation of fragmentation.", transaction->request->size, transaction->expected_request_length);
+        HK_LOGV("Received %d of %d. Waiting for continuation of fragmentation.", transaction->request->size, transaction->expected_request_length);
     }
 
     if (res == ESP_ERR_HK_TERMINATE)

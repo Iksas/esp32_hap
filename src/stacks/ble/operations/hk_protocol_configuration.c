@@ -51,7 +51,6 @@ esp_err_t hk_protocol_configuration(hk_conn_key_store_t *keys, hk_transaction_t 
     {
         HK_LOGE("Error getting value of write request.");
         res = ESP_ERR_HK_UNSUPPORTED_REQUEST;
-        //todo: error handling
     }
 
     hk_tlv_free(tlv_data_request);

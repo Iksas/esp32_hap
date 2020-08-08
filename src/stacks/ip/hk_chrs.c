@@ -222,9 +222,11 @@ void hk_chrs_write(hk_session_t *session, cJSON *j_chr)
         {
             HK_LOGD("%d - Writing chr %d.%d.", session->socket, aid, iid);
 
-            chr->write(write_request); //todo: error handling
-            hk_html_response_send_empty(session, HK_HTML_204);
-            hk_chrs_notify(chr);
+            esp_err_t res = chr->write(write_request);
+            if(res == ESP_OK){
+                hk_html_response_send_empty(session, HK_HTML_204);
+                hk_chrs_notify(chr);
+            }
         }
 
         hk_mem_free(write_request);

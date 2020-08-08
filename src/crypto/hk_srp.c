@@ -142,7 +142,7 @@ esp_err_t hk_srp_set_key(Srp *srp, byte *secret, word32 size)
         HK_CRYPTO_RUN_AND_CHECK(ret, wc_Sha512Update, &hash.data.sha512, secret, size);
         HK_CRYPTO_RUN_AND_CHECK(ret, wc_Sha512Final, &hash.data.sha512, srp->key);
 
-        memset(&hash, 0, sizeof(hash)); //todo: why?
+        memset(&hash, 0, sizeof(hash));
         return ret ? ESP_FAIL : ESP_OK;
     }
     else
