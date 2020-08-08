@@ -34,5 +34,25 @@ typedef enum
     HK_CHR_PROP_SUPPORTS_BROADCAST_NOTIFY = 0x0200
 } hk_chr_prop_t;
 
+
+/**
+ * @brief Returns the format of a characteristic type
+ *
+ * Returns the format of a characteristic type.
+ *
+ * @param chr_type The type of the characteristic.
+ * 
+ * @return Retruns the format.
+ */
  hk_format_t hk_chrs_properties_get_type(hk_chr_types_t chr_type);
+
+/**
+ * @brief Returns the properties of a characteristic type
+ *
+ * Returns the properties (can be written, can be read, notifies, ...) of a characteristic type.
+ *
+ * @param chr_type The type of the characteristic.
+ * 
+ * @return Retruns a bitfield with the properties.
+ */
  uint16_t hk_chrs_properties_get_prop(hk_chr_types_t chr_type);
