@@ -82,7 +82,6 @@ esp_err_t hk_pair_verify_start(hk_conn_key_store_t *keys, hk_tlv_t *request_tlvs
     hk_tlv_t *tlv_data_response = NULL;
 
     hk_conn_key_store_reset(keys);
-    hk_conn_key_store_verify_reset(keys);
 
     if (hk_store_keys_can_get())
     {
@@ -292,7 +291,6 @@ esp_err_t hk_pair_verify_resume(hk_conn_key_store_t *keys, hk_tlv_t *request_tlv
         if (!ret)
         {
             hk_mem_set(encrypted_data, 0);
-            hk_conn_key_store_reset(keys);
         }
 
         RUN_AND_CHECK(ret, hk_chacha20poly1305_caluclate_auth_tag_without_message, encryption_key, HK_CHACHA_RESUME_MSG2, encrypted_data);

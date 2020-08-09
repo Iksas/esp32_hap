@@ -20,8 +20,28 @@ typedef struct
     hk_srp_key_t *pair_setup_srp_key;
 } hk_conn_key_store_t;
 
-hk_conn_key_store_t *hk_conn_key_store_init();
-void hk_conn_key_store_free(hk_conn_key_store_t *keys);
-void hk_conn_key_store_reset(hk_conn_key_store_t *keys);
 
-void hk_conn_key_store_verify_reset(hk_conn_key_store_t *keys);
+/**
+ * @brief Initializes the keys of a connection
+ *
+ * Initializes the keys of a connection.
+ */
+hk_conn_key_store_t *hk_conn_key_store_init();
+
+/**
+ * @brief Frees the keys of a connection
+ *
+ * Frees the keys of a connection.
+ *
+ * @param keys The keys.
+ */
+void hk_conn_key_store_free(hk_conn_key_store_t *keys);
+
+/**
+ * @brief Resets the keys of a connection.
+ *
+ * Resets all keys of a connection. That should be done on new pair verify.
+ *
+ * @param keys The keys.
+ */
+void hk_conn_key_store_reset(hk_conn_key_store_t *keys);

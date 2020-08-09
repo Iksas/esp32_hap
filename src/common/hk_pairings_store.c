@@ -251,13 +251,6 @@ esp_err_t hk_pairings_store_remove_all()
     return ESP_OK;
 }
 
-esp_err_t hk_pairings_store_list()
-{
-    esp_err_t ret = ESP_FAIL;
-    HK_LOGW("List pairings not implemented.");
-    return ret;
-}
-
 esp_err_t hk_pairings_log_devices()
 {
     hk_mem *data = hk_mem_init();
