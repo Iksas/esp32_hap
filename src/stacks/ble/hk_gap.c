@@ -31,9 +31,9 @@ static esp_err_t hk_gap_get_peer_address(int handle, hk_mem *address)
     {
         hk_mem_set(address, 18);
         sprintf(address->ptr, "%x.%x.%x.%x.%x.%x",
-                conn_desc.peer_id_addr.val[0], conn_desc.peer_id_addr.val[1],
-                conn_desc.peer_id_addr.val[2], conn_desc.peer_id_addr.val[3],
-                conn_desc.peer_id_addr.val[4], conn_desc.peer_id_addr.val[5]);
+            conn_desc.peer_id_addr.val[0], conn_desc.peer_id_addr.val[1],
+            conn_desc.peer_id_addr.val[2], conn_desc.peer_id_addr.val[3],
+            conn_desc.peer_id_addr.val[4], conn_desc.peer_id_addr.val[5]);
     }
 
     return ret;
@@ -95,14 +95,14 @@ static int hk_gap_gap_event(struct ble_gap_event *event, void *arg)
         break;
     case BLE_GAP_EVENT_SUBSCRIBE:
         HK_LOGV("subscribe event; conn_handle=%d attr_handle=%d "
-                "reason=%d prevn=%d curn=%d previ=%d curi=%d\n",
-                event->subscribe.conn_handle,
-                event->subscribe.attr_handle,
-                event->subscribe.reason,
-                event->subscribe.prev_notify,
-                event->subscribe.cur_notify,
-                event->subscribe.prev_indicate,
-                event->subscribe.cur_indicate);
+            "reason=%d prevn=%d curn=%d previ=%d curi=%d\n",
+            event->subscribe.conn_handle,
+            event->subscribe.attr_handle,
+            event->subscribe.reason,
+            event->subscribe.prev_notify,
+            event->subscribe.cur_notify,
+            event->subscribe.prev_indicate,
+            event->subscribe.cur_indicate);
         rc = 0;
         break;
     case BLE_GAP_EVENT_MTU:
@@ -146,9 +146,28 @@ static esp_err_t hk_gap_start_advertising_internal(hk_mem *manufacturer_data, bo
     fields.flags = BLE_HS_ADV_F_DISC_GEN | BLE_HS_ADV_F_BREDR_UNSUP; // Discoverability in forthcoming advertisement (general) // BLE-only (BR/EDR unsupported)
     if (send_name)
     {
-        fields.name = (uint8_t *)hk_gap_name;
-        fields.name_len = strlen(hk_gap_name);
-        fields.name_is_complete = 1;
+        size_t name_length = strlen(hk_gap_name);
+        if (name_length < 8) {
+            fields.name = (uint8_t *)hk_gap_name;
+            fields.name_len = name_length;
+            fields.name_is_complete = 1;
+        }
+        else {
+            fields.name = (uint8_t *)hk_gap_name;
+            fields.name_len = 7;
+            fields.name_is_complete = 0;
+
+            struct ble_hs_adv_fields scan_response_fields;
+            memset(&scan_response_fields, 0, sizeof scan_response_fields);
+            scan_response_fields.name = (uint8_t *)hk_gap_name;
+            scan_response_fields.name_len = name_length;
+            err = ble_gap_adv_rsp_set_fields(&scan_response_fields);
+            if (err)
+            {
+                HK_LOGE("Could not set scan response fields. Errorcode: %d", err);
+                return ESP_FAIL;
+            }
+        }
     }
     fields.mfg_data = (uint8_t *)manufacturer_data->ptr;
     fields.mfg_data_len = manufacturer_data->size;
@@ -156,7 +175,7 @@ static esp_err_t hk_gap_start_advertising_internal(hk_mem *manufacturer_data, bo
     err = ble_gap_adv_set_fields(&fields);
     if (err)
     {
-        HK_LOGE("Could not start advertising, because fields could not be set. Errorcode: %d", err);
+        HK_LOGE("Could not set advertising fields. Errorcode: %d", err);
         return ESP_FAIL;
     }
 
