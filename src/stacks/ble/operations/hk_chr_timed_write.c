@@ -12,7 +12,7 @@ time_t time_of_death = -1;
 
 esp_err_t hk_chr_timed_write(hk_transaction_t *transaction, hk_chr_t *chr)
 {
-    esp_err_t res = ESP_OK;
+    esp_err_t ret = ESP_OK;
     uint8_t ttl = 0;
     hk_mem *ttl_mem = hk_mem_init();
     hk_tlv_t *tlv_data_request = hk_tlv_deserialize(transaction->request);
@@ -21,19 +21,19 @@ esp_err_t hk_chr_timed_write(hk_transaction_t *transaction, hk_chr_t *chr)
     if (hk_tlv_get_mem_by_type(tlv_data_request, 0x01, hk_chr_timed_write_write_request) != ESP_OK)
     {
         HK_LOGE("Error getting value of write request.");
-        res = ESP_ERR_HK_UNSUPPORTED_REQUEST;
+        ret = ESP_ERR_HK_UNSUPPORTED_REQUEST;
     }
 
-    if (res == ESP_OK)
+    if (ret == ESP_OK)
     {
         if (hk_tlv_get_mem_by_type(tlv_data_request, 0x08, ttl_mem) != ESP_OK)
         {
             HK_LOGE("Error getting value of write request.");
-            res = ESP_ERR_HK_UNSUPPORTED_REQUEST;
+            ret = ESP_ERR_HK_UNSUPPORTED_REQUEST;
         }
     }
 
-    if (res == ESP_OK)
+    if (ret == ESP_OK)
     {
         ttl = *(uint8_t *)ttl_mem->ptr;
         time_t now;
@@ -44,12 +44,12 @@ esp_err_t hk_chr_timed_write(hk_transaction_t *transaction, hk_chr_t *chr)
 
     hk_mem_free(ttl_mem);
     hk_tlv_free(tlv_data_request);
-    return res;
+    return ret;
 }
 
 esp_err_t hk_chr_execute_write(hk_connection_t *connection, hk_transaction_t *transaction, hk_chr_t *chr)
 {
-    esp_err_t res = ESP_OK;
+    esp_err_t ret = ESP_OK;
     hk_mem *write_response = hk_mem_init();
     time_t now;
     time(&now);
@@ -58,31 +58,31 @@ esp_err_t hk_chr_execute_write(hk_connection_t *connection, hk_transaction_t *tr
     {
         HK_LOGD("Time of death: %ld, Now: %ld", time_of_death, now);
         HK_LOGE("Execute of timed write could not be done, as time was over.");
-        res = ESP_ERR_NOT_SUPPORTED;
+        ret = ESP_ERR_NOT_SUPPORTED;
     }
     else
     {
         HK_LOGD("Executing timed write: Time of death: %ld, Now: %ld", time_of_death, now);
     }
 
-    if (res == ESP_OK)
+    if (ret == ESP_OK)
     {
         if (chr->write_callback != NULL)
         {
-            res = chr->write_callback(hk_chr_timed_write_write_request);
+            ret = chr->write_callback(hk_chr_timed_write_write_request);
         }
         else if (chr->write_with_response_callback)
         {
-            res = chr->write_with_response_callback(connection, hk_chr_timed_write_write_request, write_response);
+            ret = chr->write_with_response_callback(connection, hk_chr_timed_write_write_request, write_response);
         }
         else
         {
             HK_LOGE("Write callback was not found.");
-            res = ESP_ERR_NOT_FOUND;
+            ret = ESP_ERR_NOT_FOUND;
         }
     }
 
-    if (res == ESP_OK)
+    if (ret == ESP_OK)
     {
         if (write_response->size > 0)
         {
@@ -94,5 +94,5 @@ esp_err_t hk_chr_execute_write(hk_connection_t *connection, hk_transaction_t *tr
 
     hk_mem_free(write_response);
     hk_mem_free(hk_chr_timed_write_write_request);
-    return res;
+    return ret;
 }

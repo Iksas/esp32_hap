@@ -50,24 +50,24 @@ hk_tlv_t *hk_tlv_add_uint16(hk_tlv_t *tlv_list, char type, uint16_t data)
 
 esp_err_t hk_tlv_get_mem_by_type(hk_tlv_t *tlv, char type, hk_mem *result)
 {
-    esp_err_t res = ESP_ERR_HK_UNSUPPORTED_REQUEST;
+    esp_err_t ret = ESP_ERR_HK_UNSUPPORTED_REQUEST;
 
     while(tlv) {
         if (tlv->type == type)
         {
             hk_mem_append_buffer(result, tlv->value, tlv->length);
-            res = ESP_OK;
+            ret = ESP_OK;
         }
 
         tlv = hk_ll_next(tlv);
     }
 
-    if (res != ESP_OK)
+    if (ret != ESP_OK)
     {
         HK_LOGE("Error getting tlv for type %d.", type);
     }
 
-    return res;
+    return ret;
 }
 
 hk_tlv_t *hk_tlv_get_tlv_by_type(hk_tlv_t *tlv, char type)

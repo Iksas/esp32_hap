@@ -2,6 +2,7 @@
 
 #include "../../../utils/hk_logging.h"
 #include "../../../utils/hk_tlv.h"
+#include "../../../utils/hk_util.h"
 #include "../../../utils/hk_store.h"
 #include "../../../crypto/hk_hkdf.h"
 #include "../../../common/hk_global_state.h"
@@ -13,7 +14,7 @@
 
 esp_err_t hk_protocol_configuration(hk_conn_key_store_t *keys, hk_transaction_t *transaction, hk_chr_t *chr)
 {
-    esp_err_t res = ESP_OK;
+    esp_err_t ret = ESP_OK;
     hk_tlv_t *tlv_data_request = hk_tlv_deserialize(transaction->request);
 
     if (hk_tlv_get_tlv_by_type(tlv_data_request, 0x01) != NULL)
@@ -30,7 +31,8 @@ esp_err_t hk_protocol_configuration(hk_conn_key_store_t *keys, hk_transaction_t 
 
         // get global state number and current configuration
         uint16_t global_state = hk_global_state_get();
-        uint8_t configuration = hk_store_configuration_get();
+        uint8_t configuration = 0;
+        RUN_AND_CHECK(ret, hk_store_u8_get, HK_CONFIGURATION_STORE_KEY, &configuration);
 
         // generate response
         hk_tlv_t *tlv_data_response = NULL;
@@ -45,15 +47,15 @@ esp_err_t hk_protocol_configuration(hk_conn_key_store_t *keys, hk_transaction_t 
     else if (hk_tlv_get_tlv_by_type(tlv_data_request, 0x02) != NULL)
     {
         HK_LOGE("Request for getting all parameters.");
-        res = ESP_ERR_HK_UNSUPPORTED_REQUEST;
+        ret = ESP_ERR_HK_UNSUPPORTED_REQUEST;
     }
     else
     {
         HK_LOGE("Error getting value of write request.");
-        res = ESP_ERR_HK_UNSUPPORTED_REQUEST;
+        ret = ESP_ERR_HK_UNSUPPORTED_REQUEST;
     }
 
     hk_tlv_free(tlv_data_request);
 
-    return res;
+    return ret;
 }

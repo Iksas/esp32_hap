@@ -14,16 +14,16 @@
 
 esp_err_t hk_pairing_ble_write_pair_setup(hk_connection_t *connection, hk_mem *request, hk_mem *response)
 {
-    esp_err_t res = ESP_OK;
+    esp_err_t ret = ESP_OK;
     bool is_paired = false; // not needed in ble
     int rc = hk_pair_setup(request, response, connection->security_keys, connection->device_id, &is_paired);
     if (rc != 0)
     {
-        HK_LOGE("Error in pair setup: %d", res);
-        res = ESP_ERR_HK_UNSUPPORTED_REQUEST;
+        HK_LOGE("Error in pair setup: %d", ret);
+        ret = ESP_ERR_HK_UNSUPPORTED_REQUEST;
     }
 
-    return res;
+    return ret;
 }
 
 esp_err_t hk_pairing_ble_write_pair_verify(hk_connection_t *connection, hk_mem *request, hk_mem *response)

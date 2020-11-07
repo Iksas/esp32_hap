@@ -184,7 +184,7 @@ static int hk_gatt_encrypt(struct ble_gatt_access_ctxt *ctxt, const ble_uuid128_
 static int hk_gatt_write_ble_chr(uint16_t handle, struct ble_gatt_access_ctxt *ctxt, void *arg)
 {
     int rc = 0;
-    esp_err_t res = ESP_OK;
+    esp_err_t ret = ESP_OK;
     const ble_uuid128_t *chr_uuid = BLE_UUID128(ctxt->chr->uuid);
     hk_connection_t *connection = hk_connection_get_by_handle(handle);
     hk_chr_t *chr = (hk_chr_t *)arg;
@@ -222,39 +222,39 @@ static int hk_gatt_write_ble_chr(uint16_t handle, struct ble_gatt_access_ctxt *c
         {
         case 1:
             HK_LOGV("Signature read for characteristc %s.", uuid_name);
-            res = hk_chr_signature_read(chr_uuid, transaction, chr);
+            ret = hk_chr_signature_read(chr_uuid, transaction, chr);
             break;
         case 2:
             HK_LOGD("Characteristic write for %s.", uuid_name);
-            res = hk_chr_write(connection, transaction, chr);
+            ret = hk_chr_write(connection, transaction, chr);
             break;
         case 3:
             HK_LOGD("Characteristic read for %s.", uuid_name);
-            res = hk_chr_read(transaction, chr);;
+            ret = hk_chr_read(transaction, chr);;
             break;
         case 4:
             HK_LOGD("Characteristic timed write for %s.", uuid_name);
-            res = hk_chr_timed_write(transaction, chr);
+            ret = hk_chr_timed_write(transaction, chr);
             break;
         case 5:
             HK_LOGD("Characteristic execute write for %s.", uuid_name);
-            res = hk_chr_execute_write(connection, transaction, chr);
+            ret = hk_chr_execute_write(connection, transaction, chr);
             break;
         case 6:
             HK_LOGV("Signature read for service %s.", uuid_name);
-            res = hk_srv_signature_read(transaction, chr);
+            ret = hk_srv_signature_read(transaction, chr);
             break;
         case 7:
             HK_LOGD("Characteristic configuration for %s.", uuid_name);
-            res = hk_chr_configuration(transaction);
+            ret = hk_chr_configuration(transaction);
             break;
         case 8:
             HK_LOGD("Protocol configuration for %s.", uuid_name);
-            res = hk_protocol_configuration(connection->security_keys, transaction, chr);
+            ret = hk_protocol_configuration(connection->security_keys, transaction, chr);
             break;
         default:
             HK_LOGE("Unknown opcode.");
-            res = ESP_ERR_NOT_SUPPORTED;
+            ret = ESP_ERR_NOT_SUPPORTED;
         }
     }
     else
@@ -262,11 +262,11 @@ static int hk_gatt_write_ble_chr(uint16_t handle, struct ble_gatt_access_ctxt *c
         HK_LOGV("Received %d of %d. Waiting for continuation of fragmentation.", transaction->request->size, transaction->expected_request_length);
     }
 
-    if (res == ESP_ERR_HK_TERMINATE)
+    if (ret == ESP_ERR_HK_TERMINATE)
     {
         hk_gap_terminate_connection(handle);
     }
-    else if (res != ESP_OK)
+    else if (ret != ESP_OK)
     {
         transaction->response_status = 0x06;
     }

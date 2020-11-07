@@ -293,8 +293,8 @@ void hk_com_task(void *args_ptr)
                 }
                 else
                 {
-                    esp_err_t res = hk_com_open_connection(&connections, listen_socket, &active_fds);
-                    if (res == ESP_OK)
+                    esp_err_t ret = hk_com_open_connection(&connections, listen_socket, &active_fds);
+                    if (ret == ESP_OK)
                     {
                         highest_socket = MAX(highest_socket, connections->socket);
                     }

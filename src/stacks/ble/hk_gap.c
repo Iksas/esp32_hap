@@ -212,7 +212,8 @@ esp_err_t hk_gap_start_advertising()
     uint8_t type = 0x06;
     uint8_t stl = 0x2d;
     uint8_t sf = has_pairing ? 0x00 : 0x01;
-    uint8_t configuration = hk_store_configuration_get();
+    uint8_t configuration = 0;
+    RUN_AND_CHECK(ret, hk_store_u8_get, HK_CONFIGURATION_STORE_KEY, &configuration);
     uint8_t ble = 0x02;
     hk_accessory_id_get(accessory_id);
 

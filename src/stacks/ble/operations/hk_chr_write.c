@@ -9,7 +9,7 @@
 
 esp_err_t hk_chr_write(hk_connection_t *connection, hk_transaction_t *transaction, hk_chr_t *chr)
 {
-    esp_err_t res = ESP_OK;
+    esp_err_t ret = ESP_OK;
     hk_mem *write_request = hk_mem_init();
     hk_mem *write_response = hk_mem_init();
     hk_tlv_t *tlv_data_request = hk_tlv_deserialize(transaction->request);
@@ -17,27 +17,27 @@ esp_err_t hk_chr_write(hk_connection_t *connection, hk_transaction_t *transactio
     if (hk_tlv_get_mem_by_type(tlv_data_request, 0x01, write_request) != ESP_OK)
     {
         HK_LOGE("Error getting value of write request.");
-        res = ESP_ERR_HK_UNSUPPORTED_REQUEST;
+        ret = ESP_ERR_HK_UNSUPPORTED_REQUEST;
     }
 
-    if (res == ESP_OK)
+    if (ret == ESP_OK)
     {
         if (chr->write_callback != NULL)
         {
-            res = chr->write_callback(write_request);
+            ret = chr->write_callback(write_request);
         }
         else if (chr->write_with_response_callback)
         {
-            res = chr->write_with_response_callback(connection, write_request, write_response);
+            ret = chr->write_with_response_callback(connection, write_request, write_response);
         }
         else
         {
             HK_LOGE("Write callback was not found.");
-            res = ESP_ERR_NOT_FOUND;
+            ret = ESP_ERR_NOT_FOUND;
         }
     }
 
-    if (res == ESP_OK)
+    if (ret == ESP_OK)
     {
         if (write_response->size > 0)
         {
@@ -51,5 +51,5 @@ esp_err_t hk_chr_write(hk_connection_t *connection, hk_transaction_t *transactio
     hk_mem_free(write_request);
     hk_mem_free(write_response);
     hk_tlv_free(tlv_data_request);
-    return res;
+    return ret;
 }

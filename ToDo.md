@@ -1,4 +1,4 @@
-- review error handling, shouldnt every function have this?
+
 - move special functions of store out to usages
 - check IP stack is still working
 - check IP stack notifications against spec

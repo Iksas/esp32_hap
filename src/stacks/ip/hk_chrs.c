@@ -30,11 +30,11 @@ void hk_chrs_get(hk_session_t *session)
 {
     hk_mem *ids = hk_mem_init();
     session->response->content_type = HK_SESSION_CONTENT_JSON;
-    esp_err_t res = hk_html_parser_get_query_value(session->request->query, "id", ids);
+    esp_err_t ret = hk_html_parser_get_query_value(session->request->query, "id", ids);
 
     int results[2];
     cJSON *j_root = cJSON_CreateObject();
-    if (res == ESP_OK)
+    if (ret == ESP_OK)
     {
         cJSON *j_chrs = cJSON_CreateArray();
         cJSON_AddItemToObject(j_root, "characteristics", j_chrs);
@@ -222,10 +222,13 @@ void hk_chrs_write(hk_session_t *session, cJSON *j_chr)
         {
             HK_LOGD("%d - Writing chr %d.%d.", session->socket, aid, iid);
 
-            esp_err_t res = chr->write(write_request);
-            if(res == ESP_OK){
+            ret = chr->write(write_request);
+            if(ret == ESP_OK){
                 hk_html_response_send_empty(session, HK_HTML_204);
                 hk_chrs_notify(chr);
+            }
+            else{
+                HK_LOGE("Error writing characteristic.");
             }
         }
 

@@ -8,7 +8,7 @@
 
 esp_err_t hk_chr_read(hk_transaction_t *transaction, hk_chr_t *chr)
 {
-    esp_err_t res = ESP_OK;
+    esp_err_t ret = ESP_OK;
     hk_tlv_t *tlv_data_response = NULL;
     hk_mem *read_response = hk_mem_init();
 
@@ -18,10 +18,10 @@ esp_err_t hk_chr_read(hk_transaction_t *transaction, hk_chr_t *chr)
     }
     else
     {
-        res = chr->read_callback(read_response);
+        ret = chr->read_callback(read_response);
     }
 
-    if (res == ESP_OK)
+    if (ret == ESP_OK)
     {
         if (read_response->size > 0)
         {
@@ -34,5 +34,5 @@ esp_err_t hk_chr_read(hk_transaction_t *transaction, hk_chr_t *chr)
     hk_tlv_free(tlv_data_response);
     hk_mem_free(read_response);
 
-    return res;
+    return ret;
 }

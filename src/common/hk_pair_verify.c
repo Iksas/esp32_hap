@@ -335,14 +335,14 @@ esp_err_t hk_pair_verify_resume(hk_conn_key_store_t *keys, hk_tlv_t *request_tlv
 
 int hk_pair_verify(hk_mem *request, hk_mem *result, hk_conn_key_store_t *keys, bool *is_session_encrypted)
 {
-    esp_err_t res = ESP_OK;
+    esp_err_t ret = ESP_OK;
     hk_tlv_t *tlv_data_request = hk_tlv_deserialize(request);
     hk_tlv_t *state_tlv = hk_tlv_get_tlv_by_type(tlv_data_request, HK_PAIR_TLV_STATE);
 
     if (state_tlv == NULL)
     {
         HK_LOGE("Could not find tlv with type state.");
-        res = ESP_ERR_HK_UNSUPPORTED_REQUEST;
+        ret = ESP_ERR_HK_UNSUPPORTED_REQUEST;
     }
     else
     {
@@ -355,8 +355,8 @@ int hk_pair_verify(hk_mem *request, hk_mem *result, hk_conn_key_store_t *keys, b
             {
                 if (*method_tlv->value == HK_PAIR_TLV_METHOD_RESUME)
                 {
-                    res = hk_pair_verify_resume(keys, tlv_data_request, result);
-                    if (res == ESP_OK)
+                    ret = hk_pair_verify_resume(keys, tlv_data_request, result);
+                    if (ret == ESP_OK)
                     {
                         *is_session_encrypted = true;
                     }
@@ -365,16 +365,16 @@ int hk_pair_verify(hk_mem *request, hk_mem *result, hk_conn_key_store_t *keys, b
             
             if(!*is_session_encrypted)
             {
-                res = hk_pair_verify_start(keys, tlv_data_request, result);
+                ret = hk_pair_verify_start(keys, tlv_data_request, result);
             }
 
             break;
         }
         case HK_PAIR_TLV_STATE_M3:
         {
-            res = hk_pair_verify_finish(keys, tlv_data_request, result);
+            ret = hk_pair_verify_finish(keys, tlv_data_request, result);
 
-            if (res == ESP_OK)
+            if (ret == ESP_OK)
             {
                 *is_session_encrypted = true;
                 HK_LOGD("Pair verify succeeded.");
@@ -383,12 +383,12 @@ int hk_pair_verify(hk_mem *request, hk_mem *result, hk_conn_key_store_t *keys, b
         }
         default:
             HK_LOGE("Unexpected value in tlv in pair setup: %d", *state_tlv->value);
-            res = ESP_ERR_HK_UNSUPPORTED_REQUEST;
+            ret = ESP_ERR_HK_UNSUPPORTED_REQUEST;
         }
     }
 
 
     hk_tlv_free(tlv_data_request);
 
-    return res;
+    return ret;
 }

@@ -1,6 +1,7 @@
 #include "../../utils/hk_logging.h"
 #include "../../include/hk.h"
 #include "../../utils/hk_store.h"
+#include "../../utils/hk_util.h"
 #include "../../common/hk_accessory_id.h"
 #include "../../common/hk_pairings_store.h"
 #include "../../common/hk_global_state.h"
@@ -58,10 +59,63 @@ void hk_setup_start()
     hk_gatt_init();
 }
 
+esp_err_t hk_setup_update_configuration_counter(const char *revision)
+{
+    hk_mem* revision_stored = hk_mem_init();
+
+    esp_err_t ret = hk_store_blob_get(HK_REVISION_STORE_KEY, revision_stored);
+    if (ret == ESP_ERR_NOT_FOUND) //ESP_ERR_NVS_NOT_FOUND
+    {
+        ret = ESP_OK;
+        HK_LOGD("Found no revision number. Setting configuration counter to 1.");
+        hk_mem_append_string(revision_stored, revision);
+        RUN_AND_CHECK(ret, hk_store_blob_set, HK_REVISION_STORE_KEY, revision_stored);
+        RUN_AND_CHECK(ret, hk_store_u8_set, HK_CONFIGURATION_STORE_KEY, 1);
+
+        hk_mem_free(revision_stored);
+        return ret;
+    }
+    else if (ret != ESP_OK)
+    {
+        HK_LOGE("Error updating configuration counter %x.", ret);
+        hk_mem_free(revision_stored);
+        return ret;
+    }
+
+    uint8_t configuration_counter = 0;
+    if (!hk_mem_equal_str(revision_stored, revision))
+    {
+        ret = hk_store_u8_get(HK_CONFIGURATION_STORE_KEY, &configuration_counter);
+
+        if (ret != ESP_OK)
+        {
+            HK_LOGW("Error getting configuration counter (%d). Setting counter to 0.", ret);
+            configuration_counter = 0;
+        }
+        else
+        {
+            configuration_counter++;
+        }
+
+        ret = ESP_OK;
+        HK_LOGI("Found new revision number (%s). Updating configuration counter to %d.", revision, configuration_counter);
+
+        hk_mem_set(revision_stored, 0);
+        hk_mem_append_string(revision_stored, revision);
+        RUN_AND_CHECK(ret, hk_store_blob_set, HK_REVISION_STORE_KEY, revision_stored);
+        RUN_AND_CHECK(ret, hk_store_u8_set, HK_CONFIGURATION_STORE_KEY, configuration_counter); 
+    }
+
+    hk_mem_free(revision_stored);
+
+    return ret;
+}
+
 void hk_setup_add_accessory(const char *name, const char *manufacturer, const char *model, const char *serial_number, const char *revision, void (*identify)())
 {
     hk_identify_callback = identify;
-    hk_store_configuration_set(3);
+    hk_setup_update_configuration_counter(revision);
+
     hk_gatt_add_srv(HK_SRV_ACCESSORY_INFORMATION, false, false, false);
 
     hk_gatt_add_chr_static_read(HK_CHR_NAME, name);
@@ -69,11 +123,10 @@ void hk_setup_add_accessory(const char *name, const char *manufacturer, const ch
     hk_gatt_add_chr_static_read(HK_CHR_MODEL, model);
     hk_gatt_add_chr_static_read(HK_CHR_SERIAL_NUMBER, serial_number);
     hk_gatt_add_chr_static_read(HK_CHR_FIRMWARE_REVISION, revision);
-    hk_gatt_add_chr(HK_CHR_IDENTIFY, NULL, hk_identify, NULL, false, -1, -1); 
-
+    hk_gatt_add_chr(HK_CHR_IDENTIFY, NULL, hk_identify, NULL, false, -1, -1);
 
     hk_gatt_add_srv(HK_SRV_HAP_PROTOCOL_INFORMATION, false, false, true);
-    hk_gatt_add_chr_static_read(HK_CHR_VERSION, "2.2.0");
+    hk_gatt_add_chr_static_read(HK_CHR_VERSION, "2.2.0"); // version of specification
     hk_gatt_add_chr(HK_CHR_SERVICE_SIGNATURE, hk_read_chr_signature, hk_write_chr_signature, NULL, false, -1, -1);
 
     hk_gatt_add_srv(HK_SRV_PARIRING, true, false, false);
@@ -81,6 +134,7 @@ void hk_setup_add_accessory(const char *name, const char *manufacturer, const ch
     hk_gatt_add_chr(HK_CHR_PAIR_VERIFY, NULL, NULL, hk_pairing_ble_write_pair_verify, false, -1, -1);
     hk_gatt_add_chr(HK_CHR_PAIRING_FEATURES, hk_pairing_ble_read_pairing_features, NULL, NULL, false, -1, -1);
     hk_gatt_add_chr(HK_CHR_PAIRING_PAIRINGS, hk_pairing_ble_read_pairing_pairings, NULL, hk_pairing_ble_write_pairing_pairings, false, -1, -1);
+
 }
 
 void hk_setup_add_srv(hk_srv_types_t srv_type, bool primary, bool hidden)
@@ -88,7 +142,7 @@ void hk_setup_add_srv(hk_srv_types_t srv_type, bool primary, bool hidden)
     hk_gatt_add_srv(srv_type, primary, hidden, false);
 }
 
-void *hk_setup_add_chr(hk_chr_types_t type, esp_err_t (*read)(hk_mem *response), esp_err_t (*write)(hk_mem *request), bool can_notify)
+void *hk_setup_add_chr(hk_chr_types_t type, esp_err_t(*read)(hk_mem *response), esp_err_t(*write)(hk_mem *request), bool can_notify)
 {
     return hk_gatt_add_chr(type, read, write, NULL, can_notify, -1, -1);
 }

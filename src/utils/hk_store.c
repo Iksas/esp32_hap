@@ -9,7 +9,6 @@
 #define HK_STORE_PAIRED "hk_paired"
 #define HK_STORE_ACC_PRV_KEY "hk_acc_prv_key"
 #define HK_STORE_ACC_PUB_KEY "hk_acc_pub_key"
-#define HK_STORE_CONFIGURATION "hk_config"
 
 nvs_handle hk_store_handle;
 const char *hk_store_name = "hk_store";
@@ -19,6 +18,7 @@ const char *hk_store_code;
     ret = func(args);                                                    \
     if (ret == ESP_ERR_NVS_NOT_FOUND)                                    \
     {                                                                    \
+        ret = ESP_ERR_NOT_FOUND;                                         \
     }                                                                    \
     else if (ret)                                                        \
     {                                                                    \
@@ -39,19 +39,18 @@ const char *hk_store_code;
 //     return ret;
 // }
 
-static void hk_store_uint8_t_set(const char *key, uint8_t value)
+// todo: static
+esp_err_t hk_store_u8_get(const char *key, uint8_t *value)
 {
-    ESP_ERROR_CHECK(nvs_set_u8(hk_store_handle, key, value));
+    esp_err_t ret = ESP_OK;
+    RUN_AND_CHECK_STORE(ret, nvs_get_u8, hk_store_handle, key, value);
+    return ret;
 }
 
-static esp_err_t hk_store_uint8_t_get(const char *key, uint8_t *value)
+esp_err_t hk_store_u8_set(const char *key, uint8_t value)
 {
-    esp_err_t ret = nvs_get_u8(hk_store_handle, key, value);
-    if (ret != ESP_ERR_NVS_NOT_FOUND)
-    {
-        ESP_ERROR_CHECK(ret);
-    }
-
+    esp_err_t ret = ESP_OK;
+    RUN_AND_CHECK_STORE(ret, nvs_set_u8, hk_store_handle, key, value);
     return ret;
 }
 
@@ -71,17 +70,11 @@ esp_err_t hk_store_u16_set(const char *key, uint16_t value)
 
 esp_err_t hk_store_blob_get(const char *key, hk_mem *value)
 {
-    size_t required_size;
-    esp_err_t ret = nvs_get_blob(hk_store_handle, key, NULL, &required_size);
-    if (!ret)
-    {
-        hk_mem_set(value, required_size);
-        ret = nvs_get_blob(hk_store_handle, key, value->ptr, &required_size);
-    }
-    else if (ret == ESP_ERR_NVS_NOT_FOUND)
-    {
-        ret = ESP_ERR_NOT_FOUND;
-    }
+    size_t required_size = 0;
+    esp_err_t ret = ESP_OK;
+    RUN_AND_CHECK_STORE(ret, nvs_get_blob, hk_store_handle, key, NULL, &required_size);
+    hk_mem_set(value, required_size);
+    RUN_AND_CHECK_STORE(ret, nvs_get_blob, hk_store_handle, key, value->ptr, &required_size);
 
     return ret;
 }
@@ -138,18 +131,6 @@ const char *hk_store_code_get()
 void hk_store_code_set(const char *code)
 {
     hk_store_code = code;
-}
-
-uint8_t hk_store_configuration_get()
-{
-    uint8_t value;
-    hk_store_uint8_t_get(HK_STORE_CONFIGURATION, &value);
-    return value;
-}
-
-void hk_store_configuration_set(uint8_t configuration)
-{
-    hk_store_uint8_t_set(HK_STORE_CONFIGURATION, configuration);
 }
 
 esp_err_t hk_store_init()
