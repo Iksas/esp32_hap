@@ -32,7 +32,7 @@ esp_err_t hk_protocol_configuration(hk_conn_key_store_t *keys, hk_transaction_t 
         // get global state number and current configuration
         uint16_t global_state = hk_global_state_get();
         uint8_t configuration = 0;
-        RUN_AND_CHECK(ret, hk_store_u8_get, HK_CONFIGURATION_STORE_KEY, &configuration);
+        RUN_AND_CHECK(ret, hk_store_u8_get, HK_STORE_CONFIGURATION, &configuration);
 
         // generate response
         hk_tlv_t *tlv_data_response = NULL;

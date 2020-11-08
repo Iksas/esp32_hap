@@ -15,6 +15,7 @@
 #include "hk_accessory_id.h"
 #include "hk_pairings_store.h"
 #include "hk_pair_tlvs.h"
+#include "hk_code_store.h"
 
 static esp_err_t hk_pairing_setup_srp_start(hk_mem *result, hk_conn_key_store_t *keys)
 {
@@ -28,7 +29,7 @@ static esp_err_t hk_pairing_setup_srp_start(hk_mem *result, hk_conn_key_store_t 
 
     // init
     keys->pair_setup_srp_key = hk_srp_init_key();
-    RUN_AND_CHECK(ret, hk_srp_generate_key, keys->pair_setup_srp_key, "Pair-Setup", hk_store_code_get()); // username has to be Pair-Setup according to specification
+    RUN_AND_CHECK(ret, hk_srp_generate_key, keys->pair_setup_srp_key, "Pair-Setup", hk_code); // username has to be Pair-Setup according to specification
     RUN_AND_CHECK(ret, hk_srp_export_public_key, keys->pair_setup_srp_key, keys->pair_setup_public_key);
     RUN_AND_CHECK(ret, hk_srp_export_salt, keys->pair_setup_srp_key, salt);
 

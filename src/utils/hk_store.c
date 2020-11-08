@@ -12,7 +12,6 @@
 
 nvs_handle hk_store_handle;
 const char *hk_store_name = "hk_store";
-const char *hk_store_code;
 
 #define RUN_AND_CHECK_STORE(ret, func, args...)                          \
     ret = func(args);                                                    \
@@ -121,16 +120,6 @@ esp_err_t hk_store_key_pub_get(hk_mem *value)
 esp_err_t hk_store_key_pub_set(hk_mem *value)
 {
     return hk_store_blob_set(HK_STORE_ACC_PUB_KEY, value);
-}
-
-const char *hk_store_code_get()
-{
-    return hk_store_code;
-}
-
-void hk_store_code_set(const char *code)
-{
-    hk_store_code = code;
 }
 
 esp_err_t hk_store_init()

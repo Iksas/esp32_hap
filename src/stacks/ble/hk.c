@@ -5,6 +5,7 @@
 #include "../../common/hk_accessory_id.h"
 #include "../../common/hk_pairings_store.h"
 #include "../../common/hk_global_state.h"
+#include "../../common/hk_code_store.h"
 #include "hk_nimble.h"
 #include "hk_gatt.h"
 #include "hk_gap.h"
@@ -42,7 +43,7 @@ esp_err_t hk_write_chr_signature(hk_mem *response)
 
 void hk_init(const char *name, const hk_categories_t category, const char *code)
 {
-    hk_store_code_set(code);
+    hk_code = code;
     hk_global_state_init();
     hk_nimble_init();
     hk_gap_init(name, category, 2);
@@ -63,14 +64,14 @@ esp_err_t hk_setup_update_configuration_counter(const char *revision)
 {
     hk_mem* revision_stored = hk_mem_init();
 
-    esp_err_t ret = hk_store_blob_get(HK_REVISION_STORE_KEY, revision_stored);
+    esp_err_t ret = hk_store_blob_get(HK_STORE_REVISION, revision_stored);
     if (ret == ESP_ERR_NOT_FOUND) //ESP_ERR_NVS_NOT_FOUND
     {
         ret = ESP_OK;
         HK_LOGD("Found no revision number. Setting configuration counter to 1.");
         hk_mem_append_string(revision_stored, revision);
-        RUN_AND_CHECK(ret, hk_store_blob_set, HK_REVISION_STORE_KEY, revision_stored);
-        RUN_AND_CHECK(ret, hk_store_u8_set, HK_CONFIGURATION_STORE_KEY, 1);
+        RUN_AND_CHECK(ret, hk_store_blob_set, HK_STORE_REVISION, revision_stored);
+        RUN_AND_CHECK(ret, hk_store_u8_set, HK_STORE_CONFIGURATION, 1);
 
         hk_mem_free(revision_stored);
         return ret;
@@ -85,7 +86,7 @@ esp_err_t hk_setup_update_configuration_counter(const char *revision)
     uint8_t configuration_counter = 0;
     if (!hk_mem_equal_str(revision_stored, revision))
     {
-        ret = hk_store_u8_get(HK_CONFIGURATION_STORE_KEY, &configuration_counter);
+        ret = hk_store_u8_get(HK_STORE_CONFIGURATION, &configuration_counter);
 
         if (ret != ESP_OK)
         {
@@ -102,8 +103,8 @@ esp_err_t hk_setup_update_configuration_counter(const char *revision)
 
         hk_mem_set(revision_stored, 0);
         hk_mem_append_string(revision_stored, revision);
-        RUN_AND_CHECK(ret, hk_store_blob_set, HK_REVISION_STORE_KEY, revision_stored);
-        RUN_AND_CHECK(ret, hk_store_u8_set, HK_CONFIGURATION_STORE_KEY, configuration_counter); 
+        RUN_AND_CHECK(ret, hk_store_blob_set, HK_STORE_REVISION, revision_stored);
+        RUN_AND_CHECK(ret, hk_store_u8_set, HK_STORE_CONFIGURATION, configuration_counter); 
     }
 
     hk_mem_free(revision_stored);

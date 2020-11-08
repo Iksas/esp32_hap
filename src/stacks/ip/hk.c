@@ -3,6 +3,7 @@
 #include "../../utils/hk_store.h"
 #include "../../common/hk_accessory_id.h"
 #include "../../common/hk_pairings_store.h"
+#include "../../common/hk_code_store.h"
 #include "hk_accessory_id.h"
 #include "hk_server.h"
 #include "hk_advertising.h"
@@ -20,7 +21,7 @@ esp_err_t hk_identify(hk_mem* request){
 
 void hk_init(const char *name, const hk_categories_t category, const char *code)
 {
-    hk_store_code_set(code);
+    hk_code = code;
     hk_advertising_init(name, category, 2);
     hk_server_start();
 
