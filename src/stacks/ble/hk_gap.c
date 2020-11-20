@@ -12,11 +12,11 @@
 
 #include "hk_connection_security.h"
 #include "hk_connection.h"
+#include "hk_broadcast_key.h"
 
 static uint8_t hk_gap_own_addr_type;
 const char *hk_gap_name; // todo: move to config
 size_t hk_gap_category;  // todo: move to config, type to uint16_t
-hk_mem *hk_gap_broadcast_key = NULL;
 
 static void hk_gap_disconnect(uint16_t handle)
 {
@@ -31,9 +31,9 @@ static esp_err_t hk_gap_get_peer_address(int handle, hk_mem *address)
     {
         hk_mem_set(address, 18);
         sprintf(address->ptr, "%x.%x.%x.%x.%x.%x",
-            conn_desc.peer_id_addr.val[0], conn_desc.peer_id_addr.val[1],
-            conn_desc.peer_id_addr.val[2], conn_desc.peer_id_addr.val[3],
-            conn_desc.peer_id_addr.val[4], conn_desc.peer_id_addr.val[5]);
+                conn_desc.peer_id_addr.val[0], conn_desc.peer_id_addr.val[1],
+                conn_desc.peer_id_addr.val[2], conn_desc.peer_id_addr.val[3],
+                conn_desc.peer_id_addr.val[4], conn_desc.peer_id_addr.val[5]);
     }
 
     return ret;
@@ -95,14 +95,14 @@ static int hk_gap_gap_event(struct ble_gap_event *event, void *arg)
         break;
     case BLE_GAP_EVENT_SUBSCRIBE:
         HK_LOGV("subscribe event; conn_handle=%d attr_handle=%d "
-            "reason=%d prevn=%d curn=%d previ=%d curi=%d\n",
-            event->subscribe.conn_handle,
-            event->subscribe.attr_handle,
-            event->subscribe.reason,
-            event->subscribe.prev_notify,
-            event->subscribe.cur_notify,
-            event->subscribe.prev_indicate,
-            event->subscribe.cur_indicate);
+                "reason=%d prevn=%d curn=%d previ=%d curi=%d\n",
+                event->subscribe.conn_handle,
+                event->subscribe.attr_handle,
+                event->subscribe.reason,
+                event->subscribe.prev_notify,
+                event->subscribe.cur_notify,
+                event->subscribe.prev_indicate,
+                event->subscribe.cur_indicate);
         rc = 0;
         break;
     case BLE_GAP_EVENT_MTU:
@@ -147,12 +147,14 @@ static esp_err_t hk_gap_start_advertising_internal(hk_mem *manufacturer_data, bo
     if (send_name)
     {
         size_t name_length = strlen(hk_gap_name);
-        if (name_length < 8) {
+        if (name_length < 8)
+        {
             fields.name = (uint8_t *)hk_gap_name;
             fields.name_len = name_length;
             fields.name_is_complete = 1;
         }
-        else {
+        else
+        {
             fields.name = (uint8_t *)hk_gap_name;
             fields.name_len = 7;
             fields.name_is_complete = 0;
@@ -235,22 +237,19 @@ esp_err_t hk_gap_start_advertising()
     return ret;
 }
 
-void hk_gap_broadcast_key_set(hk_mem *broadcast_key)
-{
-    HK_LOGD("Broadcast key length: %d", broadcast_key->size);
-    hk_mem_set_mem(hk_gap_broadcast_key, broadcast_key);
-}
-
 esp_err_t hk_gap_start_advertising_change(uint16_t chr_index, hk_mem *value)
 {
-    if (hk_gap_broadcast_key->size < 1)
+    hk_mem *broadcast_key = hk_mem_init();
+    esp_err_t ret = ESP_OK;
+    
+    ret = hk_broadcast_key_get(NULL, broadcast_key);
+    if (ret != ESP_OK)
     {
-        HK_LOGW("No broadcast key until now. Canceling advertising for change. Probably Protocol configuration was not called by controller.");
+        HK_LOGW("No valid broadcast key. Canceling advertising for change. Either ProtocolConfiguration was not called by controller or key is not valid anymore.");
         return ESP_OK;
     }
 
     HK_LOGD("Starting advertising change for chr: %d", chr_index);
-    esp_err_t ret = ESP_OK;
     hk_mem *accessory_id = hk_mem_init();
     hk_mem *manufacturer_data = hk_mem_init();
     hk_mem *data_to_encrypt = hk_mem_init();
@@ -274,10 +273,10 @@ esp_err_t hk_gap_start_advertising_change(uint16_t chr_index, hk_mem *value)
     hk_mem_append(data_to_encrypt, value);
 
     // HK_LOGD("encrypting: %s %s %s",
-    //         hk_mem_to_debug_string(hk_gap_broadcast_key),
+    //         hk_mem_to_debug_string(broadcast_key),
     //         hk_mem_to_debug_string(data_to_encrypt),
     //         hk_mem_to_debug_string(encrypted));
-    RUN_AND_CHECK(ret, hk_chacha20poly1305_encrypt, hk_gap_broadcast_key, "GS", data_to_encrypt, encrypted);
+    RUN_AND_CHECK(ret, hk_chacha20poly1305_encrypt, broadcast_key, "GS", data_to_encrypt, encrypted);
 
     //HK_LOGD("encrypting done: %s", hk_mem_to_debug_string(encrypted));
     if (!ret)
@@ -310,8 +309,6 @@ void hk_gap_address_set(uint8_t own_addr_type)
 void hk_gap_init(const char *name, size_t category, size_t config_version)
 {
     HK_LOGD("Initializing GAP.");
-
-    hk_gap_broadcast_key = hk_mem_init();
 
     ble_svc_gap_init();
     hk_gap_name = name;

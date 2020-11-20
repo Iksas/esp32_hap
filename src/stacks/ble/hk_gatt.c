@@ -246,7 +246,7 @@ static int hk_gatt_write_ble_chr(uint16_t handle, struct ble_gatt_access_ctxt *c
             break;
         case 7:
             HK_LOGD("Characteristic configuration for %s.", uuid_name);
-            ret = hk_chr_configuration(transaction);
+            ret = hk_chr_configuration(transaction, chr);
             break;
         case 8:
             HK_LOGD("Protocol configuration for %s.", uuid_name);
