@@ -20,9 +20,3 @@ esp_err_t hk_store_blob_set(const char *key, hk_mem *value);
 esp_err_t hk_store_erase(const char *key);
 
 void hk_store_free();
-
-bool hk_store_keys_can_get();
-esp_err_t hk_store_key_priv_get();
-esp_err_t hk_store_key_priv_set(hk_mem *value);
-esp_err_t hk_store_key_pub_get(hk_mem *value);
-esp_err_t hk_store_key_pub_set(hk_mem *value);

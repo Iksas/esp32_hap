@@ -7,12 +7,12 @@
 #include "../utils/hk_logging.h"
 #include "../utils/hk_tlv.h"
 #include "../utils/hk_util.h"
-#include "../utils/hk_store.h"
 #include "../utils/hk_ll.h"
 
 #include "hk_accessory_id.h"
 #include "hk_pairings_store.h"
 #include "hk_pair_tlvs.h"
+#include "hk_key_store.h"
 
 typedef struct
 {
@@ -83,22 +83,8 @@ esp_err_t hk_pair_verify_start(hk_conn_key_store_t *keys, hk_tlv_t *request_tlvs
 
     hk_conn_key_store_reset(keys);
 
-    if (hk_store_keys_can_get())
-    {
-        hk_store_key_pub_get(accessory_public_key);
-        hk_store_key_priv_get(accessory_private_key);
-    }
-    else
-    {
-        HK_LOGE("Cannot get key from store for pairing.");
-        ret = ESP_ERR_NOT_FOUND;
-    }
-
-    if (accessory_public_key->size < 1 || accessory_private_key->size < 1)
-    {
-        HK_LOGE("Verfiy was called, but accessory keys are not present.");
-        ret = ESP_ERR_NOT_FOUND;
-    }
+    RUN_AND_CHECK(ret, hk_key_store_pub_get, accessory_public_key);
+    RUN_AND_CHECK(ret, hk_key_store_priv_get, accessory_private_key);
 
     // spec 5.7.2.1
     RUN_AND_CHECK(ret, hk_curve25519_update_from_random, accessory_curve_key_pair);

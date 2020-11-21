@@ -51,8 +51,8 @@
 
 //     hk_store_init();
 //     hk_pairings_store_remove_all();
-//     hk_store_key_pub_set(accessory_public_key);
-//     hk_store_key_priv_set(accessory_private_key);
+//     hk_key_store_pub_set(accessory_public_key);
+//     hk_key_store_priv_set(accessory_private_key);
 //     hk_pairings_store_add(device_id, device_long_term_key_public, true);
 
 //     // test

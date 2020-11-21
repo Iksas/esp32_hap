@@ -4,7 +4,6 @@
 
 #include "../utils/hk_logging.h"
 #include "../utils/hk_tlv.h"
-#include "../utils/hk_store.h"
 #include "../utils/hk_util.h"
 #include "../include/hk_mem.h"
 #include "../crypto/hk_srp.h"
@@ -16,6 +15,7 @@
 #include "hk_pairings_store.h"
 #include "hk_pair_tlvs.h"
 #include "hk_code_store.h"
+#include "hk_key_store.h"
 
 static esp_err_t hk_pairing_setup_srp_start(hk_mem *result, hk_conn_key_store_t *keys)
 {
@@ -163,9 +163,9 @@ static esp_err_t hk_pairing_setup_exchange_response_generation(hk_mem *result, h
 
     RUN_AND_CHECK(ret, hk_ed25519_init_from_random, accessory_key);
     RUN_AND_CHECK(ret, hk_ed25519_export_public_key, accessory_key, accessory_public_key);
-    RUN_AND_CHECK(ret, hk_store_key_pub_set, accessory_public_key);
+    RUN_AND_CHECK(ret, hk_key_store_pub_set, accessory_public_key);
     RUN_AND_CHECK(ret, hk_ed25519_export_private_key, accessory_key, accessory_private_key);
-    RUN_AND_CHECK(ret, hk_store_key_priv_set, accessory_private_key);
+    RUN_AND_CHECK(ret, hk_key_store_priv_set, accessory_private_key);
     RUN_AND_CHECK(ret, hk_hkdf, srp_private_key, accessory_info, HK_HKDF_PAIR_SETUP_ACCESSORY_SALT, HK_HKDF_PAIR_SETUP_ACCESSORY_INFO);
     RUN_AND_CHECK(ret, hk_accessory_id_get_serialized, accessory_id);
 

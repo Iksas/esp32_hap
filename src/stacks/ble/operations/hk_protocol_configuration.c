@@ -23,7 +23,6 @@ esp_err_t hk_protocol_configuration(hk_conn_key_store_t *keys, hk_transaction_t 
     bool is02 = hk_tlv_get_tlv_by_type(tlv_data_request, 0x02) != NULL;
     if (is01 || is02)
     {
-        HK_LOGW("hk_protocol_configuration 1");
         hk_mem *broadcast_key = hk_mem_init();
         hk_mem *accessory_id = hk_mem_init();
 

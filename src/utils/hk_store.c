@@ -6,10 +6,6 @@
 #include "hk_logging.h"
 #include "hk_util.h"
 
-#define HK_STORE_PAIRED "hk_paired"
-#define HK_STORE_ACC_PRV_KEY "hk_acc_prv_key"
-#define HK_STORE_ACC_PUB_KEY "hk_acc_pub_key"
-
 nvs_handle hk_store_handle;
 const char *hk_store_name = "hk_store";
 
@@ -92,34 +88,6 @@ esp_err_t hk_store_erase(const char *key)
     }
 
     return ret;
-}
-
-bool hk_store_keys_can_get()
-{
-    size_t required_size;
-    bool can_get_priv_key = nvs_get_blob(hk_store_handle, HK_STORE_ACC_PRV_KEY, NULL, &required_size) == ESP_OK;
-    bool can_get_pub_key = nvs_get_blob(hk_store_handle, HK_STORE_ACC_PUB_KEY, NULL, &required_size) == ESP_OK;
-    return can_get_priv_key && can_get_pub_key;
-}
-
-esp_err_t hk_store_key_priv_get(hk_mem *value)
-{
-    return hk_store_blob_get(HK_STORE_ACC_PRV_KEY, value);
-}
-
-esp_err_t hk_store_key_priv_set(hk_mem *value)
-{
-    return hk_store_blob_set(HK_STORE_ACC_PRV_KEY, value);
-}
-
-esp_err_t hk_store_key_pub_get(hk_mem *value)
-{
-    return hk_store_blob_get(HK_STORE_ACC_PUB_KEY, value);
-}
-
-esp_err_t hk_store_key_pub_set(hk_mem *value)
-{
-    return hk_store_blob_set(HK_STORE_ACC_PUB_KEY, value);
 }
 
 esp_err_t hk_store_init()
