@@ -1,9 +1,9 @@
 #include "hk_chr_timed_write.h"
 
 #include <time.h>
+
 #include "../../../utils/hk_logging.h"
 #include "../../../utils/hk_tlv.h"
-#include "../../../utils/hk_errors.h"
 
 #include "../hk_formats_ble.h"
 
@@ -21,7 +21,7 @@ esp_err_t hk_chr_timed_write(hk_transaction_t *transaction, hk_chr_t *chr)
     if (hk_tlv_get_mem_by_type(tlv_data_request, 0x01, hk_chr_timed_write_write_request) != ESP_OK)
     {
         HK_LOGE("Error getting value of write request.");
-        ret = ESP_ERR_HK_UNSUPPORTED_REQUEST;
+        ret = ESP_ERR_INVALID_ARG;
     }
 
     if (ret == ESP_OK)
@@ -29,7 +29,7 @@ esp_err_t hk_chr_timed_write(hk_transaction_t *transaction, hk_chr_t *chr)
         if (hk_tlv_get_mem_by_type(tlv_data_request, 0x08, ttl_mem) != ESP_OK)
         {
             HK_LOGE("Error getting value of write request.");
-            ret = ESP_ERR_HK_UNSUPPORTED_REQUEST;
+            ret = ESP_ERR_INVALID_ARG;
         }
     }
 

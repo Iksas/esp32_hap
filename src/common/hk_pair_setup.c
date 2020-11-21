@@ -1,7 +1,6 @@
 #include "hk_pair_setup.h"
 
 #include <string.h>
-
 #include "../utils/hk_logging.h"
 #include "../utils/hk_tlv.h"
 #include "../utils/hk_util.h"
@@ -250,7 +249,7 @@ esp_err_t hk_pair_setup(hk_mem *request, hk_mem *response, hk_conn_key_store_t *
     if (type_tlv == NULL)
     {
         HK_LOGE("Could not find tlv with type state.");
-        ret = ESP_ERR_HK_UNSUPPORTED_REQUEST;
+        ret = ESP_ERR_INVALID_ARG;
     }
     else
     {
@@ -267,7 +266,7 @@ esp_err_t hk_pair_setup(hk_mem *request, hk_mem *response, hk_conn_key_store_t *
             break;
         default:
             HK_LOGE("Unexpected value in tlv in pair setup: %d", *type_tlv->value);
-            ret = ESP_ERR_HK_UNSUPPORTED_REQUEST;
+            ret = ESP_ERR_INVALID_ARG;
         }
     }
 

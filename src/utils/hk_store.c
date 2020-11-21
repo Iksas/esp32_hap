@@ -17,7 +17,7 @@ const char *hk_store_name = "hk_store";
     }                                                                    \
     else if (ret)                                                        \
     {                                                                    \
-        HK_LOGE("Error executing: %s (%d)", hk_error_to_name(ret), ret); \
+        HK_LOGE("Error executing: %s (%d)", esp_err_to_name(ret), ret); \
     }
 
 // esp_err_t hk_store_bool_get(const char *key, bool *value)

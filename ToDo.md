@@ -1,5 +1,4 @@
 
-- move special functions of store out to usages and document
 - check IP stack is still working
 - check IP stack notifications against spec
 - Document all header files

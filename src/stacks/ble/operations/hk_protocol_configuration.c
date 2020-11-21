@@ -7,7 +7,6 @@
 #include "../../../crypto/hk_hkdf.h"
 #include "../../../common/hk_global_state.h"
 #include "../../../common/hk_accessory_id.h"
-#include "../../../utils/hk_errors.h"
 
 #include "../hk_formats_ble.h"
 #include "../hk_connection_security.h"
@@ -53,7 +52,7 @@ esp_err_t hk_protocol_configuration(hk_conn_key_store_t *keys, hk_transaction_t 
     else
     {
         HK_LOGE("Error getting value of write request.");
-        ret = ESP_ERR_HK_UNSUPPORTED_REQUEST;
+        ret = ESP_ERR_INVALID_ARG;
     }
 
     hk_tlv_free(tlv_data_request);

@@ -7,7 +7,6 @@
 #include "../../common/hk_pair_setup.h"
 #include "../../common/hk_pair_verify.h"
 #include "../../common/hk_pairings.h"
-#include "../../utils/hk_errors.h"
 #include "hk_connection_security.h"
 
 #include "../../utils/hk_logging.h"
@@ -20,7 +19,7 @@ esp_err_t hk_pairing_ble_write_pair_setup(hk_connection_t *connection, hk_mem *r
     if (rc != 0)
     {
         HK_LOGE("Error in pair setup: %d", ret);
-        ret = ESP_ERR_HK_UNSUPPORTED_REQUEST;
+        ret = ESP_ERR_INVALID_ARG;
     }
 
     return ret;
@@ -64,7 +63,7 @@ esp_err_t hk_pairing_ble_write_pairing_pairings(hk_connection_t *connection, hk_
     hk_pairings(request, response, &kill_connection, &is_paired);
     if (kill_connection)
     {
-        return ESP_ERR_HK_TERMINATE;
+        return ESP_ERR_INVALID_STATE;
     }
 
     return ESP_OK;

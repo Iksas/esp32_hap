@@ -294,7 +294,7 @@ void hk_chrs_put(hk_session_t *session)
     if (j_root == NULL)
     {
         HK_LOGE("Failed to parse request for chrs put: %s", session->request->content->ptr);
-        session->response->result = ESP_ERR_HK_UNSUPPORTED_REQUEST;
+        session->response->result = ESP_ERR_INVALID_ARG;
     }
 
     if (session->response->result == ESP_OK)
@@ -306,7 +306,7 @@ void hk_chrs_put(hk_session_t *session)
             if (j_chr == NULL)
             {
                 HK_LOGE("Could not find first element in chrs put.");
-                session->response->result = ESP_ERR_HK_UNSUPPORTED_REQUEST;
+                session->response->result = ESP_ERR_INVALID_ARG;
                 break;
             }
 

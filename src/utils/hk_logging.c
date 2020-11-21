@@ -1,7 +1,6 @@
 #include "hk_logging.h"
 
 #include <stdio.h>
-#include "hk_errors.h"
 
 void hk_log_print_bytewise(const char *title, char *data, size_t size, bool formatted)
 {

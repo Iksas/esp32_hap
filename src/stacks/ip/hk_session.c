@@ -79,7 +79,7 @@ const char *hk_session_get_status(hk_session_t *session)
     {
     case ESP_OK:
         return HK_HTML_200;
-    case ESP_ERR_HK_UNSUPPORTED_REQUEST:
+    case ESP_ERR_INVALID_ARG:
         return HK_HTML_400;
     case ESP_ERR_NOT_FOUND:
         return HK_HTML_500;

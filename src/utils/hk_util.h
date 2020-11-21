@@ -12,6 +12,6 @@ if(!ret) \
     ret = func(args); \
     if (ret)\
     {\
-        HK_LOGE("Error executing: %s (%d)", hk_error_to_name(ret), ret); \
+        HK_LOGE("Error executing: %s (%d)", esp_err_to_name(ret), ret); \
     }  \
 }

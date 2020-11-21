@@ -262,7 +262,7 @@ static int hk_gatt_write_ble_chr(uint16_t handle, struct ble_gatt_access_ctxt *c
         HK_LOGV("Received %d of %d. Waiting for continuation of fragmentation.", transaction->request->size, transaction->expected_request_length);
     }
 
-    if (ret == ESP_ERR_HK_TERMINATE)
+    if (ret == ESP_ERR_INVALID_STATE) 
     {
         hk_gap_terminate_connection(handle);
     }

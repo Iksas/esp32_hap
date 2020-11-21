@@ -61,7 +61,7 @@ esp_err_t hk_pairings(hk_mem *request, hk_mem *response, bool *kill_session, boo
     if (type_tlv == NULL)
     {
         HK_LOGE("Could not find tlv with type state.");
-        ret = ESP_ERR_HK_UNSUPPORTED_REQUEST;
+        ret = ESP_ERR_INVALID_ARG;
     }
 
     if (ret == ESP_OK)
@@ -69,7 +69,7 @@ esp_err_t hk_pairings(hk_mem *request, hk_mem *response, bool *kill_session, boo
         if (*type_tlv->value != 1)
         {
             HK_LOGE("Unexpected state.");
-            ret = ESP_ERR_HK_UNSUPPORTED_REQUEST;
+            ret = ESP_ERR_INVALID_ARG;
         }
     }
 
@@ -80,7 +80,7 @@ esp_err_t hk_pairings(hk_mem *request, hk_mem *response, bool *kill_session, boo
         if (method_tlv == NULL)
         {
             HK_LOGE("Could not find tlv with type method.");
-            ret = ESP_ERR_HK_UNSUPPORTED_REQUEST;
+            ret = ESP_ERR_INVALID_ARG;
         }
     }
 
@@ -104,7 +104,7 @@ esp_err_t hk_pairings(hk_mem *request, hk_mem *response, bool *kill_session, boo
             break;
         default:
             HK_LOGE("Unexpected value in tlv in pairing: %d", *type_tlv->value);
-            ret = ESP_ERR_HK_UNSUPPORTED_REQUEST;
+            ret = ESP_ERR_INVALID_ARG;
         }
     }
 

@@ -1,15 +1,15 @@
 #pragma once
 
+#include <stdlib.h>
+#include <stdbool.h>
+
+#include "host/ble_gatt.h"
+
 #include "../../include/hk_chrs.h"
 #include "../../include/hk_srvs.h"
 #include "../../include/hk_chrs.h"
 #include "../../include/hk_mem.h"
 
-#include <stdlib.h>
-#include <stdbool.h>
-
-#include "host/ble_gatt.h"
-#include "../../utils/hk_errors.h"
 #include "hk_connection.h"
 
 void hk_gatt_init();

@@ -1,8 +1,7 @@
 
 #pragma once
 
-#include "../../../include/hk_mem.h" 
-#include "../../../utils/hk_errors.h"
+#include "../../../include/hk_mem.h"
 
 #include "../hk_connection.h"
 #include "../hk_chr.h"

@@ -3,7 +3,6 @@
 #include "../../../include/hk_mem.h"
 #include "../../../utils/hk_logging.h"
 #include "../../../utils/hk_tlv.h"
-#include "../../../utils/hk_errors.h"
 
 #include "../hk_formats_ble.h"
 
@@ -17,7 +16,7 @@ esp_err_t hk_chr_write(hk_connection_t *connection, hk_transaction_t *transactio
     if (hk_tlv_get_mem_by_type(tlv_data_request, 0x01, write_request) != ESP_OK)
     {
         HK_LOGE("Error getting value of write request.");
-        ret = ESP_ERR_HK_UNSUPPORTED_REQUEST;
+        ret = ESP_ERR_INVALID_ARG;
     }
 
     if (ret == ESP_OK)

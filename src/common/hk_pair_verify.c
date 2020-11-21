@@ -328,7 +328,7 @@ int hk_pair_verify(hk_mem *request, hk_mem *result, hk_conn_key_store_t *keys, b
     if (state_tlv == NULL)
     {
         HK_LOGE("Could not find tlv with type state.");
-        ret = ESP_ERR_HK_UNSUPPORTED_REQUEST;
+        ret = ESP_ERR_INVALID_ARG;
     }
     else
     {
@@ -369,7 +369,7 @@ int hk_pair_verify(hk_mem *request, hk_mem *result, hk_conn_key_store_t *keys, b
         }
         default:
             HK_LOGE("Unexpected value in tlv in pair setup: %d", *state_tlv->value);
-            ret = ESP_ERR_HK_UNSUPPORTED_REQUEST;
+            ret = ESP_ERR_INVALID_ARG;
         }
     }
 

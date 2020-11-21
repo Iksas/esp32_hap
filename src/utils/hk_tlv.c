@@ -1,9 +1,9 @@
+#include <string.h>
+#include <stdio.h>
+
 #include "hk_tlv.h"
 #include "hk_logging.h"
 #include "hk_ll.h"
-
-#include <string.h>
-#include <stdio.h>
 
 hk_tlv_t *hk_tlv_add_buffer(hk_tlv_t *tlv_list, char type, char *data, size_t size)
 {
@@ -50,7 +50,7 @@ hk_tlv_t *hk_tlv_add_uint16(hk_tlv_t *tlv_list, char type, uint16_t data)
 
 esp_err_t hk_tlv_get_mem_by_type(hk_tlv_t *tlv, char type, hk_mem *result)
 {
-    esp_err_t ret = ESP_ERR_HK_UNSUPPORTED_REQUEST;
+    esp_err_t ret = ESP_ERR_INVALID_ARG;
 
     while(tlv) {
         if (tlv->type == type)
