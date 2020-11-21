@@ -15,6 +15,10 @@ const char *hk_store_name = "hk_store";
     {                                                                    \
         ret = ESP_ERR_NOT_FOUND;                                         \
     }                                                                    \
+    else if (ret == ESP_ERR_NVS_KEY_TOO_LONG)                            \
+    {                                                                    \
+        HK_LOGE("Error executing: ESP_ERR_NVS_KEY_TOO_LONG (4361). The maximum allowed key length is 15."); \
+    }                                                                    \
     else if (ret)                                                        \
     {                                                                    \
         HK_LOGE("Error executing: %s (%d)", esp_err_to_name(ret), ret); \

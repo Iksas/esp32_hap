@@ -25,17 +25,17 @@ esp_err_t hk_protocol_configuration(hk_conn_key_store_t *keys, hk_transaction_t 
         hk_mem *broadcast_key = hk_mem_init();
         hk_mem *accessory_id = hk_mem_init();
 
-        if (is01) // reset broadcast key if requested
-        {
-            RUN_AND_CHECK(ret, hk_broadcast_key_reset, keys->accessory_shared_secret);
-        }
-
         // get parameters
         uint16_t global_state = hk_global_state_get();
         uint8_t configuration = 0;
         RUN_AND_CHECK(ret, hk_store_u8_get, HK_STORE_CONFIGURATION, &configuration);
         RUN_AND_CHECK(ret, hk_accessory_id_get, accessory_id);
-        RUN_AND_CHECK(ret, hk_broadcast_key_get, keys->accessory_shared_secret, broadcast_key);
+        ret = hk_broadcast_key_get(keys->accessory_shared_secret, broadcast_key);
+        if (ret == ESP_ERR_NOT_FOUND || is01) // create new broadcast key if requested or key not available
+        {
+            ret = ESP_OK;
+            RUN_AND_CHECK(ret, hk_broadcast_key_reset, keys->accessory_shared_secret, broadcast_key);
+        }
 
         // generate response
         hk_tlv_t *tlv_data_response = NULL;
