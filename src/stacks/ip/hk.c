@@ -4,10 +4,11 @@
 #include "../../common/hk_accessory_id.h"
 #include "../../common/hk_pairings_store.h"
 #include "../../common/hk_code_store.h"
-#include "hk_accessory_id.h"
+#include "../../common/hk_accessory_id.h"
 #include "hk_server.h"
 #include "hk_advertising.h"
 #include "hk_chrs.h"
+#include "hk_accessories_store.h"
 
 void (*hk_identify_callback)();
 
@@ -69,7 +70,7 @@ void hk_reset()
     HK_LOGW("Resetting homekit for this device.");
     hk_accessory_id_reset();
     hk_pairings_store_remove_all();
-    hk_advertising_update_paired();
+    hk_advertising_reset();
 }
 
 void hk_notify(void *chr)

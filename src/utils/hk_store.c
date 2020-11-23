@@ -1,7 +1,6 @@
 #include "hk_store.h"
 
 #include <esp_system.h>
-#include <nvs_flash.h>
 
 #include "hk_logging.h"
 #include "hk_util.h"

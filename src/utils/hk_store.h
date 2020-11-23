@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <esp_err.h>
+#include <nvs_flash.h>
 
 // max size for keys is 15
 #define HK_STORE_REVISION "hk_rvsn"

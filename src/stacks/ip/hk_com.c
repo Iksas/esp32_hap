@@ -8,7 +8,6 @@
 
 #include "../../utils/hk_ll.h"
 #include "../../utils/hk_logging.h"
-#include "../../utils/hk_logging_lwip.h"
 #include "../../utils/hk_math.h"
 #include "hk_subscription_store.h"
 #include "hk_session_security.h"

@@ -246,9 +246,20 @@ esp_err_t hk_pairings_store_has_pairing(bool *has_pairing)
 
 esp_err_t hk_pairings_store_remove_all()
 {
-    hk_store_erase(HK_PARING_STORE_KEY);
+    HK_LOGD("Deleting paring store.");
+    esp_err_t ret = ESP_OK;
+    ret = hk_store_erase(HK_PARING_STORE_KEY);
+    
+    if (ret == ESP_ERR_NVS_NOT_FOUND)
+    {
+        ret = ESP_OK;
+    }
+    else if(ret != ESP_OK)
+    {
+        HK_LOGE("Error resetting paring store: %s (%d)", esp_err_to_name(ret), ret);
+    }
 
-    return ESP_OK;
+    return ret;
 }
 
 esp_err_t hk_pairings_log_devices()

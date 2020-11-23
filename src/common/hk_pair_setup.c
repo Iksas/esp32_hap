@@ -154,39 +154,47 @@ static esp_err_t hk_pairing_setup_exchange_response_generation(hk_mem *result, h
     hk_mem *accessory_private_key = hk_mem_init();
     hk_mem *accessory_info = hk_mem_init();
     hk_mem *accessory_signature = hk_mem_init();
-    hk_mem *accessory_id = hk_mem_init();
+    hk_mem *accessory_pairing_id = hk_mem_init();
     hk_mem *sub_result = hk_mem_init();
     hk_mem *encrypted = hk_mem_init();
     hk_tlv_t *tlv_data_response = NULL;
     hk_tlv_t *tlv_data_response_sub = NULL;
 
+    // spec 5.6.6.2.1
     RUN_AND_CHECK(ret, hk_ed25519_init_from_random, accessory_key);
     RUN_AND_CHECK(ret, hk_ed25519_export_public_key, accessory_key, accessory_public_key);
     RUN_AND_CHECK(ret, hk_key_store_pub_set, accessory_public_key);
     RUN_AND_CHECK(ret, hk_ed25519_export_private_key, accessory_key, accessory_private_key);
     RUN_AND_CHECK(ret, hk_key_store_priv_set, accessory_private_key);
+    // spec 5.6.6.2.2
     RUN_AND_CHECK(ret, hk_hkdf, srp_private_key, accessory_info, HK_HKDF_PAIR_SETUP_ACCESSORY_SALT, HK_HKDF_PAIR_SETUP_ACCESSORY_INFO);
-    RUN_AND_CHECK(ret, hk_accessory_id_get_serialized, accessory_id);
+    
+    // spec 5.6.6.2.3
+    RUN_AND_CHECK(ret, hk_accessory_id_get_serialized, accessory_pairing_id);
 
     if (!ret)
     {
-        hk_mem_append_buffer(accessory_info, accessory_id->ptr, accessory_id->size);
-        hk_mem_append_buffer(accessory_info, accessory_public_key->ptr, accessory_public_key->size);
+        hk_mem_append(accessory_info, accessory_pairing_id);
+        hk_mem_append(accessory_info, accessory_public_key);
     }
 
+    // spec 5.6.6.2.4
     RUN_AND_CHECK(ret, hk_ed25519_sign, accessory_key, accessory_info, accessory_signature);
 
+    // spec 5.6.6.2.5
     if (!ret)
     {
-        tlv_data_response_sub = hk_tlv_add(tlv_data_response_sub, HK_PAIR_TLV_IDENTIFIER, accessory_id);
+        tlv_data_response_sub = hk_tlv_add(tlv_data_response_sub, HK_PAIR_TLV_IDENTIFIER, accessory_pairing_id);
         tlv_data_response_sub = hk_tlv_add(tlv_data_response_sub, HK_PAIR_TLV_PUBLICKEY, accessory_public_key);
         tlv_data_response_sub = hk_tlv_add(tlv_data_response_sub, HK_PAIR_TLV_SIGNATURE, accessory_signature);
 
         hk_tlv_serialize(tlv_data_response_sub, sub_result);
     }
 
+    // spec 5.6.6.2.6
     RUN_AND_CHECK(ret, hk_chacha20poly1305_encrypt, shared_secret, HK_CHACHA_SETUP_MSG6, sub_result, encrypted);
 
+    // spec 5.6.6.2.7
     tlv_data_response = hk_tlv_add_uint8(tlv_data_response, HK_PAIR_TLV_STATE, HK_PAIR_TLV_STATE_M6);
     if (!ret)
     {
@@ -201,7 +209,7 @@ static esp_err_t hk_pairing_setup_exchange_response_generation(hk_mem *result, h
 
     hk_tlv_free(tlv_data_response_sub);
     hk_tlv_free(tlv_data_response);
-    hk_mem_free(accessory_id);
+    hk_mem_free(accessory_pairing_id);
     hk_mem_free(accessory_public_key);
     hk_mem_free(accessory_private_key);
     hk_mem_free(accessory_info);
