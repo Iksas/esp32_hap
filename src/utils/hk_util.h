@@ -6,6 +6,15 @@
 #include "hk_logging.h"
 #include "hk_mem.h"
 
+/**
+ * @file hk_tlv.h
+ *
+ * Functions to work with type length value types.
+ */
+
+/**
+ * @brief Runs a function with parameters and checks for errors.
+ */
 #define RUN_AND_CHECK(ret, func, args...) \
 if(!ret) \
 { \

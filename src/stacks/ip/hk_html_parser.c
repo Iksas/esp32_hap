@@ -26,13 +26,11 @@ static esp_err_t hk_html_url(http_parser *parser, const char *url, size_t length
 
 static esp_err_t hk_html_header_field(http_parser *parser, const char *at, size_t length)
 {
-    //hk_log_print_as_string("header field", at, length);
     return ESP_OK;
 }
 
 static esp_err_t hk_html_header_value(http_parser *parser, const char *at, size_t length)
 {
-    //hk_log_print_as_string("header value", at, length);
     return ESP_OK;
 }
 

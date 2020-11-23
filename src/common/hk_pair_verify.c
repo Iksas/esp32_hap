@@ -111,8 +111,8 @@ esp_err_t hk_pair_verify_start(hk_conn_key_store_t *keys, hk_tlv_t *request_tlvs
     // spec 5.7.2.5
     if (!ret)
     {
-        tlv_data_response_sub = hk_tlv_add(tlv_data_response_sub, HK_PAIR_TLV_IDENTIFIER, accessory_id);
-        tlv_data_response_sub = hk_tlv_add(tlv_data_response_sub, HK_PAIR_TLV_SIGNATURE, accessory_signature);
+        tlv_data_response_sub = hk_tlv_add_mem(tlv_data_response_sub, HK_PAIR_TLV_IDENTIFIER, accessory_id);
+        tlv_data_response_sub = hk_tlv_add_mem(tlv_data_response_sub, HK_PAIR_TLV_SIGNATURE, accessory_signature);
 
         hk_tlv_serialize(tlv_data_response_sub, sub_result);
     }
@@ -127,8 +127,8 @@ esp_err_t hk_pair_verify_start(hk_conn_key_store_t *keys, hk_tlv_t *request_tlvs
     tlv_data_response = hk_tlv_add_uint8(tlv_data_response, HK_PAIR_TLV_STATE, HK_PAIR_TLV_STATE_M2);
     if (!ret)
     {
-        tlv_data_response = hk_tlv_add(tlv_data_response, HK_PAIR_TLV_PUBLICKEY, keys->accessory_session_key_public); // there is an error in the specification, dont use the srp proof
-        tlv_data_response = hk_tlv_add(tlv_data_response, HK_PAIR_TLV_ENCRYPTEDDATA, encrypted);
+        tlv_data_response = hk_tlv_add_mem(tlv_data_response, HK_PAIR_TLV_PUBLICKEY, keys->accessory_session_key_public); // there is an error in the specification, dont use the srp proof
+        tlv_data_response = hk_tlv_add_mem(tlv_data_response, HK_PAIR_TLV_ENCRYPTEDDATA, encrypted);
     }
     else
     {

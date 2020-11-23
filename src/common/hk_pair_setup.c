@@ -35,8 +35,8 @@ static esp_err_t hk_pairing_setup_srp_start(hk_mem *result, hk_conn_key_store_t 
     tlv_data_response = hk_tlv_add_uint8(tlv_data_response, HK_PAIR_TLV_STATE, HK_PAIR_TLV_STATE_M2);
     if (!ret)
     {
-        tlv_data_response = hk_tlv_add(tlv_data_response, HK_PAIR_TLV_PUBLICKEY, keys->pair_setup_public_key);
-        tlv_data_response = hk_tlv_add(tlv_data_response, HK_PAIR_TLV_SALT, salt);
+        tlv_data_response = hk_tlv_add_mem(tlv_data_response, HK_PAIR_TLV_PUBLICKEY, keys->pair_setup_public_key);
+        tlv_data_response = hk_tlv_add_mem(tlv_data_response, HK_PAIR_TLV_SALT, salt);
     }
     else
     {
@@ -73,7 +73,7 @@ static esp_err_t hk_pairing_setup_srp_verify(hk_tlv_t *tlv, hk_mem *result, hk_c
     tlv_data_response = hk_tlv_add_uint8(tlv_data_response, HK_PAIR_TLV_STATE, HK_PAIR_TLV_STATE_M4);
     if (!ret)
     {
-        tlv_data_response = hk_tlv_add(tlv_data_response, HK_PAIR_TLV_PROOF, accessory_proof);
+        tlv_data_response = hk_tlv_add_mem(tlv_data_response, HK_PAIR_TLV_PROOF, accessory_proof);
     }
     else
     {
@@ -184,9 +184,9 @@ static esp_err_t hk_pairing_setup_exchange_response_generation(hk_mem *result, h
     // spec 5.6.6.2.5
     if (!ret)
     {
-        tlv_data_response_sub = hk_tlv_add(tlv_data_response_sub, HK_PAIR_TLV_IDENTIFIER, accessory_pairing_id);
-        tlv_data_response_sub = hk_tlv_add(tlv_data_response_sub, HK_PAIR_TLV_PUBLICKEY, accessory_public_key);
-        tlv_data_response_sub = hk_tlv_add(tlv_data_response_sub, HK_PAIR_TLV_SIGNATURE, accessory_signature);
+        tlv_data_response_sub = hk_tlv_add_mem(tlv_data_response_sub, HK_PAIR_TLV_IDENTIFIER, accessory_pairing_id);
+        tlv_data_response_sub = hk_tlv_add_mem(tlv_data_response_sub, HK_PAIR_TLV_PUBLICKEY, accessory_public_key);
+        tlv_data_response_sub = hk_tlv_add_mem(tlv_data_response_sub, HK_PAIR_TLV_SIGNATURE, accessory_signature);
 
         hk_tlv_serialize(tlv_data_response_sub, sub_result);
     }
@@ -198,7 +198,7 @@ static esp_err_t hk_pairing_setup_exchange_response_generation(hk_mem *result, h
     tlv_data_response = hk_tlv_add_uint8(tlv_data_response, HK_PAIR_TLV_STATE, HK_PAIR_TLV_STATE_M6);
     if (!ret)
     {
-        tlv_data_response = hk_tlv_add(tlv_data_response, HK_PAIR_TLV_ENCRYPTEDDATA, encrypted);
+        tlv_data_response = hk_tlv_add_mem(tlv_data_response, HK_PAIR_TLV_ENCRYPTEDDATA, encrypted);
     }
     else
     {

@@ -97,7 +97,7 @@
 //     TEST_ASSERT_EQUAL(ESP_OK, hk_curve25519_export_public_key(device_session_key, device_session_key_public));
 
 //     response_tlvs = hk_tlv_add_uint8(response_tlvs, HK_PAIR_TLV_STATE, HK_PAIR_TLV_STATE_M2);
-//     response_tlvs = hk_tlv_add(response_tlvs, HK_PAIR_TLV_PUBLICKEY, device_session_key_public);
+//     response_tlvs = hk_tlv_add_mem(response_tlvs, HK_PAIR_TLV_PUBLICKEY, device_session_key_public);
 
 //     *response_tlvs_ptr = response_tlvs;
 
@@ -148,14 +148,14 @@
 
 //     TEST_ASSERT_EQUAL(ESP_OK, hk_ed25519_sign(device_long_term_key, device_info, device_signature));
 
-//     response_sub_tlvs = hk_tlv_add(response_sub_tlvs, HK_PAIR_TLV_IDENTIFIER, device_id);
-//     response_sub_tlvs = hk_tlv_add(response_sub_tlvs, HK_PAIR_TLV_SIGNATURE, device_signature);
+//     response_sub_tlvs = hk_tlv_add_mem(response_sub_tlvs, HK_PAIR_TLV_IDENTIFIER, device_id);
+//     response_sub_tlvs = hk_tlv_add_mem(response_sub_tlvs, HK_PAIR_TLV_SIGNATURE, device_signature);
 //     hk_tlv_serialize(response_sub_tlvs, sub_result);
 //     hk_mem_set(encrypted_data, 0);
 //     TEST_ASSERT_EQUAL(ESP_OK, hk_chacha20poly1305_encrypt(session_encryption_key, HK_CHACHA_VERIFY_MSG3, sub_result, encrypted_data));
 
 //     response_tlvs = hk_tlv_add_uint8(response_tlvs, HK_PAIR_TLV_STATE, HK_PAIR_TLV_STATE_M3);
-//     response_tlvs = hk_tlv_add(response_tlvs, HK_PAIR_TLV_ENCRYPTEDDATA, encrypted_data);
+//     response_tlvs = hk_tlv_add_mem(response_tlvs, HK_PAIR_TLV_ENCRYPTEDDATA, encrypted_data);
 //     *response_tlvs_ptr = response_tlvs;
 
 //     hk_curve25519_free(accessory_session_key);

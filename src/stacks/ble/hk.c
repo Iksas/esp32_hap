@@ -11,6 +11,8 @@
 #include "hk_gap.h"
 #include "hk_pairing_ble.h"
 
+#define HK_STORE_REVISION "hk_rvsn"
+
 void (*hk_identify_callback)();
 
 esp_err_t hk_read_protocol_information_version(hk_mem *response)

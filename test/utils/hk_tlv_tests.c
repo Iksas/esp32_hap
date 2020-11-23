@@ -11,7 +11,7 @@ hk_tlv_t* append_string(hk_tlv_t *tlv, const char* str, char type){
     hk_mem *mem = hk_mem_init();
     hk_mem_append_buffer(mem, (char*)str, strlen(str));
 
-    tlv = hk_tlv_add(tlv, type, mem);
+    tlv = hk_tlv_add_mem(tlv, type, mem);
     hk_mem_free(mem);
     return tlv;
 }
@@ -55,7 +55,7 @@ TEST_CASE("simple add", "[tlv]")
     hk_mem *mem = hk_mem_init();
     hk_mem_append_buffer(mem, (char*)str, strlen(str));
 
-    tlv = hk_tlv_add(tlv, 1, mem);
+    tlv = hk_tlv_add_mem(tlv, 1, mem);
     hk_tlv_free(tlv);
     hk_mem_free(mem);
     

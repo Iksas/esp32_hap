@@ -27,31 +27,3 @@ void hk_log_print_bytewise(const char *title, char *data, size_t size, bool form
     }
     printf("\n------------------------------------------\n");
 }
-
-void hk_log_print_as_string(const char *title, char *data, size_t size)
-{
-    printf("-------------- %s (size: %d) --------------\n", title, size);
-    if (data != NULL)
-    {
-        for (size_t i = 0; i < size; i++)
-        {
-            printf("%c", data[i]);
-        }
-        if (data[size - 1] == 0)
-        {
-            if (data[size - 2] != '\n')
-            {
-                printf("\n");
-            }
-        }
-        else if (data[size - 1] != '\n')
-        {
-            printf("\n");
-        }
-    }
-    else
-    {
-        printf("Memory not initialized.\n");
-    }
-    printf("------------------------------------------\n");
-}

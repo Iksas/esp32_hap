@@ -33,11 +33,6 @@ hk_tlv_t *hk_tlv_add_str(hk_tlv_t *tlv_list, char type, char *data)
     return hk_tlv_add_buffer(tlv_list, type, data, strlen(data));
 }
 
-hk_tlv_t *hk_tlv_add(hk_tlv_t *tlv_list, char type, hk_mem *data)
-{
-    return hk_tlv_add_buffer(tlv_list, type, data->ptr, data->size);
-}
-
 hk_tlv_t *hk_tlv_add_uint8(hk_tlv_t *tlv_list, char type, uint8_t data)
 {
     return hk_tlv_add_buffer(tlv_list, type, (char *)&data, 1);
@@ -97,11 +92,6 @@ void hk_tlv_serialize(hk_tlv_t *tlv_list, hk_mem *result)
     tlv_list = hk_ll_reverse(tlv_list);
 }
 
-hk_tlv_t *hk_tlv_deserialize(hk_mem *data)
-{
-    return hk_tlv_deserialize_buffer(data->ptr, data->size);
-}
-
 hk_tlv_t *hk_tlv_deserialize_buffer(char *data, size_t size)
 {
     hk_tlv_t *tlv_list = NULL;
@@ -123,6 +113,11 @@ hk_tlv_t *hk_tlv_deserialize_buffer(char *data, size_t size)
     tlv_list = hk_ll_reverse(tlv_list);
 
     return tlv_list;
+}
+
+hk_tlv_t *hk_tlv_deserialize(hk_mem *data)
+{
+    return hk_tlv_deserialize_buffer(data->ptr, data->size);
 }
 
 size_t hk_tlv_get_size(hk_tlv_t *tlv_list)
