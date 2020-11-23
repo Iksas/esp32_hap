@@ -41,7 +41,7 @@ esp_err_t hk_write_chr_signature(hk_mem *response)
     return ESP_ERR_NOT_SUPPORTED;
 }
 
-void hk_init(const char *name, const hk_categories_t category, const char *code)
+esp_err_t hk_init(const char *name, const hk_categories_t category, const char *code)
 {
     hk_code = code;
     hk_global_state_init();
@@ -52,12 +52,16 @@ void hk_init(const char *name, const hk_categories_t category, const char *code)
 
     hk_pairings_log_devices();
     ESP_LOGD("homekit", "Started.");
+
+    return ESP_OK;
 }
 
-void hk_setup_start()
+esp_err_t hk_setup_start()
 {
     hk_store_init();
     hk_gatt_init();
+
+    return ESP_OK;
 }
 
 esp_err_t hk_setup_update_configuration_counter(const char *revision)
@@ -114,6 +118,7 @@ esp_err_t hk_setup_update_configuration_counter(const char *revision)
 
 void hk_setup_add_accessory(const char *name, const char *manufacturer, const char *model, const char *serial_number, const char *revision, void (*identify)())
 {
+    void *dummy_chr_ptr;
     hk_identify_callback = identify;
     hk_setup_update_configuration_counter(revision);
 
@@ -124,17 +129,17 @@ void hk_setup_add_accessory(const char *name, const char *manufacturer, const ch
     hk_gatt_add_chr_static_read(HK_CHR_MODEL, model);
     hk_gatt_add_chr_static_read(HK_CHR_SERIAL_NUMBER, serial_number);
     hk_gatt_add_chr_static_read(HK_CHR_FIRMWARE_REVISION, revision);
-    hk_gatt_add_chr(HK_CHR_IDENTIFY, NULL, hk_identify, NULL, false, -1, -1);
+    hk_gatt_add_chr(HK_CHR_IDENTIFY, NULL, hk_identify, NULL, false, -1, -1, &dummy_chr_ptr);
 
     hk_gatt_add_srv(HK_SRV_HAP_PROTOCOL_INFORMATION, false, false, true);
     hk_gatt_add_chr_static_read(HK_CHR_VERSION, "2.2.0"); // version of specification
-    hk_gatt_add_chr(HK_CHR_SERVICE_SIGNATURE, hk_read_chr_signature, hk_write_chr_signature, NULL, false, -1, -1);
+    hk_gatt_add_chr(HK_CHR_SERVICE_SIGNATURE, hk_read_chr_signature, hk_write_chr_signature, NULL, false, -1, -1, &dummy_chr_ptr);
 
     hk_gatt_add_srv(HK_SRV_PARIRING, true, false, false);
-    hk_gatt_add_chr(HK_CHR_PAIR_SETUP, NULL, NULL, hk_pairing_ble_write_pair_setup, false, -1, -1);
-    hk_gatt_add_chr(HK_CHR_PAIR_VERIFY, NULL, NULL, hk_pairing_ble_write_pair_verify, false, -1, -1);
-    hk_gatt_add_chr(HK_CHR_PAIRING_FEATURES, hk_pairing_ble_read_pairing_features, NULL, NULL, false, -1, -1);
-    hk_gatt_add_chr(HK_CHR_PAIRING_PAIRINGS, hk_pairing_ble_read_pairing_pairings, NULL, hk_pairing_ble_write_pairing_pairings, false, -1, -1);
+    hk_gatt_add_chr(HK_CHR_PAIR_SETUP, NULL, NULL, hk_pairing_ble_write_pair_setup, false, -1, -1, &dummy_chr_ptr);
+    hk_gatt_add_chr(HK_CHR_PAIR_VERIFY, NULL, NULL, hk_pairing_ble_write_pair_verify, false, -1, -1, &dummy_chr_ptr);
+    hk_gatt_add_chr(HK_CHR_PAIRING_FEATURES, hk_pairing_ble_read_pairing_features, NULL, NULL, false, -1, -1, &dummy_chr_ptr);
+    hk_gatt_add_chr(HK_CHR_PAIRING_PAIRINGS, hk_pairing_ble_read_pairing_pairings, NULL, hk_pairing_ble_write_pairing_pairings, false, -1, -1, &dummy_chr_ptr);
 
 }
 
@@ -143,9 +148,9 @@ void hk_setup_add_srv(hk_srv_types_t srv_type, bool primary, bool hidden)
     hk_gatt_add_srv(srv_type, primary, hidden, false);
 }
 
-void *hk_setup_add_chr(hk_chr_types_t type, esp_err_t(*read)(hk_mem *response), esp_err_t(*write)(hk_mem *request), bool can_notify)
+esp_err_t hk_setup_add_chr(hk_chr_types_t type, esp_err_t(*read)(hk_mem *response), esp_err_t(*write)(hk_mem *request), bool can_notify, void** chr_ptr)
 {
-    return hk_gatt_add_chr(type, read, write, NULL, can_notify, -1, -1);
+    return hk_gatt_add_chr(type, read, write, NULL, can_notify, -1, -1, chr_ptr;
 }
 
 void hk_setup_finish()

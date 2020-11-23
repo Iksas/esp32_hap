@@ -1,12 +1,13 @@
 #pragma once
 
+#include <stdlib.h>
+#include <stdbool.h>
+#include <esp_err.h>
+
 #include "hk_srvs.h"
 #include "hk_chrs.h"
 #include "hk_categories.h"
 #include "hk_mem.h"
-#include <stdlib.h>
-#include <stdbool.h>
-#include "esp_err.h"
 
 /**
  * @file hk.h
@@ -23,14 +24,14 @@
  * @param category The well known category of the device.
  * @param code The code to connect to the device.
  */
-void hk_init(const char *name, const hk_categories_t category, const char *code);
+esp_err_t hk_init(const char *name, const hk_categories_t category, const char *code);
 
 /**
  * @brief Starts the setup  proccess
  *
  * Starts the setup  proccess.
  */
-void hk_setup_start();
+esp_err_t hk_setup_start();
 
 /**
  * @brief Setup an accessory
@@ -44,7 +45,7 @@ void hk_setup_start();
  * @param revision The revision of the accessory.
  * @param identify A function that is called, if the user requests identification.
  */
-void hk_setup_add_accessory(const char *name, const char *manufacturer, const char *model, const char *serial_number, const char *revision, void (*identify)());
+esp_err_t hk_setup_add_accessory(const char *name, const char *manufacturer, const char *model, const char *serial_number, const char *revision, void (*identify)());
 
 /**
  * @brief Add a service
@@ -55,7 +56,7 @@ void hk_setup_add_accessory(const char *name, const char *manufacturer, const ch
  * @param primary If this is the primary service.
  * @param hidden If this is a hidden service.
  */
-void hk_setup_add_srv(hk_srv_types_t srv_type, bool primary, bool hidden);
+esp_err_t hk_setup_add_srv(hk_srv_types_t srv_type, bool primary, bool hidden);
 
 /**
  * @brief Add a characteristic
@@ -66,28 +67,29 @@ void hk_setup_add_srv(hk_srv_types_t srv_type, bool primary, bool hidden);
  * @param read The function called if the characteristic is read. NULL if characteristec cannot be read.
  * @param write The function called if the characteristic is written. NULL if characteristec cannot be written.
  * @param can_notify True if the property can notify homekit for changes.
+ * @param chr_ptr A pointer to the characteristic.
  */
-void *hk_setup_add_chr(hk_chr_types_t chr_type, esp_err_t (*read)(hk_mem* response), esp_err_t (*write)(hk_mem* request), bool can_notify);
+esp_err_t hk_setup_add_chr(hk_chr_types_t chr_type, esp_err_t (*read)(hk_mem* response), esp_err_t (*write)(hk_mem* request), bool can_notify, void **chr_ptr);
 
 /**
  * @brief Finish setup
  *
  * Has to be called, after all services and characteristics have been added.
  */
-void hk_setup_finish();
+esp_err_t hk_setup_finish();
 
 /**
  * @brief Reset homekit
  *
  * Resets all homekit data. Espesially the pairing information. After calling reset, the device should be restarted.
  */
-void hk_reset();
+esp_err_t hk_reset();
 
 /**
  * @brief Notify homekit that a property has changed
  *
  * Calling this method triggers homekit to read a new value and notify all listening devices.
  * 
- * @param chr The characteristic handle, returned by hk_setup_add_chr;
+ * @param chr_ptr The characteristic handle, returned by hk_setup_add_chr;
  */
-void hk_notify(void *chr);
+esp_err_t hk_notify(void *chr_ptr);

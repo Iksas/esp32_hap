@@ -1,7 +1,8 @@
 #pragma once
 
+#include <esp_err.h>
+
 #include "hk_mem.h"
-#include "esp_err.h"
 
 /**
  * @brief Set up a switch device
@@ -16,8 +17,9 @@
  * @param identify The method to be called if the user wants to identify the device.
  * @param read The method that is called by homekit to aquire the current status of the switch.
  * @param write The method to be calle if the user has changed the status of the switch. On or off.
+ * @param chr_ptr A pointer to the characteristic.
  */
-void *hk_setup_add_switch(
+esp_err_t hk_setup_add_switch(
     const char *name,
     const char *manufacturer,
     const char *model,
@@ -25,7 +27,8 @@ void *hk_setup_add_switch(
     const char *revision,
     void (*identify)(),
     esp_err_t (*read)(hk_mem* response),
-    esp_err_t (*write)(hk_mem* request));
+    esp_err_t (*write)(hk_mem* request),
+    void **chr_ptr);
 
 /**
  * @brief Set up a motion sensor device
@@ -39,12 +42,14 @@ void *hk_setup_add_switch(
  * @param revision The revision of device.
  * @param identify The method to be called if the user wants to identify the device.
  * @param read The method that is called by homekit to aquire the current status of the motion sensor.
+ * @param chr_ptr A pointer to the characteristic.
  */
-void *hk_setup_add_motion_sensor(
+esp_err_t hk_setup_add_motion_sensor(
     const char *name,
     const char *manufacturer,
     const char *model,
     const char *serial_number,
     const char *revision,
     void (*identify)(), 
-    esp_err_t (*read)(hk_mem* response));
+    esp_err_t (*read)(hk_mem* response),
+    void **chr_ptr);

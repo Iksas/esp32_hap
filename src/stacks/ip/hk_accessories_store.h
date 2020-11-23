@@ -37,7 +37,7 @@ typedef struct
 
 void hk_accessories_store_add_accessory();
 void hk_accessories_store_add_srv(hk_srv_types_t srv_type, bool primary, bool hidden);
-void* hk_accessories_store_add_chr(hk_chr_types_t chr_type, esp_err_t (*read)(hk_mem* response), esp_err_t (*write)(hk_mem* request), bool can_notify);
+esp_err_t hk_accessories_store_add_chr(hk_chr_types_t chr_type, esp_err_t (*read)(hk_mem* response), esp_err_t (*write)(hk_mem* request), bool can_notify, void **chr_ptr);
 void hk_accessories_store_add_chr_static_read(hk_chr_types_t type, void *value);
 void hk_accessories_store_end_config();
 

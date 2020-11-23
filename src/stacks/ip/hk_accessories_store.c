@@ -27,7 +27,7 @@ void hk_accessories_store_add_srv(hk_srv_types_t type, bool primary, bool hidden
     hk_accessories->srvs = srv;
 }
 
-void *hk_accessories_store_add_chr(hk_chr_types_t type, esp_err_t (*read)(hk_mem* response), esp_err_t (*write)(hk_mem* request), bool can_notify)
+esp_err_t hk_accessories_store_add_chr(hk_chr_types_t type, esp_err_t (*read)(hk_mem* response), esp_err_t (*write)(hk_mem* request), bool can_notify, void **chr_ptr)
 {
     hk_chr_t *chr = hk_ll_init(hk_accessories->srvs->chrs);
 
@@ -39,7 +39,8 @@ void *hk_accessories_store_add_chr(hk_chr_types_t type, esp_err_t (*read)(hk_mem
 
     hk_accessories->srvs->chrs = chr;
 
-    return chr;
+    *chr_ptr = chr;
+    return ESP_OK;
 }
 
 void hk_accessories_store_add_chr_static_read(hk_chr_types_t type, void *value)

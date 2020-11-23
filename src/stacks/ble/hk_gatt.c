@@ -486,14 +486,15 @@ void hk_gatt_add_srv(hk_srv_types_t srv_type, bool primary, bool hidden,
     hk_gatt_chr_init(ble_chr, BLE_UUID128(srv->uuid), &hk_uuids_srv_id, BLE_GATT_CHR_F_READ, chr);
 }
 
-void *hk_gatt_add_chr(
+esp_err_t hk_gatt_add_chr(
     hk_chr_types_t chr_type,
     esp_err_t (*read)(hk_mem *response),
     esp_err_t (*write)(hk_mem *request),
     esp_err_t (*write_with_response)(hk_connection_t *connection, hk_mem *request, hk_mem *response),
     bool can_notify,
     float min_length,
-    float max_length)
+    float max_length,
+    void** chr_ptr)
 {
     hk_ble_srv_t *current_srv = &hk_gatt_srvs[hk_gatt_setup_info->srv_index];
     const ble_uuid128_t *chr_uuid = hk_uuids_get((uint8_t)chr_type);
@@ -527,7 +528,9 @@ void *hk_gatt_add_chr(
         flags,
         chr);
 
-    return chr;
+    *chr_ptr = chr
+
+    return ESP_OK;
 }
 
 void hk_gatt_add_chr_static_read(hk_chr_types_t chr_type, const char *value)

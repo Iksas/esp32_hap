@@ -337,7 +337,7 @@ int hk_pair_verify(hk_mem *request, hk_mem *result, hk_conn_key_store_t *keys, b
         case HK_PAIR_TLV_STATE_M1:
         {
             hk_tlv_t *method_tlv = hk_tlv_get_tlv_by_type(tlv_data_request, HK_PAIR_TLV_METHOD);
-            if (method_tlv != NULL)
+            if (method_tlv != NULL && method_tlv->length > 0)
             {
                 if (*method_tlv->value == HK_PAIR_TLV_METHOD_RESUME)
                 {
