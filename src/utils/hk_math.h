@@ -1,11 +1,10 @@
-#pragma once
-
-
 /**
  * @file hk_math.h
  *
  * A math library.
  */
+
+#pragma once
 
 /**
  * @brief Returns the maximum of two numbers.

@@ -1,15 +1,15 @@
+/**
+ * @file hk_ll.h
+ *
+ * A linked list library.
+ */
+
 #pragma once
 
 #include <esp_log.h>
 #include <esp_err.h>
 #include <stdlib.h>
 #include <string.h>
-
-/**
- * @file hk_ll.h
- *
- * A linked list library.
- */
 
 #define __FILENAME__ (strstr(__FILE__, "/hk_") ? strstr(__FILE__, "/hk_") + 1 : __FILE__) // write reverse strstr and use / instead of /hk_
 #define TAG  "hk"

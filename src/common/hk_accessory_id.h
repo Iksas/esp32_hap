@@ -1,3 +1,9 @@
+/**
+ * @file hk_accessory_id.h
+ *
+ * Functions to create and access the accessory id.
+ */
+
 #pragma once
 
 #include <esp_err.h>

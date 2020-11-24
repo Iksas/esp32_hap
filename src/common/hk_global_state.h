@@ -1,7 +1,12 @@
+/**
+ * @file hk_global_state.h
+ *
+ * Functions work with and access the global state.
+ */
+
 #pragma once
 
 #include <stdio.h>
-
 
 /**
  * @brief Initialize global state

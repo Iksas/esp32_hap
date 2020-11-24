@@ -1,3 +1,9 @@
+/**
+ * @file hk_conn_key_store.h
+ *
+ * Holds the connection keys.
+ */
+
 #pragma once
 
 #include "../include/hk_mem.h"

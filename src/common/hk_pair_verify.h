@@ -1,3 +1,9 @@
+/**
+ * @file hk_pair_verify.h
+ *
+ * Logic to execute pair verify
+ */
+
 #pragma once
 
 #include <esp_err.h>

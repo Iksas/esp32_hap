@@ -1,3 +1,9 @@
+/**
+ * @file hk_pairings.h
+ *
+ * Logic to execute a pairing request.
+ */
+
 #pragma once
 
 #include <esp_err.h>

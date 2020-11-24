@@ -1,10 +1,21 @@
+/**
+ * @file hk_crypto_util.h
+ *
+ * Utils used in all crypto files.
+ */
+
 #pragma once
 
-#include "../utils/hk_logging.h"
-#define WOLFSSL_USER_SETTINGS
 #include <wolfssl/wolfcrypt/settings.h>
 #include <wolfssl/wolfcrypt/error-crypt.h>
 
+#include "../utils/hk_logging.h"
+
+#define WOLFSSL_USER_SETTINGS
+
+/**
+ * @brief Runs the given function and checks the return.
+ */
 #define HK_CRYPTO_RUN_AND_CHECK(ret, func, args...) \
 if(!ret) \
 { \

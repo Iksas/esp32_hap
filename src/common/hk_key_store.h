@@ -1,3 +1,9 @@
+/**
+ * @file hk_key_store.h
+ *
+ * Stores the accessory keys.
+ */
+
 #pragma once
 
 #include <esp_err.h>

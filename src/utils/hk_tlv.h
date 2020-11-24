@@ -1,3 +1,9 @@
+/**
+ * @file hk_tlv.h
+ *
+ * Functions to work with type length value types.
+ */
+
 #pragma once
 
 #include <stdlib.h>
@@ -7,11 +13,8 @@
 #include "../include/hk_mem.h"
 
 /**
- * @file hk_tlv.h
- *
- * Functions to work with type length value types.
+ * @brief A tlv.
  */
-
 typedef struct
 {
     char type;

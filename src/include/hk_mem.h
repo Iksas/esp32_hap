@@ -1,13 +1,13 @@
-#pragma once
-
-#include <stdlib.h>
-#include <stdbool.h>
-
 /**
  * @file hk_mem.h
  *
  * Functions for memory handling.
  */
+
+#pragma once
+
+#include <stdlib.h>
+#include <stdbool.h>
 
 /**
  * @brief A memory

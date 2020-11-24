@@ -1,10 +1,10 @@
-#pragma once
-
 /**
  * @file hk_heap_debug.h
  *
  * Functions for debugging memory leaks on heap.
  */
+
+#pragma once
 
 /**
  * @brief Starts heap debugging.

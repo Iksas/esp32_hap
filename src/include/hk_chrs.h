@@ -1,3 +1,9 @@
+/**
+ * @file hk_chrs.h
+ *
+ * Holdes the characteristics of homekit.
+ */
+
 #pragma once
 
 typedef enum {

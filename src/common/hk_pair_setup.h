@@ -1,3 +1,9 @@
+/**
+ * @file hk_pair_setup.h
+ *
+ * Logic to execute pair setup.
+ */
+
 #pragma once
 
 #include <esp_err.h>

@@ -1,16 +1,17 @@
+/**
+ * @file hk_store.h
+ *
+ * A fascade to easily access the non volantile store of esp32.
+ */
+
 #pragma once
+
 #include <stdlib.h>
 #include <stdbool.h>
 #include <esp_err.h>
 #include <nvs_flash.h>
 
 #include "hk_mem.h"
-
-/**
- * @file hk_store.h
- *
- * A fascade to easily access the non volantile store of esp32.
- */
 
 /**
  * @brief Initalize the store.

@@ -1,3 +1,9 @@
+/**
+ * @file hk_categories.h
+ *
+ * Holdes the catagories of homekit.
+ */
+
 #pragma once
 
 typedef enum {

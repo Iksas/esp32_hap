@@ -1,3 +1,9 @@
+/**
+ * @file hk_pair_tlvs.h
+ *
+ * TLV codes for pairing.
+ */
+
 #pragma once
 
 #define HK_PAIR_TLV_METHOD          0x00 // (integer) Method to use for pairing. See PairMethod   

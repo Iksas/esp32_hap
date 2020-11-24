@@ -1,3 +1,9 @@
+/**
+ * @file hk_tlv.h
+ *
+ * Functions to work with type length value types.
+ */
+
 #pragma once
 
 #include <stdbool.h>
@@ -5,12 +11,6 @@
 
 #include "hk_logging.h"
 #include "hk_mem.h"
-
-/**
- * @file hk_tlv.h
- *
- * Functions to work with type length value types.
- */
 
 /**
  * @brief Runs a function with parameters and checks for errors.

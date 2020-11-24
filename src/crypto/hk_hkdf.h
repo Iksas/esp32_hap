@@ -1,3 +1,9 @@
+/**
+ * @file hk_hkdf.h
+ *
+ * Functions for working with hkdf crypto algorithm.
+ */
+
 #pragma once
 
 #include <esp_err.h>
@@ -24,6 +30,45 @@
 #define HK_HKDF_CONTROL_WRITE_INFO "Control-Write-Encryption-Key"
 #define HK_HKDF_BROADCAST_ENCRYPTION_KEY_INFO "Broadcast-Encryption-Key"
 
+/**
+ * @brief Creates key.
+ *
+ * Creates key.
+ * 
+ * @param key_in The key to crypt.
+ * @param key_out The created key.
+ * @param salt The salt.
+ * @param info The info.
+ * 
+ * @return Returns an esp_err_t result.
+ */
 esp_err_t hk_hkdf(hk_mem *key_in, hk_mem* key_out, const char* salt, const char* info);
+
+/**
+ * @brief Creates key.
+ *
+ * Creates key.
+ * 
+ * @param key_in The key to crypt.
+ * @param key_out The created key.
+ * @param size The size.
+ * @param salt The salt.
+ * @param info The info.
+ * 
+ * @return Returns an esp_err_t result.
+ */
 esp_err_t hk_hkdf_with_given_size(hk_mem *key_in, hk_mem* key_out, size_t size, const char* salt, const char* info);
+
+/**
+ * @brief Creates key.
+ *
+ * Creates key.
+ * 
+ * @param key_in The key to crypt.
+ * @param key_out The created key.
+ * @param salt The salt.
+ * @param info The info.
+ * 
+ * @return Returns an esp_err_t result.
+ */
 esp_err_t hk_hkdf_with_external_salt(hk_mem *key_in, hk_mem *key_out, hk_mem *salt, const char* info);

@@ -1,3 +1,9 @@
+/**
+ * @file hk.h
+ *
+ * Functions for initializing this library.
+ */
+
 #pragma once
 
 #include <stdlib.h>
@@ -8,12 +14,6 @@
 #include "hk_chrs.h"
 #include "hk_categories.h"
 #include "hk_mem.h"
-
-/**
- * @file hk.h
- *
- * Functions for initializing this library.
- */
 
 /**
  * @brief Initalize homekit

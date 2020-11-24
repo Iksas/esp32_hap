@@ -1,3 +1,9 @@
+/**
+ * @file hk_srvs.h
+ *
+ * Holdes the services of homekit.
+ */
+
 #pragma once
 
 typedef enum {

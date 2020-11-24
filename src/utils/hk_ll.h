@@ -1,12 +1,12 @@
-#pragma once
-
-#include <stddef.h>
-
 /**
  * @file hk_ll.h
  *
  * A linked list library.
  */
+
+#pragma once
+
+#include <stddef.h>
 
 /**
  * @brief Initalize a list.

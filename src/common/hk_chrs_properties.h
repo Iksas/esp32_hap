@@ -1,3 +1,9 @@
+/**
+ * @file hk_chrs_properties.h
+ *
+ * Functions to work with homekit properties.
+ */
+
 #pragma once
 
 #include <freertos/FreeRTOS.h>

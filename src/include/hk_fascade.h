@@ -1,3 +1,9 @@
+/**
+ * @file hk_fascade.h
+ *
+ * A fascade to make it easier to create simple homekit devices.
+ */
+
 #pragma once
 
 #include <esp_err.h>

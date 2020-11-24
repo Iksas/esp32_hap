@@ -1,3 +1,9 @@
+/**
+ * @file hk_pairings_store.h
+ *
+ * Stores the pairing information.
+ */
+
 #pragma once
 
 #include "../include/hk_mem.h"
