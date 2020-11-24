@@ -69,8 +69,8 @@ esp_err_t hk_setup_start()
 esp_err_t hk_setup_update_configuration_counter(const char *revision)
 {
     hk_mem* revision_stored = hk_mem_init();
-
     esp_err_t ret = hk_store_blob_get(HK_STORE_REVISION, revision_stored);
+    
     if (ret == ESP_ERR_NOT_FOUND) //ESP_ERR_NVS_NOT_FOUND
     {
         ret = ESP_OK;
@@ -89,9 +89,14 @@ esp_err_t hk_setup_update_configuration_counter(const char *revision)
         return ret;
     }
 
+    char* revision_stored_str = hk_mem_to_string(revision_stored);
+    HK_LOGD("Revision stored is '%s'. The new one is '%s'.", revision_stored_str, revision);
+    free(revision_stored_str);
+
     uint8_t configuration_counter = 0;
     if (!hk_mem_equal_str(revision_stored, revision))
     {
+        HK_LOGD("Updating revision and counter.");
         ret = hk_store_u8_get(HK_STORE_CONFIGURATION, &configuration_counter);
 
         if (ret != ESP_OK)
@@ -118,7 +123,7 @@ esp_err_t hk_setup_update_configuration_counter(const char *revision)
     return ret;
 }
 
-void hk_setup_add_accessory(const char *name, const char *manufacturer, const char *model, const char *serial_number, const char *revision, void (*identify)())
+esp_err_t hk_setup_add_accessory(const char *name, const char *manufacturer, const char *model, const char *serial_number, const char *revision, void (*identify)())
 {
     void *dummy_chr_ptr;
     hk_identify_callback = identify;
@@ -143,33 +148,42 @@ void hk_setup_add_accessory(const char *name, const char *manufacturer, const ch
     hk_gatt_add_chr(HK_CHR_PAIRING_FEATURES, hk_pairing_ble_read_pairing_features, NULL, NULL, false, -1, -1, &dummy_chr_ptr);
     hk_gatt_add_chr(HK_CHR_PAIRING_PAIRINGS, hk_pairing_ble_read_pairing_pairings, NULL, hk_pairing_ble_write_pairing_pairings, false, -1, -1, &dummy_chr_ptr);
 
+    return ESP_OK;
 }
 
-void hk_setup_add_srv(hk_srv_types_t srv_type, bool primary, bool hidden)
+esp_err_t hk_setup_add_srv(hk_srv_types_t srv_type, bool primary, bool hidden)
 {
     hk_gatt_add_srv(srv_type, primary, hidden, false);
+
+    return ESP_OK;
 }
 
 esp_err_t hk_setup_add_chr(hk_chr_types_t type, esp_err_t(*read)(hk_mem *response), esp_err_t(*write)(hk_mem *request), bool can_notify, void** chr_ptr)
 {
-    return hk_gatt_add_chr(type, read, write, NULL, can_notify, -1, -1, chr_ptr;
+    return hk_gatt_add_chr(type, read, write, NULL, can_notify, -1, -1, chr_ptr);
 }
 
-void hk_setup_finish()
+esp_err_t hk_setup_finish()
 {
     hk_gatt_end_config();
     ESP_LOGD("homekit", "Set up.");
+
+    return ESP_OK;
 }
 
-void hk_reset()
+esp_err_t hk_reset()
 {
     HK_LOGW("Resetting homekit for this device.");
     hk_accessory_id_reset();
     hk_global_state_reset();
     hk_pairings_store_remove_all();
+
+    return ESP_OK;
 }
 
-void hk_notify(void *chr)
+esp_err_t hk_notify(void *chr)
 {
     hk_gatt_indicate(chr);
+
+    return ESP_OK;
 }

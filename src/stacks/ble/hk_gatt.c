@@ -528,7 +528,7 @@ esp_err_t hk_gatt_add_chr(
         flags,
         chr);
 
-    *chr_ptr = chr
+    *chr_ptr = chr;
 
     return ESP_OK;
 }

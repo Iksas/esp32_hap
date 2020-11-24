@@ -44,7 +44,7 @@ void hk_mem_set(hk_mem *mem, size_t size)
     }
 }
 
-void hk_mem_set_mem(hk_mem *mem, hk_mem* mem_to_set)
+void hk_mem_set_mem(hk_mem *mem, hk_mem *mem_to_set)
 {
     mem->ptr = realloc(mem->ptr, mem_to_set->size);
     memcpy(mem->ptr, mem_to_set->ptr, mem_to_set->size);
@@ -78,12 +78,30 @@ bool hk_mem_equal(hk_mem *mem1, hk_mem *mem2)
     return strncmp(mem1->ptr, mem2->ptr, mem1->size) == 0;
 }
 
+char *hk_mem_to_string(hk_mem *mem)
+{
+    char *str;
+    if (mem->size > 0)
+    {
+        str = (char *)malloc(mem->size * sizeof(char) + 1);
+        memcpy(str, mem->ptr, mem->size);
+        str[mem->size] = 0;
+    }
+    else
+    {
+        str = (char *)malloc(2);
+        sprintf(str, "-");
+    }
+
+    return str;
+}
+
 char *hk_mem_to_debug_string(hk_mem *mem)
 {
     char *str;
     if (mem->size > 0)
     {
-        str = (char*)malloc(mem->size * 2 + 1);
+        str = (char *)malloc(mem->size * 2 + 1);
         for (size_t i = 0; i < mem->size; i++)
         {
             sprintf(str + i * 2, "%02x", mem->ptr[i]);
@@ -91,7 +109,7 @@ char *hk_mem_to_debug_string(hk_mem *mem)
     }
     else
     {
-        str = (char*)malloc(2);
+        str = (char *)malloc(2);
         sprintf(str, "-");
     }
 

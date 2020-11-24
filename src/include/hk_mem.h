@@ -130,4 +130,16 @@ bool hk_mem_equal_str(hk_mem *mem, const char *str);
  * 
  * @return The string.
  */
+char *hk_mem_to_string(hk_mem *mem);
+
+/**
+ * @brief Get debug string from memory.
+ *
+ * Returns a string constructed from the memory area. Be sure to free the string, 
+ * when it is not used anymore
+ *
+ * @param mem A pointer to an initialized memory.
+ * 
+ * @return The string.
+ */
 char* hk_mem_to_debug_string(hk_mem *mem);

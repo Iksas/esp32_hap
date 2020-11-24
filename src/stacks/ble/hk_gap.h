@@ -1,10 +1,11 @@
 #pragma once
 
-//#include <stdlib.h>
 #include <stdbool.h>
 #include <host/ble_hs.h>
 
 #include "../../include/hk_mem.h"
+
+#define HK_STORE_CONFIGURATION "hk_gap_conf"
 
 void hk_gap_init(const char *name, size_t category, size_t config_version);
 void hk_gap_address_set(uint8_t own_addr_type);
