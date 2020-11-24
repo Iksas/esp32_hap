@@ -6,12 +6,11 @@
 
 #pragma once
 
+#define WOLFSSL_USER_SETTINGS
 #include <wolfssl/wolfcrypt/settings.h>
 #include <wolfssl/wolfcrypt/error-crypt.h>
 
 #include "../utils/hk_logging.h"
-
-#define WOLFSSL_USER_SETTINGS
 
 /**
  * @brief Runs the given function and checks the return.
