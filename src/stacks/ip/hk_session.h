@@ -7,7 +7,6 @@
 
 #include "../../include/hk_mem.h"
 #include "../../common/hk_conn_key_store.h"
-#include "hk_session_security.h"
 
 #define HK_SESSION_RESPONSE_MESSAGE 0
 #define HK_SESSION_RESPONSE_EVENT 1
@@ -44,17 +43,15 @@ typedef struct hk_session
 {
     hk_session_request_t *request;
     hk_session_response_t *response;    
-    hk_encryption_data_t* encryption_data;
     hk_conn_key_store_t *keys;
 
     char *device_id;
     int socket;
     bool should_close;
-    bool is_secure;
     bool kill; // states that all sessions with the same device id have to be killed
 } hk_session_t;
 
-void hk_session_init(hk_session_t *session, int socket);
+hk_session_t *hk_session_init(int socket);
 void hk_session_clean(hk_session_t *session);
 void hk_session_clean_response(hk_session_t *session);
 void hk_session_free(hk_session_t *session_context);

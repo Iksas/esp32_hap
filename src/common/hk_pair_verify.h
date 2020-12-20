@@ -21,4 +21,4 @@
  * @param keys The keys of the connection.
  * @param is_session_encrypted Sets the encrypted status.
  */
-int hk_pair_verify(hk_mem *request, hk_mem *result, hk_conn_key_store_t *keys, bool *is_session_encrypted);
+esp_err_t hk_pair_verify(hk_mem *request, hk_mem *result, hk_conn_key_store_t *keys, bool *is_session_encrypted);

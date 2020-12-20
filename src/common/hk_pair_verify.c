@@ -66,7 +66,7 @@ esp_err_t hk_create_session_security(hk_conn_key_store_t *keys)
 esp_err_t hk_pair_verify_start(hk_conn_key_store_t *keys, hk_tlv_t *request_tlvs, hk_mem *response)
 {
     // see spec chapter 5.7.2
-    HK_LOGV("Now running pair verify start.");
+    HK_LOGD("Now running pair verify start.");
     esp_err_t ret = ESP_OK;
     hk_ed25519_key_t *accessory_long_term_key = hk_ed25519_init();
     hk_curve25519_key_t *accessory_curve_key_pair = hk_curve25519_init();
@@ -156,7 +156,7 @@ esp_err_t hk_pair_verify_start(hk_conn_key_store_t *keys, hk_tlv_t *request_tlvs
 
 esp_err_t hk_pair_verify_finish(hk_conn_key_store_t *keys, hk_tlv_t *request_tlvs, hk_mem *response)
 {
-    HK_LOGV("Now running pair verify finish.");
+    HK_LOGD("Now running pair verify finish.");
     hk_ed25519_key_t *device_long_term_key = hk_ed25519_init();
     hk_mem *device_long_term_key_public = hk_mem_init();
     hk_mem *device_info = hk_mem_init();
@@ -294,6 +294,7 @@ esp_err_t hk_pair_verify_resume(hk_conn_key_store_t *keys, hk_tlv_t *request_tlv
             tlv_data_response = hk_tlv_add_uint8(tlv_data_response, HK_PAIR_TLV_METHOD, HK_PAIR_TLV_METHOD_RESUME);
             tlv_data_response = hk_tlv_add_mem(tlv_data_response, HK_PAIR_TLV_SESSIONID, session->id);
             tlv_data_response = hk_tlv_add_mem(tlv_data_response, HK_PAIR_TLV_ENCRYPTEDDATA, encrypted_data);
+            HK_LOGD("Resuming session.");
         }
         else
         {
@@ -319,7 +320,7 @@ esp_err_t hk_pair_verify_resume(hk_conn_key_store_t *keys, hk_tlv_t *request_tlv
     return ret;
 }
 
-int hk_pair_verify(hk_mem *request, hk_mem *result, hk_conn_key_store_t *keys, bool *is_session_encrypted)
+esp_err_t hk_pair_verify(hk_mem *request, hk_mem *result, hk_conn_key_store_t *keys, bool *is_session_encrypted)
 {
     esp_err_t ret = ESP_OK;
     hk_tlv_t *tlv_data_request = hk_tlv_deserialize(request);
