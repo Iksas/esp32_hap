@@ -27,50 +27,43 @@ char *hk_chrs_get_next_id_pair(char *ids, int *result)
     return next_ids + 1;
 }
 
-void hk_chrs_get(hk_session_t *session)
+esp_err_t hk_chrs_get(char *ids, hk_mem *response)
 {
-    hk_mem *ids = hk_mem_init();
-    session->response->content_type = HK_SESSION_CONTENT_JSON;
-    esp_err_t ret = hk_html_parser_get_query_value(session->request->query, "id", ids);
+    esp_err_t ret = ESP_OK;
 
     int results[2];
     cJSON *j_root = cJSON_CreateObject();
-    if (ret == ESP_OK)
-    {
-        cJSON *j_chrs = cJSON_CreateArray();
-        cJSON_AddItemToObject(j_root, "characteristics", j_chrs);
-        char *id_ptr = ids->ptr;
-        session->response->result = ESP_OK;
-        while (id_ptr != NULL)
-        {
-            id_ptr = hk_chrs_get_next_id_pair(id_ptr, results);
-            hk_chr_t *chr = hk_accessories_store_get_chr(results[0], results[1]);
-            if (chr == NULL)
-            {
-                HK_LOGE("Could not find chr %d.%d.", results[0], results[1]);
-                session->response->result = ESP_ERR_NOT_FOUND;
-                break;
-            }
+    cJSON *j_chrs = cJSON_CreateArray();
+    cJSON_AddItemToObject(j_root, "characteristics", j_chrs);
 
-            cJSON *j_chr = cJSON_CreateObject();
-            cJSON_AddNumberToObject(j_chr, "aid", results[0]);
-            cJSON_AddNumberToObject(j_chr, "iid", results[1]);
-            hk_accessories_serializer_value(chr, j_chr);
-            cJSON_AddItemToArray(j_chrs, j_chr);
+    while (ids != NULL)
+    {
+        ids = hk_chrs_get_next_id_pair(ids, results);
+        hk_chr_t *chr = hk_accessories_store_get_chr(results[0], results[1]);
+        if (chr == NULL)
+        {
+            HK_LOGE("Could not find chr %d.%d.", results[0], results[1]);
+            ret = ESP_ERR_NOT_FOUND;
+            break;
         }
+
+        cJSON *j_chr = cJSON_CreateObject();
+        cJSON_AddNumberToObject(j_chr, "aid", results[0]);
+        cJSON_AddNumberToObject(j_chr, "iid", results[1]);
+        hk_accessories_serializer_value(chr, j_chr);
+        cJSON_AddItemToArray(j_chrs, j_chr);
     }
 
-    if (session->response->result == ESP_OK)
+    if (ret == ESP_OK)
     {
         char *serialized = cJSON_PrintUnformatted(j_root);
-        hk_mem_append_string(session->response->content, (const char *)serialized);
+        hk_mem_append_string(response, (const char *)serialized);
         free(serialized);
     }
 
-    HK_LOGD("%d - Returning value for chr %d.%d.", session->socket, results[0], results[1]);
-    hk_session_send(session);
-    hk_mem_free(ids);
     cJSON_Delete(j_root);
+
+    return ret;
 }
 
 void hk_chrs_notify(void *chr_ptr)
@@ -228,11 +221,13 @@ void hk_chrs_write(hk_session_t *session, cJSON *j_chr)
             HK_LOGD("%d - Writing chr %d.%d.", session->socket, aid, iid);
 
             ret = chr->write(write_request);
-            if(ret == ESP_OK){
+            if (ret == ESP_OK)
+            {
                 hk_html_response_send_empty(session, HK_HTML_204);
                 hk_chrs_notify(chr);
             }
-            else{
+            else
+            {
                 HK_LOGE("Error writing characteristic.");
             }
         }

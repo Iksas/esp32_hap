@@ -24,3 +24,7 @@ if(!ret) \
         HK_LOGE("Error executing: %s (%d)", esp_err_to_name(ret), ret); \
     }  \
 }
+
+#ifndef MIN
+   #define MIN(x,y) ((x)<(y)?(x):(y))
+#endif

@@ -49,7 +49,7 @@ esp_err_t hk_pair_verify_create_session(hk_conn_key_store_t *keys)
     return ret;
 }
 
-esp_err_t hk_create_session_security(hk_conn_key_store_t *keys)
+static esp_err_t hk_pair_verify_create_session_security(hk_conn_key_store_t *keys)
 {
     esp_err_t ret = ESP_OK;
 
@@ -136,7 +136,7 @@ esp_err_t hk_pair_verify_start(hk_conn_key_store_t *keys, hk_tlv_t *request_tlvs
     }
 
     hk_tlv_serialize(tlv_data_response, response);
-    RUN_AND_CHECK(ret, hk_create_session_security, keys);
+    RUN_AND_CHECK(ret, hk_pair_verify_create_session_security, keys);
     
     hk_tlv_free(tlv_data_response_sub);
     hk_tlv_free(tlv_data_response);
@@ -218,6 +218,7 @@ esp_err_t hk_pair_verify_finish(hk_conn_key_store_t *keys, hk_tlv_t *request_tlv
 
 esp_err_t hk_pair_verify_resume(hk_conn_key_store_t *keys, hk_tlv_t *request_tlvs, hk_mem *response)
 {
+    HK_LOGD("Now running pair verify resume.");
     hk_mem *session_id = hk_mem_init();
     hk_mem *encryption_key = hk_mem_init();
     hk_mem *encrypted_data = hk_mem_init();
@@ -285,7 +286,7 @@ esp_err_t hk_pair_verify_resume(hk_conn_key_store_t *keys, hk_tlv_t *request_tlv
         if (!ret)
         {
             hk_mem_set_mem(session->accessory_shared_secret, keys->accessory_shared_secret);
-            hk_create_session_security(keys);
+            RUN_AND_CHECK(ret, hk_pair_verify_create_session_security, keys);
         }
 
         tlv_data_response = hk_tlv_add_uint8(tlv_data_response, HK_PAIR_TLV_STATE, HK_PAIR_TLV_STATE_M2);
@@ -298,7 +299,6 @@ esp_err_t hk_pair_verify_resume(hk_conn_key_store_t *keys, hk_tlv_t *request_tlv
         }
         else
         {
-            // todo: send error if session was found, but encryption failed
             if (session != NULL)
             {
                 hk_mem_free(session->id);

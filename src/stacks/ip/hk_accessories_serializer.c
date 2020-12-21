@@ -36,7 +36,7 @@ cJSON *hk_accessories_serializer_format_value(hk_format_t format, void *value)
     }
 }
 
-void hk_accessories_serializer_value(hk_chr_t *chr, cJSON *j_chr)
+esp_err_t hk_accessories_serializer_value(hk_chr_t *chr, cJSON *j_chr)
 {
     hk_format_t format = hk_chrs_properties_get_type(chr->type);
     if (chr->read != NULL)
@@ -57,6 +57,8 @@ void hk_accessories_serializer_value(hk_chr_t *chr, cJSON *j_chr)
             cJSON_AddNullToObject(j_chr, "value");
         }
     }
+
+    return ESP_OK;
 }
 
 void hk_accessories_serializer_format(hk_chr_t *chr, cJSON *j_chr)
@@ -163,7 +165,7 @@ void hk_accessories_serializer_accessory(hk_accessory_t *accessory, cJSON *j_acc
     }
 }
 
-void hk_accessories_serializer_accessories(hk_mem *out)
+esp_err_t hk_accessories_serializer_accessories(hk_mem *out)
 {
     cJSON *j_root = cJSON_CreateObject();
     cJSON *j_accessories = cJSON_CreateArray();
@@ -179,4 +181,6 @@ void hk_accessories_serializer_accessories(hk_mem *out)
     hk_mem_append_string(out, (const char *)serialized);
     free(serialized);
     cJSON_Delete(j_root);
+
+    return ESP_OK;
 }
