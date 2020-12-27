@@ -339,20 +339,18 @@ esp_err_t hk_chrs_put(hk_mem *request, void *http_handle, int socket)
     return ret;
 }
 
-void hk_chrs_identify(hk_session_t *session)
+esp_err_t hk_chrs_identify(int socket)
 {
     hk_chr_t *chr = hk_accessories_store_get_identify_chr();
     if (chr == NULL)
     {
         HK_LOGE("Could not find identify chr.");
-        session->response->result = ESP_ERR_NOT_FOUND;
+        return ESP_ERR_NOT_FOUND;
     }
 
-    if (session->response->result == ESP_OK)
-    {
-        HK_LOGE("%d - Calling write on identify chr!", session->socket);
-        chr->write(NULL);
-    }
+    esp_err_t ret = ESP_OK;
+    HK_LOGD("%d - Calling write on identify chr!", socket);
+    RUN_AND_CHECK(ret, chr->write, NULL);
 
-    hk_session_send(session);
+    return ret;
 }

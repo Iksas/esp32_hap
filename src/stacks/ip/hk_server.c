@@ -45,6 +45,12 @@ static httpd_uri_t hk_server_characteristics_put = {
     .handler = hk_server_handlers_characteristics_put,
     .user_ctx = NULL};
 
+static httpd_uri_t hk_server_identify_post = {
+    .uri = "/identify",
+    .method = HTTP_POST,
+    .handler = hk_server_handlers_identify_post,
+    .user_ctx = NULL};
+
 static httpd_uri_t hk_server_pair_setup_post = {
     .uri = "/pair-setup",
     .method = HTTP_POST,
@@ -71,6 +77,7 @@ esp_err_t hk_server_start(void)
     RUN_AND_CHECK(ret, httpd_register_uri_handler, hk_server_handle, &hk_server_accessories_get);
     RUN_AND_CHECK(ret, httpd_register_uri_handler, hk_server_handle, &hk_server_characteristics_get);
     RUN_AND_CHECK(ret, httpd_register_uri_handler, hk_server_handle, &hk_server_characteristics_put);
+    RUN_AND_CHECK(ret, httpd_register_uri_handler, hk_server_handle, &hk_server_identify_post);
     RUN_AND_CHECK(ret, httpd_register_uri_handler, hk_server_handle, &hk_server_pair_setup_post);
     RUN_AND_CHECK(ret, httpd_register_uri_handler, hk_server_handle, &hk_server_pair_verify_post);
 
