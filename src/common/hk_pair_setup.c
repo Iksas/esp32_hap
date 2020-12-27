@@ -108,7 +108,7 @@ static esp_err_t hk_pairing_setup_exchange_response_verification(hk_tlv_t *tlv, 
     RUN_AND_CHECK(ret, hk_tlv_get_mem_by_type, tlv, HK_PAIR_TLV_ENCRYPTEDDATA, encrypted_data);
     RUN_AND_CHECK(ret, hk_hkdf, srp_private_key, shared_secret, HK_HKDF_PAIR_SETUP_ENCRYPT_SALT, HK_HKDF_PAIR_SETUP_ENCRYPT_INFO);
     RUN_AND_CHECK(ret, hk_chacha20poly1305_decrypt, shared_secret, HK_CHACHA_SETUP_MSG5, encrypted_data, decrypted_data);
-    
+
     if (!ret)
     {
         tlv_data_decrypted = hk_tlv_deserialize(decrypted_data);
@@ -168,7 +168,7 @@ static esp_err_t hk_pairing_setup_exchange_response_generation(hk_mem *result, h
     RUN_AND_CHECK(ret, hk_key_store_priv_set, accessory_private_key);
     // spec 5.6.6.2.2
     RUN_AND_CHECK(ret, hk_hkdf, srp_private_key, accessory_info, HK_HKDF_PAIR_SETUP_ACCESSORY_SALT, HK_HKDF_PAIR_SETUP_ACCESSORY_INFO);
-    
+
     // spec 5.6.6.2.3
     RUN_AND_CHECK(ret, hk_accessory_id_get_serialized, accessory_pairing_id);
 
@@ -221,12 +221,13 @@ static esp_err_t hk_pairing_setup_exchange_response_generation(hk_mem *result, h
     return ret;
 }
 
-static esp_err_t hk_pairing_setup_exchange_response(hk_tlv_t *tlv, hk_mem *result, hk_conn_key_store_t *keys, hk_mem *device_id, bool *is_paired)
+static esp_err_t hk_pairing_setup_exchange_response(hk_tlv_t *tlv, hk_mem *result, hk_conn_key_store_t *keys)
 {
     HK_LOGD("pairing setup 3/3 (exchange response).");
 
     hk_mem *shared_secret = hk_mem_init();
     hk_mem *srp_private_key = hk_mem_init();
+    hk_mem *device_id = hk_mem_init();
 
     esp_err_t ret = ESP_OK;
 
@@ -236,19 +237,19 @@ static esp_err_t hk_pairing_setup_exchange_response(hk_tlv_t *tlv, hk_mem *resul
 
     if (!ret)
     {
-        *is_paired = true;
         HK_LOGI("Accessory paired.");
     }
 
     hk_mem_free(shared_secret);
     hk_mem_free(srp_private_key);
+    hk_mem_free(device_id);
     hk_srp_free_key(keys->pair_setup_srp_key);
 
     HK_LOGD("pairing setup 3/3 done.");
     return ret;
 }
 
-esp_err_t hk_pair_setup(hk_mem *request, hk_mem *response, hk_conn_key_store_t *keys, hk_mem *device_id, bool *is_paired)
+esp_err_t hk_pair_setup(hk_mem *request, hk_mem *response, hk_conn_key_store_t *keys)
 {
     hk_tlv_t *tlv_data_request = hk_tlv_deserialize(request);
     hk_tlv_t *type_tlv = hk_tlv_get_tlv_by_type(tlv_data_request, HK_PAIR_TLV_STATE);
@@ -270,7 +271,7 @@ esp_err_t hk_pair_setup(hk_mem *request, hk_mem *response, hk_conn_key_store_t *
             RUN_AND_CHECK(ret, hk_pairing_setup_srp_verify, tlv_data_request, response, keys);
             break;
         case HK_PAIR_TLV_STATE_M5:
-            RUN_AND_CHECK(ret, hk_pairing_setup_exchange_response, tlv_data_request, response, keys, device_id, is_paired);
+            RUN_AND_CHECK(ret, hk_pairing_setup_exchange_response, tlv_data_request, response, keys);
             break;
         default:
             HK_LOGE("Unexpected value in tlv in pair setup: %d", *type_tlv->value);

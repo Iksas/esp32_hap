@@ -9,7 +9,6 @@ hk_session_t *hk_session_init(int socket)
     hk_session_t *session = malloc(sizeof(hk_session_t));
     session->socket = socket;
     session->should_close = false;
-    session->device_id = NULL;
     session->kill = false;
 
     session->request = (hk_session_request_t *)malloc(sizeof(hk_session_request_t));
@@ -54,10 +53,6 @@ void hk_session_free(hk_session_t *session)
     hk_mem_free(session->request->url);
     hk_mem_free(session->request->query);
     hk_mem_free(session->request->content);
-    if (session->device_id != NULL)
-    {
-        free(session->device_id);
-    }
     free(session->request);
 
     hk_mem_free(session->response->data);

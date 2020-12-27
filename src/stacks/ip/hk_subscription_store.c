@@ -4,118 +4,170 @@
 
 #include "../../utils/hk_ll.h"
 #include "../../utils/hk_logging.h"
+#include "../../utils/hk_util.h"
 
 typedef struct
 {
     hk_chr_t *chr;
-    hk_session_t **sessions;
+    int *sockets;
+    size_t number_of_sockets;
 } hk_subscription_t;
 
 hk_subscription_t *subscriptions = NULL;
 
-hk_subscription_t *hk_subscription_store_get_subscription(hk_chr_t *chr)
+static esp_err_t hk_subscription_store_get_subscription(hk_chr_t *chr, hk_subscription_t **subscription)
 {
-    hk_subscription_t *subscription = NULL;
+    if (*subscription != NULL)
+    {
+        HK_LOGE("Should never happen.");
+        return ESP_ERR_INVALID_ARG;
+    }
 
     hk_ll_foreach(subscriptions, current_subscription)
     {
         if (current_subscription->chr == chr)
         {
-            subscription = current_subscription;
+            *subscription = current_subscription;
         }
     }
 
-    return subscription;
+    return ESP_OK;
 }
 
-hk_session_t **hk_subscription_store_get_sessions(hk_chr_t *chr)
+esp_err_t hk_subscription_store_get(hk_chr_t *chr, int **sockets, size_t *number_of_sockets)
 {
-    hk_subscription_t *subscription = hk_subscription_store_get_subscription(chr);
-    if (subscription == NULL)
+    esp_err_t ret = ESP_OK;
+    hk_subscription_t *subscription = NULL;
+    RUN_AND_CHECK(ret, hk_subscription_store_get_subscription, chr, &subscription);
+
+    if (subscription != NULL)
     {
-        return NULL;
+        *sockets = subscription->sockets;
+        *number_of_sockets = subscription->number_of_sockets;
+    }
+    else
+    {
+        ret = ESP_ERR_NOT_FOUND;
+        *sockets = NULL;
+        *number_of_sockets = 0;
     }
 
-    return subscription->sessions;
+    return ret;
 }
 
-void hk_subscription_store_add_session(hk_chr_t *chr, hk_session_t *session)
+esp_err_t hk_subscription_store_add(hk_chr_t *chr, int socket)
 {
-    hk_subscription_t *subscription = hk_subscription_store_get_subscription(chr);
+    esp_err_t ret = ESP_OK;
+    hk_subscription_t *subscription = NULL;
+    RUN_AND_CHECK(ret, hk_subscription_store_get_subscription, chr, &subscription);
 
     if (subscription == NULL)
     {
         subscription = subscriptions = hk_ll_init(subscriptions);
         subscription->chr = chr;
-        subscription->sessions = NULL;
+        subscription->sockets = NULL;
+    }
+
+    if (subscription->sockets == NULL)
+    {
+        HK_LOGD("Creating subscription list for %x and adding socket %d.", (uint)chr, socket);
+        subscription->sockets = (int *)malloc(sizeof(int));
+        subscription->number_of_sockets = 1;
+        subscription->sockets[0] = socket;
     }
     else
     {
-        hk_ll_foreach(subscription->sessions, current_session)
-        {
-            if (*current_session == session)
-            {
-                HK_LOGD("Subscription exists for session %d (%x) in subscription list of %x. Doing nothing.", session->socket, (uint)session, (uint)chr);
-                return;
-            }
-        }
+        HK_LOGD("Adding socket %d to subscription list of %x.", socket, (uint)chr);
+        int *sockets_array_old = subscription->sockets;
+        subscription->number_of_sockets++;
+        subscription->sockets = (int *)malloc(sizeof(int) * subscription->number_of_sockets);
+        subscription->sockets[subscription->number_of_sockets - 1] = socket;
+        memcpy(subscription->sockets, sockets_array_old, sizeof(int) * (subscription->number_of_sockets - 1));
+        free(sockets_array_old);
     }
 
-    HK_LOGD("Adding session %d (%x) to subscription list of %x.", session->socket, (uint)session, (uint)chr);
-    subscription->sessions = hk_ll_init(subscription->sessions);
-    *subscription->sessions = session;
+    return ret;
 }
 
-void hk_subscription_store_remove_session_from_subscription(hk_chr_t *chr, hk_session_t *session)
+esp_err_t hk_subscription_store_remove(hk_chr_t *chr, int socket)
 {
-    hk_subscription_t *subscription = hk_subscription_store_get_subscription(chr);
+    esp_err_t ret = ESP_OK;
+    hk_subscription_t *subscription = NULL;
+    RUN_AND_CHECK(ret, hk_subscription_store_get_subscription, chr, &subscription);
 
     if (subscription != NULL)
     {
-        hk_ll_foreach(subscription->sessions, current_session)
+        if (subscription->number_of_sockets - 1 > 0)
         {
-            if (*current_session == session)
+            int index_of_socket = -1;
+            for (size_t i = 0; i < subscription->number_of_sockets; i++)
             {
-                HK_LOGD("Removing session %d from subscription list of %x.", 
-                    session->socket, (uint)chr);
-                subscription->sessions = hk_ll_remove(subscription->sessions, current_session);
-                return;
+                if (subscription->sockets[i] == socket)
+                {
+                    index_of_socket = i;
+                    break;
+                }
             }
-        }
-    }
 
-    HK_LOGD("Could not remove subscription of session %d in subscription list of %x. It was not found.", 
-        session->socket, (uint)chr);
-}
-
-void hk_subscription_store_remove_session(hk_session_t *session)
-{
-    HK_LOGD("Removing all subscriptions for session %d.", session->socket);
-
-    hk_ll_foreach(subscriptions, current_subscription)
-    {
-        for (hk_session_t **current_session = current_subscription->sessions; current_session != NULL;)
-        {   
-            hk_session_t *current_session_ptr = *current_session;
-            if (current_session_ptr == session)
+            if (index_of_socket >= 0)
             {
-                hk_session_t **next = hk_ll_next(current_session);
-                current_subscription->sessions = hk_ll_remove(current_subscription->sessions, current_session);
-                current_session = next;
+                subscription->number_of_sockets--;
+                HK_LOGD("Removing subscription of socket %d at list of %x.", socket, (uint)subscription->chr);
+                int *sockets_array_old = subscription->sockets;
+                subscription->sockets = (int *)malloc(sizeof(int) * subscription->number_of_sockets);
+                memcpy(
+                    subscription->sockets,
+                    sockets_array_old,
+                    sizeof(int) * index_of_socket);
+                memcpy(
+                    subscription->sockets + index_of_socket,
+                    sockets_array_old + index_of_socket + 1,
+                    sizeof(int) * (subscription->number_of_sockets - index_of_socket));
+                free(sockets_array_old);
             }
             else
             {
-                current_session = hk_ll_next(current_session);
+                HK_LOGD("Cannot remove subscription of socket %d at list of %x, as socket was not found in list.", socket, (uint)subscription->chr);
             }
         }
+        else
+        {
+            subscription->number_of_sockets = 0;
+            free(subscription->sockets);
+            subscription->sockets = NULL;
+        }
     }
+    else
+    {
+        HK_LOGD("Cannot remove subscription of socket %d at list of %x, as list was not found.", socket, (uint)subscription->chr);
+    }
+
+    return ret;
+}
+
+esp_err_t hk_subscription_store_remove_all(int socket)
+{
+    HK_LOGD("Removing all subscriptions for socket %d.", socket);
+    esp_err_t ret = ESP_OK;
+
+    hk_ll_foreach(subscriptions, current_subscription)
+    {
+        esp_err_t ret_local = hk_subscription_store_remove(current_subscription->chr, socket);
+        if (ret_local != ESP_OK)
+        {
+            HK_LOGE("Error removing socket %d for %x.", socket, (uint)current_subscription->chr);
+            ret = ret_local;
+        }
+    }
+
+    return ret;
 }
 
 void hk_subscription_store_free()
 {
     hk_ll_foreach(subscriptions, subscription_item)
     {
-        hk_ll_free(subscription_item->sessions);
+        free(subscription_item->sockets);
     }
 
     hk_ll_free(subscriptions);

@@ -32,6 +32,18 @@ static httpd_uri_t hk_server_characteristics_get = {
     .handler = hk_server_handlers_characteristics_get,
     .user_ctx = NULL};
 
+static httpd_uri_t hk_server_characteristics_put = {
+    .uri = "/characteristics",
+    .method = HTTP_PUT,
+    .handler = hk_server_handlers_characteristics_put,
+    .user_ctx = NULL};
+
+static httpd_uri_t hk_server_pair_setup_post = {
+    .uri = "/pair-setup",
+    .method = HTTP_POST,
+    .handler = hk_server_handlers_pair_setup_post,
+    .user_ctx = NULL};
+
 static httpd_uri_t hk_server_pair_verify_post = {
     .uri = "/pair-verify",
     .method = HTTP_POST,
@@ -53,6 +65,8 @@ esp_err_t hk_server_start(void)
     RUN_AND_CHECK(ret, httpd_start, &server_handle, &config);
     RUN_AND_CHECK(ret, httpd_register_uri_handler, server_handle, &hk_server_accessories_get);
     RUN_AND_CHECK(ret, httpd_register_uri_handler, server_handle, &hk_server_characteristics_get);
+    RUN_AND_CHECK(ret, httpd_register_uri_handler, server_handle, &hk_server_characteristics_put);
+    RUN_AND_CHECK(ret, httpd_register_uri_handler, server_handle, &hk_server_pair_setup_post);
     RUN_AND_CHECK(ret, httpd_register_uri_handler, server_handle, &hk_server_pair_verify_post);
 
     if (ret == ESP_OK)

@@ -45,7 +45,6 @@ typedef struct hk_session
     hk_session_response_t *response;    
     hk_conn_key_store_t *keys;
 
-    char *device_id;
     int socket;
     bool should_close;
     bool kill; // states that all sessions with the same device id have to be killed

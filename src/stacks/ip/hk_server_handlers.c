@@ -82,6 +82,54 @@ esp_err_t hk_server_handlers_characteristics_get(httpd_req_t *request)
     return ret;
 }
 
+esp_err_t hk_server_handlers_characteristics_put(httpd_req_t *request)
+{
+    HK_LOGD("hk_server_handlers_characteristics_put");
+
+    esp_err_t ret = ESP_OK;
+    hk_mem *request_content = hk_mem_init();
+
+    RUN_AND_CHECK(ret, hk_server_handlers_get_request_content, request, request_content);
+    int socket = httpd_req_to_sockfd(request);
+    RUN_AND_CHECK(ret, hk_chrs_put, request_content, request->handle, socket);
+
+    RUN_AND_CHECK(ret, httpd_resp_set_status, request, HTTPD_204);
+    RUN_AND_CHECK(ret, httpd_resp_send, request, NULL, 0);
+
+    hk_mem_free(request_content);
+
+    return ret;
+}
+
+esp_err_t hk_server_handlers_pair_setup_post(httpd_req_t *request)
+{
+    HK_LOGD("hk_server_handlers_pair_setup_post");
+
+    esp_err_t ret = ESP_OK;
+    hk_mem *request_content = hk_mem_init();
+    hk_mem *response_content = hk_mem_init();
+    bool session_is_secure = false;
+
+    int socket = httpd_req_to_sockfd(request);
+    hk_session_t *session = (hk_session_t *)httpd_sess_get_ctx(request->handle, socket);
+    
+    RUN_AND_CHECK(ret, hk_server_handlers_get_request_content, request, request_content);
+    RUN_AND_CHECK(ret, hk_pair_setup, request_content, response_content, session->keys);
+    RUN_AND_CHECK(ret, httpd_resp_set_type, request, HK_SERVER_CONTENT_TLV);
+    RUN_AND_CHECK(ret, httpd_resp_send, request, response_content->ptr, response_content->size);
+
+    if (session_is_secure)
+    {
+        RUN_AND_CHECK(ret, hk_server_transport_set_session_secure, request->handle, socket);
+        HK_LOGD("%d - Pairing verified, now communicating encrypted.", session->socket);
+    }
+
+    hk_mem_free(request_content);
+    hk_mem_free(response_content);
+
+    return ret;
+}
+
 esp_err_t hk_server_handlers_pair_verify_post(httpd_req_t *request)
 {
     HK_LOGD("hk_server_handlers_pair_verify_post");

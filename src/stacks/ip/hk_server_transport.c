@@ -144,7 +144,7 @@ static int hk_server_transport_recv(httpd_handle_t handle, int socket, char *buf
 
         // find max length to submit to server and copy it into buffer
         size_t copy_length = MIN(buffer_length, size_to_submit_from_buffer);
-        memcpy(buffer, transport_context->received_buffer, copy_length);
+        memcpy(buffer, transport_context->received_buffer + transport_context->received_submitted_length, copy_length);
 
         // set offset for next block and returned data length
         transport_context->received_submitted_length += copy_length;

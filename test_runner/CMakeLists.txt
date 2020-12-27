@@ -3,11 +3,9 @@
 cmake_minimum_required(VERSION 3.5)
 set(COMPONENTS esptool_py esp32 main esp32_hap unity)
 
-
-
 # Include the components directory of the main application:
-#
 set(EXTRA_COMPONENT_DIRS "../..")
+
 # Set the components to include the tests for.
 # This can be overriden from CMake cache:
 # - when invoking CMake directly: cmake -D TEST_COMPONENTS="xxxxx" ..

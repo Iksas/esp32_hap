@@ -16,7 +16,7 @@ TEST_CASE("Checking reading/writing u8.", "[store]")
     uint8_t result = -1;
 
     esp_err_t ret = hk_store_u8_get(key, &result);
-    TEST_ASSERT_EQUAL_INT32(HK_STORE_ERR_NOT_FOUND, ret);
+    TEST_ASSERT_EQUAL_INT32(ESP_ERR_NOT_FOUND, ret);
     ret = hk_store_u8_set(key, number);
     TEST_ASSERT_EQUAL_INT32(ESP_OK, ret);
     ret = hk_store_u8_get(key, &result);
