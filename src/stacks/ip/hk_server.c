@@ -57,6 +57,12 @@ static httpd_uri_t hk_server_pair_setup_post = {
     .handler = hk_server_handlers_pair_setup_post,
     .user_ctx = NULL};
 
+static httpd_uri_t hk_server_pairings_post = {
+    .uri = "/pairings",
+    .method = HTTP_POST,
+    .handler = hk_server_handlers_pairings_post,
+    .user_ctx = NULL};
+
 static httpd_uri_t hk_server_pair_verify_post = {
     .uri = "/pair-verify",
     .method = HTTP_POST,
@@ -80,6 +86,7 @@ esp_err_t hk_server_start(void)
     RUN_AND_CHECK(ret, httpd_register_uri_handler, hk_server_handle, &hk_server_identify_post);
     RUN_AND_CHECK(ret, httpd_register_uri_handler, hk_server_handle, &hk_server_pair_setup_post);
     RUN_AND_CHECK(ret, httpd_register_uri_handler, hk_server_handle, &hk_server_pair_verify_post);
+    RUN_AND_CHECK(ret, httpd_register_uri_handler, hk_server_handle, &hk_server_pairings_post);
 
     if (ret == ESP_OK)
     {
