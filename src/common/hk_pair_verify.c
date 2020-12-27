@@ -36,7 +36,7 @@ esp_err_t hk_pair_verify_create_session(hk_conn_key_store_t *keys)
 
     if (!ret)
     {
-        HK_LOGD("Currently we have %d sessions. Adding new one.", hk_ll_count(hk_pair_verify_sessions));
+        HK_LOGV("Currently we have %d sessions. Adding new one.", hk_ll_count(hk_pair_verify_sessions));
         hk_pair_verify_sessions = hk_ll_init(hk_pair_verify_sessions);
         hk_pair_verify_sessions->id = hk_mem_init();
         hk_pair_verify_sessions->accessory_shared_secret = hk_mem_init();
@@ -66,7 +66,7 @@ static esp_err_t hk_pair_verify_create_session_security(hk_conn_key_store_t *key
 esp_err_t hk_pair_verify_start(hk_conn_key_store_t *keys, hk_tlv_t *request_tlvs, hk_mem *response)
 {
     // see spec chapter 5.7.2
-    HK_LOGD("Now running pair verify start.");
+    HK_LOGV("Now running pair verify start.");
     esp_err_t ret = ESP_OK;
     hk_ed25519_key_t *accessory_long_term_key = hk_ed25519_init();
     hk_curve25519_key_t *accessory_curve_key_pair = hk_curve25519_init();
@@ -156,7 +156,7 @@ esp_err_t hk_pair_verify_start(hk_conn_key_store_t *keys, hk_tlv_t *request_tlvs
 
 esp_err_t hk_pair_verify_finish(hk_conn_key_store_t *keys, hk_tlv_t *request_tlvs, hk_mem *response)
 {
-    HK_LOGD("Now running pair verify finish.");
+    HK_LOGV("Now running pair verify finish.");
     hk_ed25519_key_t *device_long_term_key = hk_ed25519_init();
     hk_mem *device_long_term_key_public = hk_mem_init();
     hk_mem *device_info = hk_mem_init();
@@ -364,7 +364,7 @@ esp_err_t hk_pair_verify(hk_mem *request, hk_mem *result, hk_conn_key_store_t *k
             if (ret == ESP_OK)
             {
                 *is_session_encrypted = true;
-                HK_LOGD("Pair verify succeeded.");
+                HK_LOGV("Pair verify succeeded.");
             }
             break;
         }

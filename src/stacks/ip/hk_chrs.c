@@ -1,16 +1,15 @@
 #include "hk_chrs.h"
 
 #include "../../common/hk_chrs_properties.h"
-#include "../../common/hk_global_state.h"
 #include "../../include/hk_srvs.h"
 #include "../../include/hk_chrs.h"
 #include "../../utils/hk_logging.h"
 #include "../../utils/hk_ll.h"
 #include "../../utils/hk_util.h"
-#include "hk_html.h"
-#include "hk_html_parser.h"
+#include "hk_server.h"
 #include "hk_accessories_serializer.h"
 #include "hk_subscription_store.h"
+#include "hk_advertising.h"
 
 #include <cJSON.h>
 #include <stdbool.h>
@@ -67,56 +66,74 @@ esp_err_t hk_chrs_get(char *ids, hk_mem *response)
     return ret;
 }
 
-void hk_chrs_notify(void *chr_ptr)
+esp_err_t hk_chrs_notify(void *chr_ptr)
 {
-    // if (!chr_ptr)
-    // {
-    //     HK_LOGE("No chr was given, to notify.");
-    //     return;
-    // }
+    esp_err_t ret = ESP_OK;
+    if (!chr_ptr)
+    {
+        HK_LOGE("No chr was given, to notify.");
+        return ESP_ERR_INVALID_ARG;
+    }
 
-    // // increase global state
-    // hk_global_state_next();
+    // increase global state
+    hk_advertising_global_state_next();
 
-    // // fire event
-    // hk_chr_t *chr = (hk_chr_t *)chr_ptr;
-    // hk_session_t **session_list = hk_subscription_store_get_sessions(chr);
+    // fire event
+    hk_chr_t *chr = (hk_chr_t *)chr_ptr;
+    const uint8_t aid = chr->aid;
+    const uint8_t iid = chr->iid;
+    int *sockets = NULL;
+    size_t number_of_sockets = -1;
+    ret = hk_subscription_store_get(chr, &sockets, &number_of_sockets);
 
-    // if (session_list == NULL)
-    // {
-    //     HK_LOGD("Cant notify, because nothing is subscribed for chr %d.%d.", chr->aid, chr->iid);
-    //     return;
-    // }
+    if (ret == ESP_ERR_NOT_FOUND)
+    {
+        HK_LOGD("Cant notify, because nothing is subscribed for characteristics %d.%d.", aid, iid);
+        return ret;
+    }
+    else if (ret != ESP_OK)
+    {
+        HK_LOGE("Error getting characteristics %d.%d to notify.", aid, iid);
+        return ret;
+    }
 
-    // const double aid = chr->aid;
-    // const double iid = chr->iid;
+    if (sockets == NULL || number_of_sockets < 1)
+    {
+        HK_LOGD("Cant notify, because nothing is subscribed for chr %d.%d.", aid, iid);
+        return ret;
+    }
 
-    // cJSON *j_chr = cJSON_CreateObject();
-    // cJSON_AddNumberToObject(j_chr, "aid", aid);
-    // cJSON_AddNumberToObject(j_chr, "iid", iid);
-    // cJSON_AddNumberToObject(j_chr, "status", 0); // todo: is this needed?
-    // hk_accessories_serializer_value(chr, j_chr);
+    cJSON *j_chr = cJSON_CreateObject();
+    cJSON_AddNumberToObject(j_chr, "aid", (const double)aid);
+    cJSON_AddNumberToObject(j_chr, "iid", (const double)iid);
+    cJSON_AddNumberToObject(j_chr, "status", 0); // todo: is this needed?
+    hk_accessories_serializer_value(chr, j_chr);
 
-    // cJSON *j_chrs = cJSON_CreateArray();
-    // cJSON_AddItemToArray(j_chrs, j_chr);
+    cJSON *j_chrs = cJSON_CreateArray();
+    cJSON_AddItemToArray(j_chrs, j_chr);
 
-    // cJSON *j_root = cJSON_CreateObject();
-    // cJSON_AddItemToObject(j_root, "characteristics", j_chrs);
+    cJSON *j_root = cJSON_CreateObject();
+    cJSON_AddItemToObject(j_root, "characteristics", j_chrs);
 
-    // char *serialized = cJSON_PrintUnformatted(j_root);
-    // cJSON_Delete(j_root);
+    char *serialized = cJSON_PrintUnformatted(j_root);
+    cJSON_Delete(j_root);
 
-    // hk_ll_foreach(session_list, current_session)
-    // {
-    //     hk_session_t *session = *current_session;
-    //     hk_mem_append_string(session->response->content, (const char *)serialized);
-    //     hk_html_append_response_start(session, HK_HTML_PROT_EVENT, HK_HTML_200);
-    //     hk_html_append_header(session, "Content-Type", HK_HTML_CONTENT_JSON);
-    //     HK_LOGD("%d - Sending change notification: %s (%x)", session->socket, serialized, (uint)session);
-    //     hk_html_response_send(session);
-    // }
+    for (size_t i = 0; i < number_of_sockets; i++)
+    {
+        hk_mem *message = hk_mem_init(); // is freed after being sent
+        hk_mem_append_string(message, "EVENT/1.0 200 OK\n");
+        hk_mem_append_string(message, "Content-Type: application/hap+json\n");
+        hk_mem_append_string(message, "Content-Length: ");
+        char content_length[20];
+        sprintf(content_length, "%d\n\n", strlen(serialized));
+        hk_mem_append_string(message, content_length);
+        hk_mem_append_string(message, (const char *)serialized);
+        HK_LOGD("%d - Sending change notification.", sockets[i]);
+        RUN_AND_CHECK(ret, hk_server_send_async, sockets[i], message);
+    }
 
-    // free(serialized);
+    free(serialized);
+    return ret;
 }
 
 static esp_err_t hk_chrs_write(int socket, int aid, int iid, cJSON *j_chr)
@@ -234,7 +251,7 @@ static esp_err_t hk_chrs_write(int socket, int aid, int iid, cJSON *j_chr)
 static esp_err_t hk_chr_subscribe(int socket, int aid, int iid)
 {
     esp_err_t ret = ESP_OK;
-    HK_LOGD("%d - Subscription request for chr %d.%d.", socket, aid, iid);
+    HK_LOGV("%d - Subscription request for chr %d.%d.", socket, aid, iid);
 
     hk_chr_t *chr = hk_accessories_store_get_chr(aid, iid);
     if (chr == NULL)

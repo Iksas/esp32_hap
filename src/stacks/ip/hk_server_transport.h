@@ -9,3 +9,4 @@
 
 esp_err_t hk_server_transport_on_open_connection(httpd_handle_t hd, int sockfd);
 esp_err_t hk_server_transport_set_session_secure(httpd_handle_t handle, int socket);
+esp_err_t hk_server_transport_send_unsolicited(httpd_handle_t handle, int socket, hk_mem *message);

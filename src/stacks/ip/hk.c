@@ -88,7 +88,5 @@ esp_err_t hk_reset()
 
 esp_err_t hk_notify(void *chr)
 {
-    hk_chrs_notify(chr);
-    
-    return ESP_OK;
+    return hk_chrs_notify(chr);
 }

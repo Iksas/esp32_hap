@@ -70,14 +70,14 @@ esp_err_t hk_subscription_store_add(hk_chr_t *chr, int socket)
 
     if (subscription->sockets == NULL)
     {
-        HK_LOGD("Creating subscription list for %x and adding socket %d.", (uint)chr, socket);
+        HK_LOGV("Creating subscription list for %x and adding socket %d.", (uint)chr, socket);
         subscription->sockets = (int *)malloc(sizeof(int));
         subscription->number_of_sockets = 1;
         subscription->sockets[0] = socket;
     }
     else
     {
-        HK_LOGD("Adding socket %d to subscription list of %x.", socket, (uint)chr);
+        HK_LOGV("Adding socket %d to subscription list of %x.", socket, (uint)chr);
         int *sockets_array_old = subscription->sockets;
         subscription->number_of_sockets++;
         subscription->sockets = (int *)malloc(sizeof(int) * subscription->number_of_sockets);

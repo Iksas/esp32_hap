@@ -42,10 +42,10 @@ static void hk_server_on_free_session_transport_ctx(void *ctx)
     hk_server_transport_context_free(transport_context);
 }
 
-static int hk_server_transport_sock_err(const char *ctx, int sockfd)
+static int hk_server_transport_sock_err(const char *ctx, int socket)
 {
     int errval;
-    HK_LOGW("error in %s : %d", ctx, errno);
+    HK_LOGW("%d - Error in %s : %d", socket, ctx, errno);
 
     switch (errno)
     {
@@ -100,7 +100,6 @@ static int hk_server_transport_decrypt(hk_server_transport_context_t *context, h
 
 static int hk_server_transport_recv(httpd_handle_t handle, int socket, char *buffer, size_t buffer_length, int flags)
 {
-    HK_LOGD("%d - hk_server_transport_recv (%d)", socket, buffer_length);
     int ret = 0;
     (void)handle;
     if (buffer == NULL)
@@ -132,7 +131,7 @@ static int hk_server_transport_recv(httpd_handle_t handle, int socket, char *buf
             // decrypt the received message into transport context buffer
             memset(transport_context->received_buffer, 0, HK_MAX_RECV_SIZE);
             transport_context->received_submitted_length = 0;
-            size_to_submit_from_buffer = transport_context->received_length = 
+            size_to_submit_from_buffer = transport_context->received_length =
                 ret = hk_server_transport_decrypt(transport_context, session->keys, buffer_recv, transport_context->received_buffer, ret);
 
             if (ret < 0)
@@ -159,7 +158,7 @@ static int hk_server_transport_recv(httpd_handle_t handle, int socket, char *buf
         }
     }
 
-    HK_LOGD("%d - Received: \n%s", socket, buffer);
+    HK_LOGV("%d - Received: \n%s", socket, buffer);
     return ret;
 }
 
@@ -186,13 +185,14 @@ static int hk_server_transport_encrypt_and_send(int socket, hk_server_transport_
                                                            pending, encrypted + HK_AAD_SIZE, chunk_size);
         if (ret != ESP_OK)
         {
+            HK_LOGE("%d - Encrypting content.", socket);
             return HTTPD_SOCK_ERR_FAIL;
         }
 
         ret = send(socket, encrypted, encrypted_size, flags);
         if (ret < 0)
         {
-            return ret;
+            return hk_server_transport_sock_err("send", socket);
         }
 
         pending += chunk_size;
@@ -201,13 +201,29 @@ static int hk_server_transport_encrypt_and_send(int socket, hk_server_transport_
     return in_length;
 }
 
+esp_err_t hk_server_transport_send_unsolicited(httpd_handle_t handle, int socket, hk_mem *message)
+{
+    hk_server_transport_context_t *transport_context = (hk_server_transport_context_t *)httpd_sess_get_transport_ctx(handle, socket);
+    hk_session_t *session = (hk_session_t *)httpd_sess_get_ctx(handle, socket);
+
+    int ret = hk_server_transport_encrypt_and_send(socket, transport_context, session->keys, message->ptr, message->size, 0);
+
+    if (ret < 0)
+    {
+        return ret;
+    }
+    else
+    {
+        return ESP_OK;
+    }
+}
+
 static int hk_server_transport_send(httpd_handle_t handle, int socket, const char *buffer, size_t buffer_length, int flags)
 {
-    HK_LOGD("%d - hk_server_transport_send", socket);
     char content[buffer_length + 1];
     memcpy(content, buffer, buffer_length);
     content[buffer_length] = '\0';
-    HK_LOGD("%d - Sending: \n%s", socket, content);
+    HK_LOGV("%d - Sending: \n%s", socket, content);
 
     int ret = 0;
     (void)handle;
@@ -233,7 +249,6 @@ static int hk_server_transport_send(httpd_handle_t handle, int socket, const cha
         }
     }
 
-    HK_LOGD("%d - Result: %d", socket, ret);
     return ret;
 }
 
@@ -253,7 +268,7 @@ static hk_server_transport_context_t *hk_server_transport_context_init()
 
 esp_err_t hk_server_transport_on_open_connection(httpd_handle_t handle, int socket)
 {
-    HK_LOGD("%d - Connection open", socket);
+    HK_LOGV("%d - Connection open", socket);
 
     // setting session context
     hk_session_t *session = hk_session_init(socket);

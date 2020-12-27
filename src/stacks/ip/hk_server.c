@@ -6,7 +6,6 @@
 #include <esp_http_server.h>
 
 #include "../../utils/hk_logging.h"
-#include "../../include/hk_mem.h"
 #include "../../utils/hk_store.h"
 #include "../../utils/hk_util.h"
 #include "../../common/hk_pair_setup.h"
@@ -19,6 +18,14 @@
 #include "hk_server_transport.h"
 #include "hk_session.h"
 #include "hk_accessories_serializer.h"
+
+typedef struct
+{
+    int socket;
+    hk_mem *message;
+} hk_server_send_args_t;
+
+httpd_handle_t hk_server_handle;
 
 static httpd_uri_t hk_server_accessories_get = {
     .uri = "/accessories",
@@ -54,20 +61,18 @@ esp_err_t hk_server_start(void)
 {
     esp_err_t ret = ESP_OK;
 
-    httpd_handle_t server_handle;
-
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
     config.server_port = 5556;
     config.open_fn = hk_server_transport_on_open_connection;
 
     // Start the httpd server
     HK_LOGD("Starting server on port: '%d'", config.server_port);
-    RUN_AND_CHECK(ret, httpd_start, &server_handle, &config);
-    RUN_AND_CHECK(ret, httpd_register_uri_handler, server_handle, &hk_server_accessories_get);
-    RUN_AND_CHECK(ret, httpd_register_uri_handler, server_handle, &hk_server_characteristics_get);
-    RUN_AND_CHECK(ret, httpd_register_uri_handler, server_handle, &hk_server_characteristics_put);
-    RUN_AND_CHECK(ret, httpd_register_uri_handler, server_handle, &hk_server_pair_setup_post);
-    RUN_AND_CHECK(ret, httpd_register_uri_handler, server_handle, &hk_server_pair_verify_post);
+    RUN_AND_CHECK(ret, httpd_start, &hk_server_handle, &config);
+    RUN_AND_CHECK(ret, httpd_register_uri_handler, hk_server_handle, &hk_server_accessories_get);
+    RUN_AND_CHECK(ret, httpd_register_uri_handler, hk_server_handle, &hk_server_characteristics_get);
+    RUN_AND_CHECK(ret, httpd_register_uri_handler, hk_server_handle, &hk_server_characteristics_put);
+    RUN_AND_CHECK(ret, httpd_register_uri_handler, hk_server_handle, &hk_server_pair_setup_post);
+    RUN_AND_CHECK(ret, httpd_register_uri_handler, hk_server_handle, &hk_server_pair_verify_post);
 
     if (ret == ESP_OK)
     {
@@ -75,4 +80,27 @@ esp_err_t hk_server_start(void)
     }
 
     return ret;
+}
+
+static void hk_server_send(void *arg)
+{
+    hk_server_send_args_t *send_args = (hk_server_send_args_t *)arg;
+
+    esp_err_t ret = hk_server_transport_send_unsolicited(hk_server_handle, send_args->socket, send_args->message);
+    if (ret != ESP_OK)
+    {
+        HK_LOGE("%d - Error sending unsolicited message to client.", send_args->socket);
+    }
+
+    hk_mem_free(send_args->message);
+    free(send_args);
+}
+
+esp_err_t hk_server_send_async(int socket, hk_mem *message)
+{
+    hk_server_send_args_t *send_args = (hk_server_send_args_t *)malloc(sizeof(hk_server_send_args_t));
+    send_args->message = message;
+    send_args->socket = socket;
+
+    return httpd_queue_work(hk_server_handle, hk_server_send, send_args);
 }

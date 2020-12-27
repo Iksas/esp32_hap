@@ -42,8 +42,6 @@ static esp_err_t hk_server_handlers_get_request_content(httpd_req_t *request, hk
 
 esp_err_t hk_server_handlers_accessories_get(httpd_req_t *request)
 {
-    HK_LOGD("hk_server_handlers_accessories_get");
-
     esp_err_t ret = ESP_OK;
     hk_mem *response_content = hk_mem_init();
 
@@ -59,16 +57,12 @@ esp_err_t hk_server_handlers_accessories_get(httpd_req_t *request)
 
 esp_err_t hk_server_handlers_characteristics_get(httpd_req_t *request)
 {
-    HK_LOGD("hk_server_handlers_characteristics_get");
-
     esp_err_t ret = ESP_OK;
     hk_mem *response_content = hk_mem_init();
     size_t query_length = httpd_req_get_url_query_len(request) + 1;
-    HK_LOGD("Query length: %d", query_length);
     char query[query_length];
 
     RUN_AND_CHECK(ret, httpd_req_get_url_query_str, request, query, query_length);
-    HK_LOGD("Query: '%s'", query);
     char ids[query_length];
     RUN_AND_CHECK(ret, httpd_query_key_value, query, "id", ids, query_length);
 
@@ -84,7 +78,7 @@ esp_err_t hk_server_handlers_characteristics_get(httpd_req_t *request)
 
 esp_err_t hk_server_handlers_characteristics_put(httpd_req_t *request)
 {
-    HK_LOGD("hk_server_handlers_characteristics_put");
+    HK_LOGV("hk_server_handlers_characteristics_put");
 
     esp_err_t ret = ESP_OK;
     hk_mem *request_content = hk_mem_init();
@@ -103,7 +97,7 @@ esp_err_t hk_server_handlers_characteristics_put(httpd_req_t *request)
 
 esp_err_t hk_server_handlers_pair_setup_post(httpd_req_t *request)
 {
-    HK_LOGD("hk_server_handlers_pair_setup_post");
+    HK_LOGV("hk_server_handlers_pair_setup_post");
 
     esp_err_t ret = ESP_OK;
     hk_mem *request_content = hk_mem_init();
@@ -132,7 +126,7 @@ esp_err_t hk_server_handlers_pair_setup_post(httpd_req_t *request)
 
 esp_err_t hk_server_handlers_pair_verify_post(httpd_req_t *request)
 {
-    HK_LOGD("hk_server_handlers_pair_verify_post");
+    HK_LOGV("hk_server_handlers_pair_verify_post");
 
     esp_err_t ret = ESP_OK;
     hk_mem *request_content = hk_mem_init();

@@ -5,12 +5,13 @@
 #include "../../utils/hk_logging.h"
 #include "../../common/hk_pairings_store.h"
 #include "../../common/hk_accessory_id.h"
+#include "../../common/hk_global_state.h"
 #include "../../utils/hk_util.h"
 #include "../../include/hk_categories.h"
 
 bool hk_advertising_is_running = false;
 
-void hk_advertising_add_txt(const char *key, const char *format, ...)
+static void hk_advertising_add_txt(const char *key, const char *format, ...)
 {
     va_list arg_ptr;
     va_start(arg_ptr, format);
@@ -54,14 +55,21 @@ void hk_advertising_init(const char *name, hk_categories_t category, size_t conf
     hk_mem_free(accessory_id);
     free(id_str);
 
-    hk_advertising_add_txt("md", "%s", name);           // model name
-    hk_advertising_add_txt("pv", "1.1");                // protocol version (required)
-    hk_advertising_add_txt("c#", "%d", config_version); // current configuration number (required)
-    hk_advertising_add_txt("s#", "1");                  // current state number (required)
-    hk_advertising_add_txt("ff", "0");                  // see spec table 5.4 - its completely unclear what that is for.
-    hk_advertising_add_txt("ci", "%d", category);       // accessory category identifier
+    hk_advertising_add_txt("md", "%s", name);                  // model name
+    hk_advertising_add_txt("pv", "1.1");                       // protocol version (required)
+    hk_advertising_add_txt("c#", "%d", config_version);        // current configuration number (required)
+    hk_advertising_add_txt("s#", "%d", hk_global_state_get()); // current state number (required)
+    hk_advertising_add_txt("ff", "0");                         // see spec table 5.4 - its completely unclear what that is for.
+    hk_advertising_add_txt("ci", "%d", category);              // accessory category identifier
     hk_advertising_update_paired();
     hk_advertising_is_running = true;
+}
+
+esp_err_t hk_advertising_global_state_next()
+{
+    hk_global_state_next();
+    hk_advertising_add_txt("s#", "%d", hk_global_state_get()); // current state number (required)
+    return ESP_OK;
 }
 
 esp_err_t hk_advertising_update_paired()
