@@ -9,4 +9,4 @@ esp_err_t hk_server_handlers_characteristics_put(httpd_req_t *request);
 esp_err_t hk_server_handlers_identify_post(httpd_req_t *request);
 esp_err_t hk_server_handlers_pair_setup_post(httpd_req_t *request);
 esp_err_t hk_server_handlers_pair_verify_post(httpd_req_t *request);
-esp_err_t hk_server_handlers_pairings_post(httpd_req_t *request, httpd_handle_t server_handle);
+esp_err_t hk_server_handlers_pairings_post(httpd_req_t *request);

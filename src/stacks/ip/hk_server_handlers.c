@@ -10,8 +10,8 @@
 #include "hk_chrs.h"
 #include "hk_advertising.h"
 #include "hk_server_transport.h"
-#include "hk_session.h"
 #include "hk_accessories_serializer.h"
+#include "hk_server_transport_context.h"
 
 #define HK_SERVER_CONTENT_TLV "application/pairing+tlv8"
 #define HK_SERVER_CONTENT_JSON "application/hap+json"
@@ -120,10 +120,10 @@ esp_err_t hk_server_handlers_pair_setup_post(httpd_req_t *request)
     hk_mem *response_content = hk_mem_init();
 
     int socket = httpd_req_to_sockfd(request);
-    hk_session_t *session = (hk_session_t *)httpd_sess_get_ctx(request->handle, socket);
+    hk_server_transport_context_t *transport_context = hk_server_transport_context_get(request->handle, socket);
 
     RUN_AND_CHECK(ret, hk_server_handlers_get_request_content, request, request_content);
-    RUN_AND_CHECK(ret, hk_pair_setup, request_content, response_content, session->keys);
+    RUN_AND_CHECK(ret, hk_pair_setup, request_content, response_content, transport_context->keys);
     RUN_AND_CHECK(ret, httpd_resp_set_type, request, HK_SERVER_CONTENT_TLV);
     RUN_AND_CHECK(ret, httpd_resp_send, request, response_content->ptr, response_content->size);
 
@@ -143,18 +143,17 @@ esp_err_t hk_server_handlers_pair_verify_post(httpd_req_t *request)
     bool session_is_secure = false;
 
     int socket = httpd_req_to_sockfd(request);
+    hk_server_transport_context_t *transport_context = hk_server_transport_context_get(request->handle, socket);
+
     RUN_AND_CHECK(ret, hk_server_handlers_get_request_content, request, request_content);
-
-    hk_session_t *session = (hk_session_t *)httpd_sess_get_ctx(request->handle, socket); // todo: session is set in the method before, move this line when session is initialized eralier.
-    RUN_AND_CHECK(ret, hk_pair_verify, request_content, response_content, session->keys, &session_is_secure);
-
+    RUN_AND_CHECK(ret, hk_pair_verify, request_content, response_content, transport_context->keys, &session_is_secure);
     RUN_AND_CHECK(ret, httpd_resp_set_type, request, HK_SERVER_CONTENT_TLV);
     RUN_AND_CHECK(ret, httpd_resp_send, request, response_content->ptr, response_content->size);
 
     if (session_is_secure)
     {
         RUN_AND_CHECK(ret, hk_server_transport_set_session_secure, request->handle, socket);
-        HK_LOGD("%d - Pairing verified, now communicating encrypted.", session->socket);
+        HK_LOGD("%d - Pairing verified, now communicating encrypted.", socket);
     }
 
     hk_mem_free(request_content);
@@ -163,7 +162,7 @@ esp_err_t hk_server_handlers_pair_verify_post(httpd_req_t *request)
     return ret;
 }
 
-esp_err_t hk_server_handlers_pairings_post(httpd_req_t *request, httpd_handle_t server_handle)
+esp_err_t hk_server_handlers_pairings_post(httpd_req_t *request)
 {
     HK_LOGV("hk_server_handlers_pairings_post");
 
@@ -183,7 +182,7 @@ esp_err_t hk_server_handlers_pairings_post(httpd_req_t *request, httpd_handle_t 
 
     if (kill_session)
     {
-        ret = httpd_sess_trigger_close(server_handle, socket);
+        ret = httpd_sess_trigger_close(request->handle, socket);
         if (ret == ESP_OK || ret == ESP_ERR_NOT_FOUND)
         {
             ret = ESP_OK;

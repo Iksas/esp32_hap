@@ -14,7 +14,6 @@
 #include "hk_chrs.h"
 #include "hk_server_handlers.h"
 #include "hk_server_transport.h"
-#include "hk_session.h"
 #include "hk_accessories_serializer.h"
 
 typedef struct

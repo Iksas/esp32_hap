@@ -1,4 +1,1 @@
-- Merge esp server
-- print qr code on start
-- print human readable config after setup
 - create tutorial

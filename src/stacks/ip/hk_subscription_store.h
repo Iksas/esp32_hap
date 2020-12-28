@@ -7,7 +7,6 @@
 #pragma once
 
 #include "hk_accessories_store.h"
-#include "hk_session.h"
 
 /**
  * @brief Adds a subscription for the characteristic for the socket.
