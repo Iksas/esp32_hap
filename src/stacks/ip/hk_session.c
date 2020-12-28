@@ -2,8 +2,6 @@
 
 #include "../../utils/hk_logging.h"
 
-#include "hk_html.h"
-
 hk_session_t *hk_session_init(int socket)
 {
     hk_session_t *session = malloc(sizeof(hk_session_t));
@@ -68,72 +66,4 @@ void hk_session_free(hk_session_t *session)
     hk_conn_key_store_free(session->keys);
     
     free(session);
-}
-
-const char *hk_session_get_status(hk_session_t *session)
-{
-    switch (session->response->result)
-    {
-    case ESP_OK:
-        return HK_HTML_200;
-    case ESP_ERR_INVALID_ARG:
-        return HK_HTML_400;
-    case ESP_ERR_NOT_FOUND:
-        return HK_HTML_500;
-    default:
-        HK_LOGE("Unknown response status: %d", session->response->result);
-        return "";
-    }
-}
-
-const char *hk_session_get_protocol(hk_session_t *session)
-{
-    switch (session->response->type)
-    {
-    case HK_SESSION_RESPONSE_MESSAGE:
-        return HK_HTML_PROT_HTTP;
-    case HK_SESSION_RESPONSE_EVENT:
-        return HK_HTML_PROT_EVENT;
-    default:
-        HK_LOGE("Unknown response type: %d.", session->response->type);
-        return "";
-    }
-}
-
-const char *hk_session_get_content_type(hk_session_t *session)
-{
-    switch (session->response->content_type)
-    {
-    case HK_SESSION_CONTENT_TLV:
-        return HK_HTML_CONTENT_TLV;
-    case HK_SESSION_CONTENT_JSON:
-        return HK_HTML_CONTENT_JSON;
-    default:
-        HK_LOGE("Unknown response content type: %d", session->response->content_type);
-        return "";
-    }
-}
-
-// void hk_session_set_device_id(hk_session_t *session, hk_mem *device_id)
-// {
-//
-// }
-
-void hk_session_send(hk_session_t *session)
-{
-    const char *status = hk_session_get_status(session);
-
-    if (session->response->content->size > 0)
-    {
-        const char *protocol = hk_session_get_protocol(session);
-        const char *content = hk_session_get_content_type(session);
-
-        hk_html_append_response_start(session, protocol, status);
-        hk_html_append_header(session, "Content-Type", content);
-        hk_html_response_send(session);
-    }
-    else
-    {
-        hk_html_response_send_empty(session, status);
-    }
 }

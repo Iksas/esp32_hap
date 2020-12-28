@@ -12,8 +12,6 @@
 #include "../../common/hk_pair_verify.h"
 #include "../../common/hk_pairings.h"
 #include "hk_chrs.h"
-#include "hk_html.h"
-#include "hk_html_parser.h"
 #include "hk_server_handlers.h"
 #include "hk_server_transport.h"
 #include "hk_session.h"
