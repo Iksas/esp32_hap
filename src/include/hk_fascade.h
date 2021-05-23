@@ -56,6 +56,32 @@ esp_err_t hk_setup_add_motion_sensor(
     const char *model,
     const char *serial_number,
     const char *revision,
-    void (*identify)(), 
+    void (*identify)(),
     esp_err_t (*read)(hk_mem* response),
     void **chr_ptr);
+
+
+/**
+ * @brief Set up a temperature sensor device
+ *
+ * Does everything needed to setup a homekit temperature sensor.
+ *
+ * @param name The name of the device.
+ * @param manufacturer The manufacturer of the device.
+ * @param model The model of the device.
+ * @param serial_number The serial number of the device.
+ * @param revision The revision of device.
+ * @param identify The method to be called if the user wants to identify the device.
+ * @param read The method that is called by homekit to aquire the current temperature.
+ * @param chr_ptr A pointer to the characteristic.
+ */
+esp_err_t hk_setup_add_temperature_sensor(
+    const char *name,
+    const char *manufacturer,
+    const char *model,
+    const char *serial_number,
+    const char *revision,
+    void (*identify)(),
+    esp_err_t (*read_temp)(hk_mem* response),
+    void **chr_ptr);
+

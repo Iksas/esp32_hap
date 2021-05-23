@@ -88,6 +88,9 @@ void hk_uuids_to_name(const ble_uuid128_t *uuid, char str[40])
         case HK_CHR_SERVICE_SIGNATURE:
             sprintf(str, "SERVICE_SIGNATURE");
             break;
+        case HK_CHR_CURRENT_TEMPERATURE:
+            sprintf(str, "CURRENT_TEMPERATURE");
+            break;
         default:
             sprintf(str, "Unknown");
             break;

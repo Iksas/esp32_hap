@@ -12,7 +12,7 @@ ESP-32 implementation of Apple Homekit Accessory Protocol(HAP). It supports Home
 
     ```bash
     %> git submodule add https://github.com/slompf18/esp32_hap_wolfssl.git components/esp32_hap_wolfssl
-    %> git submodule add https://github.com/slompf18/esp32_hap.git components/esp32_hap
+    %> git submodule add https://github.com/Iksas/esp32_hap.git components/esp32_hap
     ```
 4. Overwrite the content of 'hello_world_main.c' with the content of 'examples\simple_switch_ble.c' of this repository.
 5. Add the following line into CMakeLists.txt to add the esp32_hap component:
