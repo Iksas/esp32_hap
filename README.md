@@ -39,10 +39,10 @@ When starting your project you will have to choose, which stack you want to use.
 # Supported BLE accessories
 
 
-| Accessory           | Working Characteristics      | Non-working Characteristics |
-| ------------------- | ---------------------------- | --------------------------- |
-| Switch              | Name, On                     | -                           |
-| Temperature Sensor  | Current Temperature, Name    | -                           |
+| Accessory  | Working Characteristics | Non-working Characteristics |
+| ------------- | ------------- | ------------- |
+| Switch | Name, On  | -  |
+| Temperature Sensor  | Current Temperature, Name  | -  |
 
 All accessories and characteristics not listed above have yet to be tested.
 
