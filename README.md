@@ -38,6 +38,7 @@ When starting your project you will have to choose, which stack you want to use.
 
 # Supported BLE accessories
 
+
 | Accessory           | Working Characteristics      | Non-working Characteristics |
 | ------------------- | ---------------------------- | --------------------------- |
 | Switch              | Name, On                     | -                           |
