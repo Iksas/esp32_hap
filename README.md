@@ -41,6 +41,7 @@ When starting your project you will have to choose, which stack you want to use.
 
 | Accessory  | Working Characteristics | Non-working Characteristics |
 | ------------- | ------------- | ------------- |
+| Air Quality Sensor  | Air Quality, Name, Nitrogen Dioxode Density, Ozone Density, PM2.5 Density, PM10 Density, Status Active, Status Low Battery, Status Tampered, Sulphur Dioxode Density, VOC Density | Status Fault  |
 | Switch | Name, On  | -  |
 | Temperature Sensor  | Current Temperature, Name  | -  |
 

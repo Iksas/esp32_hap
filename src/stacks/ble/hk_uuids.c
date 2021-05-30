@@ -91,6 +91,39 @@ void hk_uuids_to_name(const ble_uuid128_t *uuid, char str[40])
         case HK_CHR_CURRENT_TEMPERATURE:
             sprintf(str, "CURRENT_TEMPERATURE");
             break;
+        case HK_CHR_AIR_QUALITY:
+            sprintf(str, "AIR_QUALITY");
+            break;
+        case HK_CHR_OZONE_DENSITY:
+            sprintf(str, "OZONE_DENSITY");
+            break;
+        case HK_CHR_NITROGEN_DIOXIDE_DENSITY:
+            sprintf(str, "NITROGEN_DIOXIDE_DENSITY");
+            break;
+        case HK_CHR_SULPHUR_DIOXIDE_DENSITY:
+            sprintf(str, "SULPHUR_DIOXIDE_DENSITY");
+            break;
+        case HK_CHR_PM25_DENSITY:
+            sprintf(str, "PM25_DENSITY");
+            break;
+        case HK_CHR_PM10_DENSITY:
+            sprintf(str, "PM10_DENSITY");
+            break;
+        case HK_CHR_VOC_DENSITY:
+            sprintf(str, "VOC_DENSITY");
+            break;
+        case HK_CHR_STATUS_ACTIVE:
+            sprintf(str, "STATUS_ACTIVE");
+            break;
+        case HK_CHR_STATUS_FAULT:
+            sprintf(str, "STATUS_FAULT");
+            break;
+        case HK_CHR_STATUS_TAMPERED:
+            sprintf(str, "STATUS_TAMPERED");
+            break;
+        case HK_CHR_STATUS_LOW_BATTERY:
+            sprintf(str, "STATUS_LOW_BATTERY");
+            break;
         default:
             sprintf(str, "Unknown");
             break;
