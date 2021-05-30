@@ -61,3 +61,24 @@ esp_err_t hk_setup_add_temperature_sensor(
 
     return ESP_OK;
 }
+
+
+esp_err_t hk_setup_add_simple_air_quality_sensor(
+    const char *name,
+    const char *manufacturer,
+    const char *model,
+    const char *serial_number,
+    const char *revision,
+    void (*identify)(),
+    esp_err_t (*read_air_quality)(hk_mem* response),
+    void **chr_ptr)
+{
+    hk_setup_start();
+    hk_setup_add_accessory(name, manufacturer, model, serial_number, revision, identify);
+    hk_setup_add_srv(HK_SRV_AIR_QUALITY_SENSOR, true, false);
+    hk_setup_add_chr(HK_CHR_AIR_QUALITY, read_air_quality, NULL, true, chr_ptr);
+    hk_setup_finish();
+
+    return ESP_OK;
+}
+

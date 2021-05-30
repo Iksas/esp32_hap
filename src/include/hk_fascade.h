@@ -85,3 +85,30 @@ esp_err_t hk_setup_add_temperature_sensor(
     esp_err_t (*read_temp)(hk_mem* response),
     void **chr_ptr);
 
+
+/**
+ * @brief Set up a simple air quality sensor device
+ *
+ * Does everything needed to setup a homekit air quality sensor.
+ * This simple sensor only transmits the air quality in
+ * five different levels, and no detailed data.
+ *
+ * @param name The name of the device.
+ * @param manufacturer The manufacturer of the device.
+ * @param model The model of the device.
+ * @param serial_number The serial number of the device.
+ * @param revision The revision of device.
+ * @param identify The method to be called if the user wants to identify the device.
+ * @param read The method that is called by homekit to aquire the current air quality.
+ * @param chr_ptr A pointer to the characteristic.
+ */
+esp_err_t hk_setup_add_simple_air_quality_sensor(
+    const char *name,
+    const char *manufacturer,
+    const char *model,
+    const char *serial_number,
+    const char *revision,
+    void (*identify)(),
+    esp_err_t (*read_air_quality)(hk_mem* response),
+    void **chr_ptr);
+
